@@ -1,16 +1,18 @@
 module sumtype;
 
-import std.variant: maxSize;
-import std.meta: staticIndexOf;
-import std.format: format;
 
 
 struct SumType(Types...)
 {
 private:
+
+	import std.meta: staticIndexOf;
+	import std.format: format;
+
 	size_t tag;
 
 	enum valueName(T) = "value%d".format(staticIndexOf!(T, Types));
+
 	union
 	{
 		static foreach (T; Types) {
@@ -19,6 +21,7 @@ private:
 	}
 
 public:
+
 	static foreach (i, T; Types) {
 		this(T val)
 		{
