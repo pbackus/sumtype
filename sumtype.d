@@ -37,19 +37,26 @@ public:
 
 	auto match(handlers...)()
 	{
-		import std.traits: Parameters;
+		import std.meta: anySatisfy, ApplyLeft, Filter;
+		import std.traits: Parameters, Unqual;
 
-		dispatch:
-		switch (type) {
-			static foreach (i, T; AllowedTypes)
-				static foreach (h; handlers)
-					static if (is(T == Parameters!h[0])) {
-						case i:
-							return h(mixin(valueName!T));
-							break dispatch;
-					}
+		enum isHandlerFor(T, alias h) =
+			is(typeof(h(T.init))) &&
+			is(Unqual!T == Unqual!(Parameters!h[0]));
 
-			default: throw new Exception("Missing handler");
+		alias handlersFor(T) = Filter!(ApplyLeft!(isHandlerFor, T), handlers);
+
+		final switch (tag) {
+			static foreach (i, T; Types) {
+				static if (handlersFor!T.length == 1) {
+					case i:
+						return handlersFor!T[0](mixin(valueName!T));
+				} else static if (handlersFor!T.length > 1) {
+					static assert(false, "multiple handlers given for type " ~ T.stringof);
+				} else static if (handlersFor!T.length == 0) {
+					static assert(false, "missing handler for type " ~ T.stringof);
+				}
+			}
 		}
 		assert(false); // unreached
 	}
@@ -69,4 +76,11 @@ unittest {
 	Foo x = Foo(42);
 	x = 3.14;
 	assert(x.match!((float v) => true, (int v) => false));
+}
+
+unittest {
+	alias Foo = SumType!(int, float);
+	Foo x = Foo(42);
+	assert(!__traits(compiles, (){ x.match!((int x) => true); }()));
+	assert(!__traits(compiles, (){ x.match!((int x) => true, (int x) => false); }()));
 }
