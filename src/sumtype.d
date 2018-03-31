@@ -84,6 +84,6 @@ unittest {
 unittest {
 	alias Foo = SumType!(int, float);
 	Foo x = Foo(42);
-	assert(!__traits(compiles, (){ x.match!((int x) => true); }()));
-	assert(!__traits(compiles, (){ x.match!((int x) => true, (int x) => false); }()));
+	assert(!__traits(compiles, x.match!((int x) => true)));
+	assert(!__traits(compiles, x.match!((int x) => true, (int x) => false)));
 }
