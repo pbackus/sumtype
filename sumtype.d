@@ -5,34 +5,32 @@ import std.meta: staticIndexOf;
 import std.format: format;
 
 
-struct SumType(AllowedTypes...)
+struct SumType(Types...)
 {
 private:
-	// Type tag
-	size_t type;
+	size_t tag;
 
-	// Value
-	enum valueName(T) = "value%d".format(staticIndexOf!(T, AllowedTypes));
+	enum valueName(T) = "value%d".format(staticIndexOf!(T, Types));
 	union
 	{
-		static foreach (T; AllowedTypes) {
+		static foreach (T; Types) {
 			mixin(T.stringof ~ " " ~ valueName!T ~ ";");
 		}
 	}
 
 public:
-	static foreach (i, T; AllowedTypes) {
+	static foreach (i, T; Types) {
 		this(T val)
 		{
-			type = i;
+			tag = i;
 			mixin(valueName!T) = val;
 		}
 	}
 
-	static foreach (i, T; AllowedTypes) {
+	static foreach (i, T; Types) {
 		void opAssign(T rhs)
 		{
-			type = i;
+			tag = i;
 			mixin(valueName!T) = rhs;
 		}
 	}
