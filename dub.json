@@ -1,0 +1,9 @@
+{
+	"name": "sumtype",
+	"authors": [
+		"Paul Backus"
+	],
+	"description": "A tagged union with no runtime dependency",
+	"copyright": "Copyright © 2018, Paul Backus",
+	"license": "MIT"
+}
