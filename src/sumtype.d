@@ -120,22 +120,27 @@ template visit(handlers...)
 	}
 }
 
-// Construction and basic matching
+// Construction
 unittest {
 	alias Foo = SumType!(int, float);
-	Foo x = Foo(42);
-	Foo y = Foo(3.14);
-
-	assert(x.visit!((int v) => true, (float v) => false));
-	assert(y.visit!((int v) => false, (float v) => true));
+	assert(__traits(compiles, (){ Foo x = Foo(42); }));
+	assert(__traits(compiles, () { Foo y = Foo(3.14); }));
 }
 
 // Assignment
 unittest {
 	alias Foo = SumType!(int, float);
 	Foo x = Foo(42);
-	x = 3.14;
-	assert(x.visit!((float v) => true, (int v) => false));
+	assert(__traits(compiles, (){ x = 3.14; }));
+}
+
+// Matching
+unittest {
+	alias Foo = SumType!(int, float);
+	Foo x = Foo(42);
+	Foo y = Foo(3.14);
+	assert(x.visit!((int v) => true, (float v) => false));
+	assert(y.visit!((int v) => false, (float v) => true));
 }
 
 // Duplicate and missing handlers
