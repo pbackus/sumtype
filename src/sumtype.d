@@ -7,11 +7,11 @@ struct SumType(Types...)
 private:
 
 	import std.meta: staticIndexOf;
-	import std.format: format;
+	import std.conv: to;
 
 	size_t tag;
 
-	enum valueName(T) = "value%d".format(staticIndexOf!(T, Types));
+	enum valueName(T) = "value" ~ staticIndexOf!(T, Types).to!string;
 
 	union
 	{
