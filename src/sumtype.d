@@ -88,6 +88,7 @@ template match(handlers...)
 	}
 }
 
+// Construction and basic matching
 unittest {
 	alias Foo = SumType!(int, float);
 	Foo x = Foo(42);
@@ -97,6 +98,7 @@ unittest {
 	assert(y.match!((int v) => false, (float v) => true));
 }
 
+// Assignment
 unittest {
 	alias Foo = SumType!(int, float);
 	Foo x = Foo(42);
@@ -104,6 +106,7 @@ unittest {
 	assert(x.match!((float v) => true, (int v) => false));
 }
 
+// Duplicate and missing handlers
 unittest {
 	alias Foo = SumType!(int, float);
 	Foo x = Foo(42);
@@ -111,6 +114,16 @@ unittest {
 	assert(!__traits(compiles, x.match!((int x) => true, (int x) => false)));
 }
 
+// Handlers for qualified types
+unittest {
+	alias Foo = SumType!(int, float);
+	Foo x = Foo(42);
+	Foo y = Foo(3.14);
+	assert(x.match!((const int v) => true, (const float v) => false));
+	assert(y.match!((const int v) => false, (const float v) => true));
+}
+
+// Delegate handlers
 unittest {
 	alias Foo = SumType!(int, float);
 	int answer = 42;
