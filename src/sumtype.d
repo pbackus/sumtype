@@ -9,7 +9,7 @@ private:
 	import std.meta: staticIndexOf;
 	import std.conv: to;
 
-	size_t tag;
+	int tag;
 
 	enum valueName(T) = "value" ~ staticIndexOf!(T, Types).to!string;
 
@@ -41,17 +41,34 @@ public:
 
 template match(handlers...)
 {
-	import std.meta: anySatisfy, ApplyLeft, Filter;
-	import std.traits: Parameters, Unqual;
-
-	enum isHandlerFor(T, alias h) =
-		is(typeof(h(T.init))) &&
-		is(Unqual!T == Unqual!(Parameters!h[0]));
-
-	alias handlersFor(T) = Filter!(ApplyLeft!(isHandlerFor, T), handlers);
-
 	auto match(Self : SumType!Types, Types...)(Self self)
 	{
+		pure static int[Types.length] getHandlerIndices()
+		{
+			import std.traits: Parameters, Unqual;
+
+			int[Types.length] result;
+
+			foreach (i, T; Types) {
+				result[i] = -1;
+				foreach (j, h; handlers) {
+					if (is(typeof(h(T.init))) &&
+					    is(Unqual!T == Unqual!(Parameters!h[0]))) {
+						if (result[i] == -1) {
+							result[i] = j;
+						} else {
+							assert(false,
+								"multiple handlers given for type " ~ T.stringof);
+						}
+					}
+				}
+			}
+
+			return result;
+		}
+
+		enum handlerIndices = getHandlerIndices;
+
 		import std.meta: staticIndexOf;
 		import std.conv: to;
 
@@ -59,12 +76,10 @@ template match(handlers...)
 
 		final switch (self.tag) {
 			static foreach (i, T; Types) {
-				static if (handlersFor!T.length == 1) {
+				static if (handlerIndices[i] != -1) {
 					case i:
-						return handlersFor!T[0](mixin("self." ~ valueName!T));
-				} else static if (handlersFor!T.length > 1) {
-					static assert(false, "multiple handlers given for type " ~ T.stringof);
-				} else static if (handlersFor!T.length == 0) {
+						return handlers[handlerIndices[i]](mixin("self." ~ valueName!T));
+				} else {
 					static assert(false, "missing handler for type " ~ T.stringof);
 				}
 			}
@@ -94,4 +109,13 @@ unittest {
 	Foo x = Foo(42);
 	assert(!__traits(compiles, x.match!((int x) => true)));
 	assert(!__traits(compiles, x.match!((int x) => true, (int x) => false)));
+}
+
+unittest {
+	alias Foo = SumType!(int, float);
+	int answer = 42;
+	Foo x = Foo(42);
+	Foo y = Foo(3.14);
+	assert(x.match!((int v) => v == answer, (float v) => v == answer));
+	assert(!y.match!((int v) => v == answer, (float v) => v == answer));
 }
