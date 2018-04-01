@@ -48,9 +48,9 @@ private enum isHandlerFor(T, alias h) =
 private enum isGenericHandlerFor(T, alias h) =
 	is(typeof(h!T(T.init)));
 
-template match(handlers...)
+template visit(handlers...)
 {
-	auto match(Self : SumType!Types, Types...)(Self self)
+	auto visit(Self : SumType!Types, Types...)(Self self)
 	{
 		pure static auto getHandlerIndices()
 		{
@@ -122,8 +122,8 @@ unittest {
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
 
-	assert(x.match!((int v) => true, (float v) => false));
-	assert(y.match!((int v) => false, (float v) => true));
+	assert(x.visit!((int v) => true, (float v) => false));
+	assert(y.visit!((int v) => false, (float v) => true));
 }
 
 // Assignment
@@ -131,15 +131,15 @@ unittest {
 	alias Foo = SumType!(int, float);
 	Foo x = Foo(42);
 	x = 3.14;
-	assert(x.match!((float v) => true, (int v) => false));
+	assert(x.visit!((float v) => true, (int v) => false));
 }
 
 // Duplicate and missing handlers
 unittest {
 	alias Foo = SumType!(int, float);
 	Foo x = Foo(42);
-	assert(!__traits(compiles, x.match!((int x) => true)));
-	assert(!__traits(compiles, x.match!((int x) => true, (int x) => false)));
+	assert(!__traits(compiles, x.visit!((int x) => true)));
+	assert(!__traits(compiles, x.visit!((int x) => true, (int x) => false)));
 }
 
 // Handlers for qualified types
@@ -147,8 +147,8 @@ unittest {
 	alias Foo = SumType!(int, float);
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
-	assert(x.match!((const int v) => true, (const float v) => false));
-	assert(y.match!((const int v) => false, (const float v) => true));
+	assert(x.visit!((const int v) => true, (const float v) => false));
+	assert(y.visit!((const int v) => false, (const float v) => true));
 }
 
 // Delegate handlers
@@ -157,8 +157,8 @@ unittest {
 	int answer = 42;
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
-	assert(x.match!((int v) => v == answer, (float v) => v == answer));
-	assert(!y.match!((int v) => v == answer, (float v) => v == answer));
+	assert(x.visit!((int v) => v == answer, (float v) => v == answer));
+	assert(!y.visit!((int v) => v == answer, (float v) => v == answer));
 }
 
 // Generic handler
@@ -168,8 +168,8 @@ unittest {
 	alias Foo = SumType!(int, float);
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
-	assert(x.match!(v => v*2) == 84);
-	assert(y.match!(v => v*2).approxEqual(6.28));
+	assert(x.visit!(v => v*2) == 84);
+	assert(y.visit!(v => v*2).approxEqual(6.28));
 }
 
 // Fallback to generic handler
@@ -179,15 +179,15 @@ unittest {
 	alias Foo = SumType!(int, float, string);
 	Foo x = Foo(42);
 	Foo y = Foo("42");
-	assert(x.match!((string v) => v.to!int, v => v*2) == 84);
-	assert(y.match!((string v) => v.to!int, v => v*2) == 42);
+	assert(x.visit!((string v) => v.to!int, v => v*2) == 84);
+	assert(y.visit!((string v) => v.to!int, v => v*2) == 42);
 }
 
 // Duplicate generic handlers
 unittest {
 	alias Foo = SumType!(int, float);
 	Foo x = Foo(42);
-	assert(!__traits(compiles, x.match!(v => v*2, v => v + 1)));
+	assert(!__traits(compiles, x.visit!(v => v*2, v => v + 1)));
 }
 
 // Multiple non-overlapping generic handlers
@@ -201,8 +201,8 @@ unittest {
 	Foo z = Foo([1, 2, 3]);
 	Foo w = Foo(['a', 'b', 'c']);
 
-	assert(x.match!(v => v*2, v => v.length) == 84);
-	assert(y.match!(v => v*2, v => v.length).approxEqual(6.28));
-	assert(w.match!(v => v*2, v => v.length) == 3);
-	assert(z.match!(v => v*2, v => v.length) == 3);
+	assert(x.visit!(v => v*2, v => v.length) == 84);
+	assert(y.visit!(v => v*2, v => v.length).approxEqual(6.28));
+	assert(w.visit!(v => v*2, v => v.length) == 3);
+	assert(z.visit!(v => v*2, v => v.length) == 3);
 }
