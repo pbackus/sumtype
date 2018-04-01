@@ -182,3 +182,27 @@ unittest {
 	assert(x.match!((string v) => v.to!int, v => v*2) == 84);
 	assert(y.match!((string v) => v.to!int, v => v*2) == 42);
 }
+
+// Duplicate generic handlers
+unittest {
+	alias Foo = SumType!(int, float);
+	Foo x = Foo(42);
+	assert(!__traits(compiles, x.match!(v => v*2, v => v + 1)));
+}
+
+// Multiple non-overlapping generic handlers
+unittest {
+	import std.math: approxEqual;
+	import std.traits: isArray;
+
+	alias Foo = SumType!(int, float, int[], char[]);
+	Foo x = Foo(42);
+	Foo y = Foo(3.14);
+	Foo z = Foo([1, 2, 3]);
+	Foo w = Foo(['a', 'b', 'c']);
+
+	assert(x.match!(v => v*2, v => v.length) == 84);
+	assert(y.match!(v => v*2, v => v.length).approxEqual(6.28));
+	assert(w.match!(v => v*2, v => v.length) == 3);
+	assert(z.match!(v => v*2, v => v.length) == 3);
+}
