@@ -3,7 +3,7 @@
 	"authors": [
 		"Paul Backus"
 	],
-	"description": "A tagged union with no runtime dependency",
+	"description": "Generic sum type with no runtime overhead",
 	"copyright": "Copyright © 2018, Paul Backus",
 	"license": "MIT"
 }
