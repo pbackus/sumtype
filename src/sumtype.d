@@ -1,23 +1,31 @@
 module sumtype;
 
-
-
 struct SumType(Types...)
 {
 private:
 
-	import std.meta: staticIndexOf;
-	import std.conv: to;
-
 	int tag;
-
-	enum valueName(T) = "value" ~ staticIndexOf!(T, Types).to!string;
 
 	union
 	{
-		static foreach (T; Types) {
-			mixin(T.stringof ~ " " ~ valueName!T ~ ";");
+		import std.conv: to;
+
+		mixin template declareValue(T)
+		{
+			T value;
 		}
+
+		static foreach (i, T; Types) {
+			mixin("mixin declareValue!T type" ~ i.to!string ~ ";");
+		}
+	}
+
+	template valueField(T)
+	{
+		import std.conv: to;
+		import std.meta: staticIndexOf;
+
+		mixin("alias valueField = type" ~ staticIndexOf!(T, Types).to!string ~ ".value;");
 	}
 
 public:
@@ -26,7 +34,7 @@ public:
 		this(T val)
 		{
 			tag = i;
-			mixin(valueName!T) = val;
+			valueField!T = val;
 		}
 	}
 
@@ -34,8 +42,18 @@ public:
 		void opAssign(T rhs)
 		{
 			tag = i;
-			mixin(valueName!T) = rhs;
+			valueField!T = rhs;
 		}
+	}
+
+	T* peek(T)()
+	{
+		import std.meta: staticIndexOf;
+
+		if (tag == staticIndexOf!(T, Types))
+			return &valueField!T;
+		else
+			return null;
 	}
 }
 
@@ -94,24 +112,27 @@ template visit(handlers...)
 
 		enum handlerIndices = getHandlerIndices;
 
-		import std.meta: staticIndexOf;
-		import std.conv: to;
-
-		enum valueName(T) = "value" ~ staticIndexOf!(T, Types).to!string;
-
+		typeSwitch:
 		final switch (self.tag) {
 			static foreach (i, T; Types) {
 				static if (handlerIndices[i] != -1) {
 					case i:
-						return handlers[handlerIndices[i]](mixin("self." ~ valueName!T));
+						if (auto p = self.peek!T) {
+							return handlers[handlerIndices[i]](*p);
+						}
+						break typeSwitch;
 				} else static if (handlerIndices.generic[i] != -1) {
 					case i:
-						return handlers[handlerIndices.generic[i]](mixin("self." ~ valueName!T));
+						if (auto p = self.peek!T) {
+							return handlers[handlerIndices.generic[i]](*p);
+						}
+						break typeSwitch;
 				} else {
 					static assert(false, "missing handler for type " ~ T.stringof);
 				}
 			}
 		}
+
 		assert(false); // unreached
 	}
 }
@@ -205,4 +226,11 @@ unittest {
 	assert(y.visit!(v => v*2, v => v.length).approxEqual(6.28));
 	assert(w.visit!(v => v*2, v => v.length) == 3);
 	assert(z.visit!(v => v*2, v => v.length) == 3);
+}
+
+// Imported types
+unittest {
+	import std.typecons: Tuple, tuple;
+
+	assert(__traits(compiles, (){ alias Foo = SumType!(Tuple!(int, int)); }));
 }
