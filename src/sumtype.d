@@ -45,16 +45,6 @@ public:
 			valueField!T = rhs;
 		}
 	}
-
-	T* peek(T)()
-	{
-		import std.meta: staticIndexOf;
-
-		if (tag == staticIndexOf!(T, Types))
-			return &valueField!T;
-		else
-			return null;
-	}
 }
 
 import std.traits: Parameters, Unqual;
@@ -112,21 +102,14 @@ template visit(handlers...)
 
 		enum handlerIndices = getHandlerIndices;
 
-		typeSwitch:
 		final switch (self.tag) {
 			static foreach (i, T; Types) {
 				static if (handlerIndices[i] != -1) {
 					case i:
-						if (auto p = self.peek!T) {
-							return handlers[handlerIndices[i]](*p);
-						}
-						break typeSwitch;
+						return handlers[handlerIndices[i]](self.valueField!T);
 				} else static if (handlerIndices.generic[i] != -1) {
 					case i:
-						if (auto p = self.peek!T) {
-							return handlers[handlerIndices.generic[i]](*p);
-						}
-						break typeSwitch;
+						return handlers[handlerIndices.generic[i]](self.valueField!T);
 				} else {
 					static assert(false, "missing handler for type " ~ T.stringof);
 				}
