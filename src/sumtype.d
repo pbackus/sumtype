@@ -37,23 +37,31 @@ public:
 			mixin(valueName!T) = rhs;
 		}
 	}
+}
 
-	auto match(handlers...)()
+template match(handlers...)
+{
+	import std.meta: anySatisfy, ApplyLeft, Filter;
+	import std.traits: Parameters, Unqual;
+
+	enum isHandlerFor(T, alias h) =
+		is(typeof(h(T.init))) &&
+		is(Unqual!T == Unqual!(Parameters!h[0]));
+
+	alias handlersFor(T) = Filter!(ApplyLeft!(isHandlerFor, T), handlers);
+
+	auto match(Self : SumType!Types, Types...)(Self self)
 	{
-		import std.meta: anySatisfy, ApplyLeft, Filter;
-		import std.traits: Parameters, Unqual;
+		import std.meta: staticIndexOf;
+		import std.conv: to;
 
-		enum isHandlerFor(T, alias h) =
-			is(typeof(h(T.init))) &&
-			is(Unqual!T == Unqual!(Parameters!h[0]));
+		enum valueName(T) = "value" ~ staticIndexOf!(T, Types).to!string;
 
-		alias handlersFor(T) = Filter!(ApplyLeft!(isHandlerFor, T), handlers);
-
-		final switch (tag) {
+		final switch (self.tag) {
 			static foreach (i, T; Types) {
 				static if (handlersFor!T.length == 1) {
 					case i:
-						return handlersFor!T[0](mixin(valueName!T));
+						return handlersFor!T[0](mixin("self." ~ valueName!T));
 				} else static if (handlersFor!T.length > 1) {
 					static assert(false, "multiple handlers given for type " ~ T.stringof);
 				} else static if (handlersFor!T.length == 0) {
