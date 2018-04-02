@@ -1,5 +1,18 @@
+/++
+A generic sum type with no runtime overhead.
+
+Serves the same purpose as Phobos's [std.variant.Algebraic], but is free from
+some of `Algebraic`'s limitations; e.g., [SumType] can be used in `pure` or
+`@nogc` code without issue, provided the underlying types allow it.
+
+License: MIT
+Author: Paul Backus
++/
 module sumtype;
 
+/**
+ * A tagged union that can hold a single value of any of the specified types.
+ */
 struct SumType(Types...)
 {
 private:
@@ -56,8 +69,45 @@ private enum isHandlerFor(T, alias h) =
 private enum isGenericHandlerFor(T, alias h) =
 	is(typeof(h!T(T.init)));
 
+/**
+ * Applies the matching handler to the value stored in a [SumType].
+ *
+ * Handlers can be any callable that accepts a single argument of one of the
+ * stored types, or any template that can be instantiated with a single type
+ * parameter to produce such a callable for that type (a "generic handler"). In
+ * practice, this usually means a function, delegate, or template lambra.
+ *
+ * Multiple generic handlers are allowed, so long as they are not ambiguous.
+ *
+ * The matching handler for each type `T` is determined according to the
+ * following steps:
+ *
+ * $(NUMBERED_LIST
+ *   * If exactly one non-generic handler accepts an argument of type `T`
+ *     without implicit conversion, that handler matches.
+ *
+ *   * Otherwise, if exactly one generic handler accepts an argument of type
+ *     `T`, that handler matches.
+ *
+ *   * Otherwise, there is no matching handler for `T`.
+ * )
+ *
+ * Exhaustiveness of matching is checked at compile time.
+ *
+ * Returns:
+ *   The value returned from the function that matches the currently-stored
+ *   type.
+ *
+ * See_Also: [std.variant.visit]
+ */
 template visit(handlers...)
 {
+	/**
+	 * The actual `visit` function.
+	 *
+	 * Params:
+	 *   self = an instance of a `SumType`
+	 */
 	auto visit(Self : SumType!Types, Types...)(Self self)
 	{
 		pure static auto getHandlerIndices()
