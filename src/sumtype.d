@@ -199,6 +199,7 @@ unittest {
 	Foo x = Foo(42);
 	assert(!__traits(compiles, x.visit!((int x) => true)));
 	assert(!__traits(compiles, x.visit!((int x) => true, (int x) => false)));
+	assert(!__traits(compiles, x.visit!()));
 }
 
 // Handlers for qualified types
