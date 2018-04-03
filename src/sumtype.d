@@ -253,7 +253,6 @@ unittest {
 // Multiple non-overlapping generic handlers
 unittest {
 	import std.math: approxEqual;
-	import std.traits: isArray;
 
 	alias Foo = SumType!(int, float, int[], char[]);
 	Foo x = Foo(42);
@@ -269,7 +268,7 @@ unittest {
 
 // Imported types
 unittest {
-	import std.typecons: Tuple, tuple;
+	import std.typecons: Tuple;
 
 	assert(__traits(compiles, (){ alias Foo = SumType!(Tuple!(int, int)); }));
 }
