@@ -137,7 +137,6 @@ template visit(handlers...)
 			static foreach (i, T; Types) {
 				result.regular[i] = -1;
 				result.generic[i] = -1;
-
 				static foreach (j, h; handlers) {
 					// Regular handlers
 					static if (isCallable!h && is(typeof(h(T.init)))) {
@@ -175,7 +174,6 @@ template visit(handlers...)
 					}
 				}
 			}
-
 			return result;
 		}
 
@@ -194,7 +192,6 @@ template visit(handlers...)
 				}
 			}
 		}
-
 		assert(false); // unreached
 	}
 }
