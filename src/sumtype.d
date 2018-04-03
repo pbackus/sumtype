@@ -1,9 +1,10 @@
 /++
-A generic sum type with no runtime overhead.
+A sum type for modern D.
 
-Serves the same purpose as Phobos's [std.variant.Algebraic], but is free from
-some of `Algebraic`'s limitations; e.g., [SumType] can be used in `pure` or
-`@nogc` code without issue, provided the underlying types allow it.
+[SumType] serves the same purpose as Phobos's [std.variant.Algebraic], but is
+free from some of `Algebraic`'s limitations; e.g., [SumType] can be used in
+`pure`, `@safe`, and `@nogc` code without issue, provided the underlying types
+allow it.
 
 License: MIT
 Author: Paul Backus
@@ -70,32 +71,28 @@ private enum isGenericHandlerFor(T, alias h) =
 	is(typeof(h!T(T.init)));
 
 /**
- * Applies the matching handler to the value stored in a [SumType].
+ * Applies a type-appropriate handler to the value stored in a [SumType].
  *
- * Handlers can be any callable that accepts a single argument of one of the
- * stored types, or any template that can be instantiated with a single type
- * parameter to produce such a callable for that type (a "generic handler"). In
- * practice, this usually means a function, delegate, or template lambra.
- *
- * Multiple generic handlers are allowed, so long as they are not ambiguous.
- *
- * The matching handler for each type `T` is determined according to the
- * following steps:
+ * For each type `T` that could be stored in the `SumType`, there must be a
+ * single, unambiguous matching handler. Matches are chosen at compile time
+ * according to the following rules:
  *
  * $(NUMBERED_LIST
- *   * If exactly one non-generic handler accepts an argument of type `T`
- *     without implicit conversion, that handler matches.
+ *   * If exactly one non-generic handler accepts a single argument of type `T`
+ *     that handler matches. Implicit conversions are not taken into account,
+ *     so, for example, a handler that accepts `long` will not be chosen as a
+ *     match for `int`.
  *
- *   * Otherwise, if exactly one generic handler accepts an argument of type
- *     `T`, that handler matches.
+ *   * Otherwise, if exactly one generic handler accepts a single argument of
+ *     type `T`, that handler matches.
  *
- *   * Otherwise, there is no matching handler for `T`.
+ *   * Otherwise, there is no match for type `T`.
  * )
  *
- * Exhaustiveness of matching is checked at compile time.
+ * Handlers may be functions, delegates, or objects with opCall overloads.
  *
  * Returns:
- *   The value returned from the function that matches the currently-stored
+ *   The value returned from the handler that matches the currently-stored
  *   type.
  *
  * See_Also: [std.variant.visit]
@@ -106,7 +103,7 @@ template visit(handlers...)
 	 * The actual `visit` function.
 	 *
 	 * Params:
-	 *   self = an instance of a `SumType`
+	 *   self = a `SumType` object
 	 */
 	auto visit(Self : SumType!Types, Types...)(Self self)
 	{
