@@ -122,7 +122,9 @@ template visit(handlers...)
 	{
 		pure static auto getHandlerIndices()
 		{
+			import std.meta: staticIndexOf;
 			import std.traits: hasMember, isCallable, isSomeFunction, Parameters, Unqual;
+			import std.typecons: Flag, No, Yes;
 
 			enum sameUnqual(T, U) = is(Unqual!T == Unqual!U);
 
@@ -134,6 +136,21 @@ template visit(handlers...)
 
 			Indices result;
 
+			void addHandlerIndex(T)(int hid, Flag!"generic" generic = No.generic)
+				if (staticIndexOf!(T, Types) >= 0)
+			{
+				int[] indices = generic ? result.generic[] : result.regular[];
+				int tid = staticIndexOf!(T, Types);
+
+				if (indices[tid] == -1) {
+					indices[tid] = hid;
+				} else {
+					assert(false,
+						"multiple " ~ (generic ? "generic" : "non-generic")
+						~ " handlers given for type " ~ T.stringof);
+				}
+			}
+
 			static foreach (i, T; Types) {
 				result.regular[i] = -1;
 				result.generic[i] = -1;
@@ -143,34 +160,19 @@ template visit(handlers...)
 						// Functions and delegates
 						static if (isSomeFunction!h) {
 							static if (sameUnqual!(T, Parameters!h[0])) {
-								if (result.regular[i] == -1) {
-									result.regular[i] = j;
-								} else {
-									assert(false,
-											"multiple handlers given for type " ~ T.stringof);
-								}
+								addHandlerIndex!T(j);
 							}
 						// Objects with overloaded opCall
 						} else static if (hasMember!(typeof(h), "opCall")) {
 							static foreach (overload; __traits(getOverloads, typeof(h), "opCall")) {
 								static if (sameUnqual!(T, Parameters!overload[0])) {
-									if (result.regular[i] == -1) {
-										result.regular[i] = j;
-									} else {
-										assert(false,
-												"multiple handlers given for type " ~ T.stringof);
-									}
+									addHandlerIndex!T(j);
 								}
 							}
 						}
 					// Generic handlers
 					} else static if (is(typeof(h!T(T.init)))) {
-						if (result.generic[i] == -1) {
-							result.generic[i] = j;
-						} else {
-							assert(false,
-									"multiple generic handlers match for type " ~ T.stringof);
-						}
+						addHandlerIndex!T(j, Yes.generic);
 					}
 				}
 			}
