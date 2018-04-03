@@ -111,24 +111,22 @@ template visit(handlers...)
 		{
 			import std.traits: isCallable;
 
-			struct Result
+			struct Indices
 			{
-				int[Types.length] indices;
+				int[Types.length] regular;
 				int[Types.length] generic;
-
-				alias indices this;
 			}
 
-			Result result;
+			Indices result;
 
 			static foreach (i, T; Types) {
-				result[i] = -1;
+				result.regular[i] = -1;
 				result.generic[i] = -1;
 
 				static foreach (j, h; handlers) {
 					static if (isCallable!h && isHandlerFor!(T, h)) {
-						if (result[i] == -1) {
-							result[i] = j;
+						if (result.regular[i] == -1) {
+							result.regular[i] = j;
 						} else {
 							assert(false,
 									"multiple handlers given for type " ~ T.stringof);
@@ -151,9 +149,9 @@ template visit(handlers...)
 
 		final switch (self.tag) {
 			static foreach (i, T; Types) {
-				static if (handlerIndices[i] != -1) {
+				static if (handlerIndices.regular[i] != -1) {
 					case i:
-						return handlers[handlerIndices[i]](self.valueField!T);
+						return handlers[handlerIndices.regular[i]](self.valueField!T);
 				} else static if (handlerIndices.generic[i] != -1) {
 					case i:
 						return handlers[handlerIndices.generic[i]](self.valueField!T);
