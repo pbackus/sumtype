@@ -61,6 +61,27 @@ public:
 	}
 }
 
+// Construction
+unittest {
+	alias Foo = SumType!(int, float);
+	assert(__traits(compiles, (){ Foo x = Foo(42); }));
+	assert(__traits(compiles, () { Foo y = Foo(3.14); }));
+}
+
+// Assignment
+unittest {
+	alias Foo = SumType!(int, float);
+	Foo x = Foo(42);
+	assert(__traits(compiles, (){ x = 3.14; }));
+}
+
+// Imported types
+unittest {
+	import std.typecons: Tuple;
+
+	assert(__traits(compiles, (){ alias Foo = SumType!(Tuple!(int, int)); }));
+}
+
 import std.traits: Parameters, Unqual;
 
 private enum isHandlerFor(T, alias h) =
@@ -165,20 +186,6 @@ template visit(handlers...)
 	}
 }
 
-// Construction
-unittest {
-	alias Foo = SumType!(int, float);
-	assert(__traits(compiles, (){ Foo x = Foo(42); }));
-	assert(__traits(compiles, () { Foo y = Foo(3.14); }));
-}
-
-// Assignment
-unittest {
-	alias Foo = SumType!(int, float);
-	Foo x = Foo(42);
-	assert(__traits(compiles, (){ x = 3.14; }));
-}
-
 // Matching
 unittest {
 	alias Foo = SumType!(int, float);
@@ -259,11 +266,4 @@ unittest {
 	assert(y.visit!(v => v*2, v => v.length).approxEqual(6.28));
 	assert(w.visit!(v => v*2, v => v.length) == 3);
 	assert(z.visit!(v => v*2, v => v.length) == 3);
-}
-
-// Imported types
-unittest {
-	import std.typecons: Tuple;
-
-	assert(__traits(compiles, (){ alias Foo = SumType!(Tuple!(int, int)); }));
 }
