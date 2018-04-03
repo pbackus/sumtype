@@ -82,14 +82,6 @@ unittest {
 	assert(__traits(compiles, (){ alias Foo = SumType!(Tuple!(int, int)); }));
 }
 
-import std.traits: Parameters, Unqual;
-
-private enum isHandlerFor(T, alias h) =
-	is(typeof(h(T.init))) &&
-	is(Unqual!T == Unqual!(Parameters!h[0]));
-
-private enum isGenericHandlerFor(T, alias h) =
-	is(typeof(h!T(T.init)));
 
 /**
  * Applies a type-appropriate handler to the value stored in a [SumType].
@@ -130,7 +122,9 @@ template visit(handlers...)
 	{
 		pure static auto getHandlerIndices()
 		{
-			import std.traits: isCallable;
+			import std.traits: hasMember, isCallable, isSomeFunction, Parameters, Unqual;
+
+			enum sameUnqual(T, U) = is(Unqual!T == Unqual!U);
 
 			struct Indices
 			{
@@ -145,19 +139,38 @@ template visit(handlers...)
 				result.generic[i] = -1;
 
 				static foreach (j, h; handlers) {
-					static if (isCallable!h && isHandlerFor!(T, h)) {
-						if (result.regular[i] == -1) {
-							result.regular[i] = j;
-						} else {
-							assert(false,
-									"multiple handlers given for type " ~ T.stringof);
+					// Regular handlers
+					static if (isCallable!h && is(typeof(h(T.init)))) {
+						// Functions and delegates
+						static if (isSomeFunction!h) {
+							static if (sameUnqual!(T, Parameters!h[0])) {
+								if (result.regular[i] == -1) {
+									result.regular[i] = j;
+								} else {
+									assert(false,
+											"multiple handlers given for type " ~ T.stringof);
+								}
+							}
+						// Objects with overloaded opCall
+						} else static if (hasMember!(typeof(h), "opCall")) {
+							static foreach (overload; __traits(getOverloads, typeof(h), "opCall")) {
+								static if (sameUnqual!(T, Parameters!overload[0])) {
+									if (result.regular[i] == -1) {
+										result.regular[i] = j;
+									} else {
+										assert(false,
+												"multiple handlers given for type " ~ T.stringof);
+									}
+								}
+							}
 						}
-					} else static if (isGenericHandlerFor!(T, h)) {
+					// Generic handlers
+					} else static if (is(typeof(h!T(T.init)))) {
 						if (result.generic[i] == -1) {
 							result.generic[i] = j;
 						} else {
 							assert(false,
-								"multiple generic handlers match for type " ~ T.stringof);
+									"multiple generic handlers match for type " ~ T.stringof);
 						}
 					}
 				}
@@ -266,4 +279,54 @@ unittest {
 	assert(y.visit!(v => v*2, v => v.length).approxEqual(6.28));
 	assert(w.visit!(v => v*2, v => v.length) == 3);
 	assert(z.visit!(v => v*2, v => v.length) == 3);
+}
+
+// Separate opCall handlers
+unittest {
+	struct IntHandler
+	{
+		bool opCall(int arg)
+		{
+			return true;
+		}
+	}
+
+	struct FloatHandler
+	{
+		bool opCall(float arg)
+		{
+			return false;
+		}
+	}
+
+	alias Foo = SumType!(int, float);
+	Foo x = Foo(42);
+	Foo y = Foo(3.14);
+	IntHandler handleInt;
+	FloatHandler handleFloat;
+	assert(x.visit!(handleInt, handleFloat));
+	assert(!y.visit!(handleInt, handleFloat));
+}
+
+// Compound opCall handler
+unittest {
+	struct CompoundHandler
+	{
+		bool opCall(int arg)
+		{
+			return true;
+		}
+
+		bool opCall(float arg)
+		{
+			return false;
+		}
+	}
+
+	alias Foo = SumType!(int, float);
+	Foo x = Foo(42);
+	Foo y = Foo(3.14);
+	CompoundHandler handleBoth;
+	assert(x.visit!handleBoth);
+	assert(!y.visit!handleBoth);
 }
