@@ -11,12 +11,19 @@ Author: Paul Backus
 +/
 module sumtype;
 
+struct This;
+
 /**
  * A tagged union that can hold a single value of any of the specified types.
  */
-struct SumType(Types...)
+struct SumType(TypesParam...)
 {
 private:
+
+	import std.meta: AliasSeq;
+	import std.typecons: ReplaceType;
+
+	alias Types = AliasSeq!(ReplaceType!(This, typeof(this), TypesParam));
 
 	int tag;
 
@@ -118,8 +125,10 @@ template visit(handlers...)
 	 * Params:
 	 *   self = a `SumType` object
 	 */
-	auto visit(Self : SumType!Types, Types...)(Self self)
+	auto visit(Self : SumType!TypesParam, TypesParam...)(Self self)
 	{
+		alias Types = self.Types;
+
 		pure static auto getHandlerIndices()
 		{
 			import std.meta: staticIndexOf;
@@ -328,4 +337,36 @@ unittest {
 	CompoundHandler handleBoth;
 	assert(x.visit!handleBoth);
 	assert(!y.visit!handleBoth);
+}
+
+// Self-referential types
+unittest {
+	import std.typecons: Tuple, tuple;
+
+	alias Tree = SumType!(int, Tuple!(This*, "left", This*, "right"));
+	alias Node = Tuple!(Tree*, "left", Tree*, "right");
+
+	Node node(Tree* left, Tree* right)
+	{
+		return tuple!("left", "right")(left, right);
+	}
+
+	int[] inorder(Tree t)
+	{
+		return t.visit!(
+			(int leaf) => [leaf],
+			(Node node) => inorder(*node.left) ~ inorder(*node.right)
+		);
+	}
+
+	Tree x =
+		Tree(node(
+			new Tree(1),
+			new Tree(node(
+				new Tree(2),
+				new Tree(3)
+			))
+		));
+
+	assert(inorder(x) == [1, 2, 3]);
 }
