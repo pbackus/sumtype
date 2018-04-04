@@ -26,7 +26,7 @@ struct SumType(TypesParam...)
 {
 private:
 
-	import std.meta: AliasSeq;
+	import std.meta: AliasSeq, staticIndexOf;
 	import std.typecons: ReplaceType;
 
 	alias Types = AliasSeq!(ReplaceType!(This, typeof(this), TypesParam));
@@ -35,25 +35,10 @@ private:
 
 	union
 	{
-		import std.conv: to;
-
-		mixin template declareValue(T)
-		{
-			T value;
-		}
-
-		static foreach (i, T; Types) {
-			mixin("mixin declareValue!T type" ~ i.to!string ~ ";");
-		}
+		Types values;
 	}
 
-	template value(T)
-	{
-		import std.conv: to;
-		import std.meta: staticIndexOf;
-
-		mixin("alias value = type" ~ staticIndexOf!(T, Types).to!string ~ ".value;");
-	}
+	alias value(T) = values[staticIndexOf!(T, Types)];
 
 public:
 
