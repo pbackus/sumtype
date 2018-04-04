@@ -34,12 +34,12 @@ private:
 		}
 	}
 
-	template valueField(T)
+	template value(T)
 	{
 		import std.conv: to;
 		import std.meta: staticIndexOf;
 
-		mixin("alias valueField = type" ~ staticIndexOf!(T, Types).to!string ~ ".value;");
+		mixin("alias value = type" ~ staticIndexOf!(T, Types).to!string ~ ".value;");
 	}
 
 public:
@@ -48,7 +48,7 @@ public:
 		this(T val)
 		{
 			tag = i;
-			valueField!T = val;
+			value!T = val;
 		}
 	}
 
@@ -56,7 +56,7 @@ public:
 		void opAssign(T rhs)
 		{
 			tag = i;
-			valueField!T = rhs;
+			value!T = rhs;
 		}
 	}
 }
@@ -136,7 +136,7 @@ template visit(handlers...)
 
 			Indices result;
 
-			void addHandlerIndex(T)(int hid, Flag!"generic" generic = No.generic)
+			void setHandlerIndex(T)(int hid, Flag!"generic" generic = No.generic)
 				if (staticIndexOf!(T, Types) >= 0)
 			{
 				int[] indices = generic ? result.generic[] : result.regular[];
@@ -160,19 +160,19 @@ template visit(handlers...)
 						// Functions and delegates
 						static if (isSomeFunction!h) {
 							static if (sameUnqual!(T, Parameters!h[0])) {
-								addHandlerIndex!T(j);
+								setHandlerIndex!T(j);
 							}
 						// Objects with overloaded opCall
 						} else static if (hasMember!(typeof(h), "opCall")) {
 							static foreach (overload; __traits(getOverloads, typeof(h), "opCall")) {
 								static if (sameUnqual!(T, Parameters!overload[0])) {
-									addHandlerIndex!T(j);
+									setHandlerIndex!T(j);
 								}
 							}
 						}
 					// Generic handlers
 					} else static if (is(typeof(h!T(T.init)))) {
-						addHandlerIndex!T(j, Yes.generic);
+						setHandlerIndex!T(j, Yes.generic);
 					}
 				}
 			}
@@ -185,10 +185,10 @@ template visit(handlers...)
 			static foreach (i, T; Types) {
 				static if (handlerIndices.regular[i] != -1) {
 					case i:
-						return handlers[handlerIndices.regular[i]](self.valueField!T);
+						return handlers[handlerIndices.regular[i]](self.value!T);
 				} else static if (handlerIndices.generic[i] != -1) {
 					case i:
-						return handlers[handlerIndices.generic[i]](self.valueField!T);
+						return handlers[handlerIndices.generic[i]](self.value!T);
 				} else {
 					static assert(false, "missing handler for type " ~ T.stringof);
 				}
