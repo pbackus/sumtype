@@ -1,7 +1,7 @@
 /++
 A sum type for modern D.
 
-[SumType] serves the same purpose as Phobos's [std.variant.Algebraic], but is
+[SumType] serves the same purpose as Phobos's `std.variant.Algebraic`, but is
 free from some of `Algebraic`'s limitations; e.g., [SumType] can be used in
 `pure`, `@safe`, and `@nogc` code without issue, provided the underlying types
 allow it.
@@ -14,7 +14,13 @@ module sumtype;
 struct This;
 
 /**
- * A tagged union that can hold a single value of any of the specified types.
+ * A tagged union that can hold a single value from any of a specified set of
+ * types
+ *
+ * You can use `This` as a placeholder to create self-referential types, just
+ * like with `Algebraic`.
+ *
+ * See_Also: `std.variant.Algebraic`
  */
 struct SumType(TypesParam...)
 {
@@ -52,6 +58,7 @@ private:
 public:
 
 	static foreach (i, T; Types) {
+		/// Constructs a [SumType] holding a specific value
 		this(T val)
 		{
 			tag = i;
@@ -60,6 +67,7 @@ public:
 	}
 
 	static foreach (i, T; Types) {
+		/// Assigns a value to a [SumType] that can hold it
 		void opAssign(T rhs)
 		{
 			tag = i;
@@ -89,11 +97,42 @@ unittest {
 	assert(__traits(compiles, (){ alias Foo = SumType!(Tuple!(int, int)); }));
 }
 
+/// Self-referential type using `This`:
+unittest {
+	import std.typecons: Tuple, tuple;
+
+	alias Tree = SumType!(int, Tuple!(This*, "left", This*, "right"));
+	alias Node = Tuple!(Tree*, "left", Tree*, "right");
+
+	Node node(Tree* left, Tree* right)
+	{
+		return tuple!("left", "right")(left, right);
+	}
+
+	int[] inorder(Tree t)
+	{
+		return t.visit!(
+			(int leaf) => [leaf],
+			(Node node) => inorder(*node.left) ~ inorder(*node.right)
+		);
+	}
+
+	Tree x =
+		Tree(node(
+			new Tree(1),
+			new Tree(node(
+				new Tree(2),
+				new Tree(3)
+			))
+		));
+
+	assert(inorder(x) == [1, 2, 3]);
+}
 
 /**
- * Applies a type-appropriate handler to the value stored in a [SumType].
+ * Applies a type-appropriate handler to the value held in a [SumType].
  *
- * For each type `T` that could be stored in the `SumType`, there must be a
+ * For each type `T` that could be held in the [SumType], there must be a
  * single, unambiguous matching handler. Matches are chosen at compile time
  * according to the following rules:
  *
@@ -112,10 +151,9 @@ unittest {
  * Handlers may be functions, delegates, or objects with opCall overloads.
  *
  * Returns:
- *   The value returned from the handler that matches the currently-stored
- *   type.
+ *   The value returned from the handler that matches the currently-held type.
  *
- * See_Also: [std.variant.visit]
+ * See_Also: `std.variant.visit`
  */
 template visit(handlers...)
 {
@@ -123,7 +161,7 @@ template visit(handlers...)
 	 * The actual `visit` function.
 	 *
 	 * Params:
-	 *   self = a `SumType` object
+	 *   self = A [SumType] object
 	 */
 	auto visit(Self : SumType!TypesParam, TypesParam...)(Self self)
 	{
@@ -337,36 +375,4 @@ unittest {
 	CompoundHandler handleBoth;
 	assert(x.visit!handleBoth);
 	assert(!y.visit!handleBoth);
-}
-
-// Self-referential types
-unittest {
-	import std.typecons: Tuple, tuple;
-
-	alias Tree = SumType!(int, Tuple!(This*, "left", This*, "right"));
-	alias Node = Tuple!(Tree*, "left", Tree*, "right");
-
-	Node node(Tree* left, Tree* right)
-	{
-		return tuple!("left", "right")(left, right);
-	}
-
-	int[] inorder(Tree t)
-	{
-		return t.visit!(
-			(int leaf) => [leaf],
-			(Node node) => inorder(*node.left) ~ inorder(*node.right)
-		);
-	}
-
-	Tree x =
-		Tree(node(
-			new Tree(1),
-			new Tree(node(
-				new Tree(2),
-				new Tree(3)
-			))
-		));
-
-	assert(inorder(x) == [1, 2, 3]);
 }
