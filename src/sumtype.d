@@ -335,6 +335,36 @@ unittest {
 	assert(z.match!(v => v*2, v => v.length) == 3);
 }
 
+/// Implicit matching of generic handlers:
+unittest {
+	alias Example = SumType!(int, int[], string);
+
+	Example a = 123;
+	Example c = [1, 2, 3];
+	Example d = "testing";
+
+	Example twice(Example e)
+	{
+		// Look Ma, no types!
+		return e.match!(
+			num => Example(num * 2),
+			array => Example(array ~ array)
+		);
+	}
+
+	bool checkValue(T)(Example e, T v)
+	{
+		return e.match!(
+				(T t) => t == v,
+				_ => false
+		);
+	}
+
+	assert(checkValue(twice(a), 246));
+	assert(checkValue(twice(c), [1, 2, 3, 1, 2, 3]));
+	assert(checkValue(twice(d), "testingtesting"));
+}
+
 // Separate opCall handlers
 unittest {
 	struct IntHandler
