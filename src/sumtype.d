@@ -78,6 +78,18 @@ unittest {
 	assert(__traits(compiles, (){ x = 3.14; }));
 }
 
+// Self assignment
+unittest {
+	alias Foo = SumType!(int, float);
+
+	Foo x = Foo(42);
+	Foo y = Foo(3.14);
+	y = x;
+
+	assert(y.tag == 0);
+	assert(y.value!int == 42);
+}
+
 // Imported types
 unittest {
 	import std.typecons: Tuple;
