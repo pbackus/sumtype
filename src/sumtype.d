@@ -17,8 +17,10 @@ struct This;
  * A tagged union that can hold a single value from any of a specified set of
  * types
  *
- * You can use `This` as a placeholder to create self-referential types, just
- * like with `Algebraic`.
+ * The stored value can be operated on using [match|pattern matching].
+ *
+ * The special type `This` can be used as a placeholder to create
+ * self-referential types, just like with `Algebraic`.
  *
  * See_Also: `std.variant.Algebraic`
  */
