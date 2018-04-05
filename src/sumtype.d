@@ -115,25 +115,18 @@ unittest {
 }
 
 /**
- * Applies a type-appropriate handler to the value held in a [SumType].
+ * Calls a type-appropriate handler with the value held in a [SumType].
  *
- * For each type `T` that could be held in the [SumType], there must be a
- * single, unambiguous matching handler. Matches are chosen at compile time
- * according to the following rules:
+ * For each possible type the [SumType] can hold, the given handlers are
+ * checked, in order, to see whether they accept a single argument of that type.
+ * The first one that does is chosen as the match for that type. Implicit
+ * conversions are not taken into account, so, for example, a handler that
+ * accepts a `long` will not match the type `int`.
  *
- * $(NUMBERED_LIST
- *   * If exactly one non-generic handler accepts a single argument of type `T`
- *     that handler matches. Implicit conversions are not taken into account,
- *     so, for example, a handler that accepts `long` will not be chosen as a
- *     match for `int`.
- *
- *   * Otherwise, if exactly one generic handler accepts a single argument of
- *     type `T`, that handler matches.
- *
- *   * Otherwise, there is no match for type `T`.
- * )
+ * Every type must have a matching handler. This is enforced at compile-time.
  *
  * Handlers may be functions, delegates, or objects with opCall overloads.
+ * Templated versions are also accepted.
  *
  * Returns:
  *   The value returned from the handler that matches the currently-held type.
@@ -156,36 +149,24 @@ template visit(handlers...)
 		{
 			import std.meta: staticIndexOf;
 			import std.traits: hasMember, isCallable, isSomeFunction, Parameters, Unqual;
-			import std.typecons: Flag, No, Yes;
 
 			enum sameUnqual(T, U) = is(Unqual!T == Unqual!U);
 
-			struct Indices
-			{
-				int[Types.length] regular;
-				int[Types.length] generic;
-			}
+			int[Types.length] indices;
 
-			Indices result;
-
-			void setHandlerIndex(T)(int hid, Flag!"generic" generic = No.generic)
+			void setHandlerIndex(T)(int hid)
 				if (staticIndexOf!(T, Types) >= 0)
 			{
-				int[] indices = generic ? result.generic[] : result.regular[];
 				int tid = staticIndexOf!(T, Types);
 
 				if (indices[tid] == -1) {
 					indices[tid] = hid;
-				} else {
-					assert(false,
-						"multiple " ~ (generic ? "generic" : "non-generic")
-						~ " handlers given for type " ~ T.stringof);
 				}
 			}
 
+			indices[] = -1;
+
 			static foreach (i, T; Types) {
-				result.regular[i] = -1;
-				result.generic[i] = -1;
 				static foreach (j, h; handlers) {
 					// Regular handlers
 					static if (isCallable!h && is(typeof(h(T.init)))) {
@@ -204,23 +185,20 @@ template visit(handlers...)
 						}
 					// Generic handlers
 					} else static if (is(typeof(h!T(T.init)))) {
-						setHandlerIndex!T(j, Yes.generic);
+						setHandlerIndex!T(j);
 					}
 				}
 			}
-			return result;
+			return indices;
 		}
 
 		enum handlerIndices = getHandlerIndices;
 
 		final switch (self.tag) {
 			static foreach (i, T; Types) {
-				static if (handlerIndices.regular[i] != -1) {
+				static if (handlerIndices[i] != -1) {
 					case i:
-						return handlers[handlerIndices.regular[i]](self.value!T);
-				} else static if (handlerIndices.generic[i] != -1) {
-					case i:
-						return handlers[handlerIndices.generic[i]](self.value!T);
+						return handlers[handlerIndices[i]](self.value!T);
 				} else {
 					static assert(false, "missing handler for type " ~ T.stringof);
 				}
@@ -239,12 +217,11 @@ unittest {
 	assert(y.visit!((int v) => false, (float v) => true));
 }
 
-// Duplicate and missing handlers
+// Missing handlers
 unittest {
 	alias Foo = SumType!(int, float);
 	Foo x = Foo(42);
 	assert(!__traits(compiles, x.visit!((int x) => true)));
-	assert(!__traits(compiles, x.visit!((int x) => true, (int x) => false)));
 	assert(!__traits(compiles, x.visit!()));
 }
 
@@ -287,13 +264,6 @@ unittest {
 	Foo y = Foo("42");
 	assert(x.visit!((string v) => v.to!int, v => v*2) == 84);
 	assert(y.visit!((string v) => v.to!int, v => v*2) == 42);
-}
-
-// Duplicate generic handlers
-unittest {
-	alias Foo = SumType!(int, float);
-	Foo x = Foo(42);
-	assert(!__traits(compiles, x.visit!(v => v*2, v => v + 1)));
 }
 
 // Multiple non-overlapping generic handlers
@@ -360,4 +330,13 @@ unittest {
 	CompoundHandler handleBoth;
 	assert(x.visit!handleBoth);
 	assert(!y.visit!handleBoth);
+}
+
+// Ordered matching
+unittest {
+	alias Foo = SumType!(int, float);
+	Foo x = Foo(42);
+	assert(x.visit!((float v) => false, (int v) => true, (int v) => false));
+	assert(x.visit!(v => true, (int v) => false));
+	assert(x.visit!(v => 2*v, v => v + 1) == 84);
 }
