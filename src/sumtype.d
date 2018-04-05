@@ -51,12 +51,16 @@ public:
 		}
 	}
 
+	import std.traits: isAssignable;
+
 	static foreach (i, T; Types) {
-		/// Assigns a value to a [SumType] that can hold it
-		void opAssign(T rhs)
-		{
-			tag = i;
-			value!T = rhs;
+		static if (isAssignable!T) {
+			/// Assigns a value to a [SumType] that can hold it
+			void opAssign(T rhs)
+			{
+				tag = i;
+				value!T = rhs;
+			}
 		}
 	}
 }
@@ -95,6 +99,13 @@ unittest {
 	import std.typecons: Tuple;
 
 	assert(__traits(compiles, (){ alias Foo = SumType!(Tuple!(int, int)); }));
+}
+
+// const and immutable types
+unittest {
+	assert(__traits(compiles, (){
+		alias Foo = SumType!(const(int), immutable(float));
+	}));
 }
 
 /// Self-referential type using `This`:
@@ -244,7 +255,7 @@ unittest {
 	assert(!__traits(compiles, x.match!()));
 }
 
-// Handlers for qualified types
+// Handlers with qualified parameters
 unittest {
 	alias Foo = SumType!(int, float);
 
@@ -253,6 +264,18 @@ unittest {
 
 	assert(x.match!((const int v) => true, (const float v) => false));
 	assert(y.match!((const int v) => false, (const float v) => true));
+}
+
+// Handlers for qualified types
+unittest {
+	alias Foo = SumType!(immutable(int), immutable(float));
+
+	Foo x = Foo(42);
+
+	assert(x.match!((immutable(int) v) => true, (immutable(float) v) => false));
+	assert(x.match!((const(int) v) => true, (const(float) v) => false));
+	assert(x.match!((immutable v) => true, v => false));
+	assert(x.match!((const v) => true, v => false));
 }
 
 // Delegate handlers
