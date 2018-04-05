@@ -47,7 +47,8 @@ Example
 Installation
 ------------
 
-Coming soon to code.dlang.org!
+If you're using dub, add the [sumtype](https://code.dlang.org/packages/sumtype)
+package to your project as a dependency.
 
 Alternatively, since it's a single, self-contained module, you can simply copy
 `sumtype.d` to your source directory and compile as usual.
