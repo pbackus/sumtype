@@ -356,8 +356,8 @@ unittest {
 	bool checkValue(T)(Example e, T v)
 	{
 		return e.match!(
-				(T t) => t == v,
-				_ => false
+			(T t) => t == v,
+			_ => false
 		);
 	}
 
