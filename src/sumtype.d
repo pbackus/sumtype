@@ -64,6 +64,7 @@ public:
 // Construction
 unittest {
 	alias Foo = SumType!(int, float);
+
 	assert(__traits(compiles, (){ Foo x = Foo(42); }));
 	assert(__traits(compiles, () { Foo y = Foo(3.14); }));
 }
@@ -71,7 +72,9 @@ unittest {
 // Assignment
 unittest {
 	alias Foo = SumType!(int, float);
+
 	Foo x = Foo(42);
+
 	assert(__traits(compiles, (){ x = 3.14; }));
 }
 
@@ -211,8 +214,10 @@ template visit(handlers...)
 // Matching
 unittest {
 	alias Foo = SumType!(int, float);
+
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
+
 	assert(x.visit!((int v) => true, (float v) => false));
 	assert(y.visit!((int v) => false, (float v) => true));
 }
@@ -220,7 +225,9 @@ unittest {
 // Missing handlers
 unittest {
 	alias Foo = SumType!(int, float);
+
 	Foo x = Foo(42);
+
 	assert(!__traits(compiles, x.visit!((int x) => true)));
 	assert(!__traits(compiles, x.visit!()));
 }
@@ -228,8 +235,10 @@ unittest {
 // Handlers for qualified types
 unittest {
 	alias Foo = SumType!(int, float);
+
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
+
 	assert(x.visit!((const int v) => true, (const float v) => false));
 	assert(y.visit!((const int v) => false, (const float v) => true));
 }
@@ -237,9 +246,11 @@ unittest {
 // Delegate handlers
 unittest {
 	alias Foo = SumType!(int, float);
+
 	int answer = 42;
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
+
 	assert(x.visit!((int v) => v == answer, (float v) => v == answer));
 	assert(!y.visit!((int v) => v == answer, (float v) => v == answer));
 }
@@ -249,8 +260,10 @@ unittest {
 	import std.math: approxEqual;
 
 	alias Foo = SumType!(int, float);
+
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
+
 	assert(x.visit!(v => v*2) == 84);
 	assert(y.visit!(v => v*2).approxEqual(6.28));
 }
@@ -260,8 +273,10 @@ unittest {
 	import std.conv: to;
 
 	alias Foo = SumType!(int, float, string);
+
 	Foo x = Foo(42);
 	Foo y = Foo("42");
+
 	assert(x.visit!((string v) => v.to!int, v => v*2) == 84);
 	assert(y.visit!((string v) => v.to!int, v => v*2) == 42);
 }
@@ -271,6 +286,7 @@ unittest {
 	import std.math: approxEqual;
 
 	alias Foo = SumType!(int, float, int[], char[]);
+
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
 	Foo z = Foo([1, 2, 3]);
@@ -301,10 +317,12 @@ unittest {
 	}
 
 	alias Foo = SumType!(int, float);
+
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
 	IntHandler handleInt;
 	FloatHandler handleFloat;
+
 	assert(x.visit!(handleInt, handleFloat));
 	assert(!y.visit!(handleInt, handleFloat));
 }
@@ -325,9 +343,11 @@ unittest {
 	}
 
 	alias Foo = SumType!(int, float);
+
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
 	CompoundHandler handleBoth;
+
 	assert(x.visit!handleBoth);
 	assert(!y.visit!handleBoth);
 }
@@ -335,7 +355,9 @@ unittest {
 // Ordered matching
 unittest {
 	alias Foo = SumType!(int, float);
+
 	Foo x = Foo(42);
+
 	assert(x.visit!((float v) => false, (int v) => true, (int v) => false));
 	assert(x.visit!(v => true, (int v) => false));
 	assert(x.visit!(v => 2*v, v => v + 1) == 84);
