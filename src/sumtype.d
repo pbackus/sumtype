@@ -345,34 +345,28 @@ unittest {
 	assert(z.match!(v => v*2, v => v.length) == 3);
 }
 
-/// Implicit matching of generic handlers:
+/// Implicit matching:
 unittest {
-	alias Example = SumType!(int, int[], string);
+	import std.math: approxEqual, PI, sqrt;
 
-	Example a = 123;
-	Example c = [1, 2, 3];
-	Example d = "testing";
+	struct Cartesian { double x, y; }
+	struct Polar { double r, theta; }
+	alias Vector = SumType!(Cartesian, Polar);
 
-	Example twice(Example e)
+	double length(Vector v)
 	{
-		// Look Ma, no types!
-		return e.match!(
-			num => Example(num * 2),
-			array => Example(array ~ array)
+		// A branch matches if its right-hand side compiles
+		return v.match!(
+			cartesian => sqrt(cartesian.x^^2 + cartesian.y^^2),
+			polar => polar.r
 		);
 	}
 
-	bool checkValue(T)(Example e, T v)
-	{
-		return e.match!(
-			(T t) => t == v,
-			_ => false
-		);
-	}
+	Vector u = Cartesian(1, 1);
+	Vector v = Polar(1, PI/4);
 
-	assert(checkValue(twice(a), 246));
-	assert(checkValue(twice(c), [1, 2, 3, 1, 2, 3]));
-	assert(checkValue(twice(d), "testingtesting"));
+	assert(length(u).approxEqual(sqrt(2.0)));
+	assert(length(v).approxEqual(1));
 }
 
 // Separate opCall handlers
