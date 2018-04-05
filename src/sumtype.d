@@ -154,7 +154,8 @@ unittest {
  * Every type must have a matching handler. This is enforced at compile-time.
  *
  * Handlers may be functions, delegates, or objects with opCall overloads.
- * Templated versions are also accepted.
+ * Templated handlers are also accepted, and will match any type for which they
+ * can be instantiated.
  *
  * Returns:
  *   The value returned from the handler that matches the currently-held type.
