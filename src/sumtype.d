@@ -99,7 +99,7 @@ unittest {
 
 	int[] inorder(Tree t)
 	{
-		return t.visit!(
+		return t.match!(
 			(int leaf) => [leaf],
 			(Node node) => inorder(*node.left) ~ inorder(*node.right)
 		);
@@ -136,15 +136,15 @@ unittest {
  *
  * See_Also: `std.variant.visit`
  */
-template visit(handlers...)
+template match(handlers...)
 {
 	/**
-	 * The actual `visit` function.
+	 * The actual `match` function.
 	 *
 	 * Params:
 	 *   self = A [SumType] object
 	 */
-	auto visit(Self : SumType!TypesParam, TypesParam...)(Self self)
+	auto match(Self : SumType!TypesParam, TypesParam...)(Self self)
 	{
 		alias Types = self.Types;
 
@@ -218,8 +218,8 @@ unittest {
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
 
-	assert(x.visit!((int v) => true, (float v) => false));
-	assert(y.visit!((int v) => false, (float v) => true));
+	assert(x.match!((int v) => true, (float v) => false));
+	assert(y.match!((int v) => false, (float v) => true));
 }
 
 // Missing handlers
@@ -228,8 +228,8 @@ unittest {
 
 	Foo x = Foo(42);
 
-	assert(!__traits(compiles, x.visit!((int x) => true)));
-	assert(!__traits(compiles, x.visit!()));
+	assert(!__traits(compiles, x.match!((int x) => true)));
+	assert(!__traits(compiles, x.match!()));
 }
 
 // Handlers for qualified types
@@ -239,8 +239,8 @@ unittest {
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
 
-	assert(x.visit!((const int v) => true, (const float v) => false));
-	assert(y.visit!((const int v) => false, (const float v) => true));
+	assert(x.match!((const int v) => true, (const float v) => false));
+	assert(y.match!((const int v) => false, (const float v) => true));
 }
 
 // Delegate handlers
@@ -251,8 +251,8 @@ unittest {
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
 
-	assert(x.visit!((int v) => v == answer, (float v) => v == answer));
-	assert(!y.visit!((int v) => v == answer, (float v) => v == answer));
+	assert(x.match!((int v) => v == answer, (float v) => v == answer));
+	assert(!y.match!((int v) => v == answer, (float v) => v == answer));
 }
 
 // Generic handler
@@ -264,8 +264,8 @@ unittest {
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
 
-	assert(x.visit!(v => v*2) == 84);
-	assert(y.visit!(v => v*2).approxEqual(6.28));
+	assert(x.match!(v => v*2) == 84);
+	assert(y.match!(v => v*2).approxEqual(6.28));
 }
 
 // Fallback to generic handler
@@ -277,8 +277,8 @@ unittest {
 	Foo x = Foo(42);
 	Foo y = Foo("42");
 
-	assert(x.visit!((string v) => v.to!int, v => v*2) == 84);
-	assert(y.visit!((string v) => v.to!int, v => v*2) == 42);
+	assert(x.match!((string v) => v.to!int, v => v*2) == 84);
+	assert(y.match!((string v) => v.to!int, v => v*2) == 42);
 }
 
 // Multiple non-overlapping generic handlers
@@ -292,10 +292,10 @@ unittest {
 	Foo z = Foo([1, 2, 3]);
 	Foo w = Foo(['a', 'b', 'c']);
 
-	assert(x.visit!(v => v*2, v => v.length) == 84);
-	assert(y.visit!(v => v*2, v => v.length).approxEqual(6.28));
-	assert(w.visit!(v => v*2, v => v.length) == 3);
-	assert(z.visit!(v => v*2, v => v.length) == 3);
+	assert(x.match!(v => v*2, v => v.length) == 84);
+	assert(y.match!(v => v*2, v => v.length).approxEqual(6.28));
+	assert(w.match!(v => v*2, v => v.length) == 3);
+	assert(z.match!(v => v*2, v => v.length) == 3);
 }
 
 // Separate opCall handlers
@@ -323,8 +323,8 @@ unittest {
 	IntHandler handleInt;
 	FloatHandler handleFloat;
 
-	assert(x.visit!(handleInt, handleFloat));
-	assert(!y.visit!(handleInt, handleFloat));
+	assert(x.match!(handleInt, handleFloat));
+	assert(!y.match!(handleInt, handleFloat));
 }
 
 // Compound opCall handler
@@ -348,8 +348,8 @@ unittest {
 	Foo y = Foo(3.14);
 	CompoundHandler handleBoth;
 
-	assert(x.visit!handleBoth);
-	assert(!y.visit!handleBoth);
+	assert(x.match!handleBoth);
+	assert(!y.match!handleBoth);
 }
 
 // Ordered matching
@@ -358,7 +358,7 @@ unittest {
 
 	Foo x = Foo(42);
 
-	assert(x.visit!((float v) => false, (int v) => true, (int v) => false));
-	assert(x.visit!(v => true, (int v) => false));
-	assert(x.visit!(v => 2*v, v => v + 1) == 84);
+	assert(x.match!((float v) => false, (int v) => true, (int v) => false));
+	assert(x.match!(v => true, (int v) => false));
+	assert(x.match!(v => 2*v, v => v + 1) == 84);
 }
