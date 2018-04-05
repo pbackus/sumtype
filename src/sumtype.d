@@ -258,6 +258,15 @@ unittest {
 	assert(!__traits(compiles, x.match!()));
 }
 
+// No implicit converstion
+unittest {
+	alias Foo = SumType!(int, float);
+
+	Foo x = Foo(42);
+
+	assert(!__traits(compiles, x.match!((long v) => true, (float v) => false)));
+}
+
 // Handlers with qualified parameters
 unittest {
 	alias Foo = SumType!(int, float);
