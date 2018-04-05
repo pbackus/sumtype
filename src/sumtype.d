@@ -215,7 +215,7 @@ template match(handlers...)
 					case i:
 						return handlers[handlerIndices[i]](self.value!T);
 				} else {
-					static assert(false, "missing handler for type " ~ T.stringof);
+					static assert(false, "No matching handler for type " ~ T.stringof);
 				}
 			}
 		}
