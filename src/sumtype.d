@@ -110,36 +110,36 @@ unittest {
 	}));
 }
 
-/// Self-referential type using `This`:
+/// Recursive definition of a linked list:
 unittest {
 	import std.typecons: Tuple, tuple;
 
-	alias Tree = SumType!(int, Tuple!(This*, "left", This*, "right"));
-	alias Node = Tuple!(Tree*, "left", Tree*, "right");
+	struct Nil {}
+	alias List(T) = SumType!(
+		Nil,
+		Tuple!(T, "head", This*, "tail")
+	);
+	alias Cons(T) = Tuple!(T, "head", List!T*, "tail");
 
-	Node node(Tree* left, Tree* right)
+	List!T* list(T)(T[] items...)
 	{
-		return tuple!("left", "right")(left, right);
+		if (items.length == 0)
+			return new List!T(Nil());
+		else
+			return new List!T(Cons!T(items[0], list(items[1..$])));
 	}
 
-	int[] inorder(Tree t)
+	int sum(List!int l)
 	{
-		return t.match!(
-			(int leaf) => [leaf],
-			(Node node) => inorder(*node.left) ~ inorder(*node.right)
+		return l.match!(
+			(Nil _) => 0,
+			cons => cons.head + sum(*cons.tail)
 		);
 	}
 
-	Tree x =
-		Tree(node(
-			new Tree(1),
-			new Tree(node(
-				new Tree(2),
-				new Tree(3)
-			))
-		));
+	List!int* myList = list(1, 2, 3, 4, 5);
 
-	assert(inorder(x) == [1, 2, 3]);
+	assert(sum(*myList) == 15);
 }
 
 /**
