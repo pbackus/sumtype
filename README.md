@@ -23,12 +23,17 @@ Example
     );
     alias Cons = Tuple!(int, "head", List*, "tail");
 
+    List* cons(int item, List* l)
+    {
+        return new List(Cons(item, l));
+    }
+
     List* list(int[] items...)
     {
         if (items.length == 0)
             return new List(Nil());
         else
-            return new List(Cons(items[0], list(items[1..$])));
+            return cons(items[0], list(items[1..$]));
     }
 
     int sum(List l)
