@@ -345,24 +345,23 @@ unittest {
 	assert(z.match!(v => v*2, v => v.length) == 3);
 }
 
-/// Implicit matching:
+/// Generic handlers with implicit matching:
 unittest {
 	import std.math: approxEqual, PI, sqrt;
 
-	struct Cartesian { double x, y; }
+	struct Rectangular { double x, y; }
 	struct Polar { double r, theta; }
-	alias Vector = SumType!(Cartesian, Polar);
+	alias Vector = SumType!(Rectangular, Polar);
 
 	double length(Vector v)
 	{
-		// A branch matches if its right-hand side compiles
 		return v.match!(
-			cartesian => sqrt(cartesian.x^^2 + cartesian.y^^2),
+			rect => sqrt(rect.x^^2 + rect.y^^2),
 			polar => polar.r
 		);
 	}
 
-	Vector u = Cartesian(1, 1);
+	Vector u = Rectangular(1, 1);
 	Vector v = Polar(1, PI/4);
 
 	assert(length(u).approxEqual(sqrt(2.0)));
