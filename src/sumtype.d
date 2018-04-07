@@ -121,6 +121,11 @@ unittest {
 	);
 	alias Cons = Tuple!(int, "head", List*, "tail");
 
+	List* nil()
+	{
+		return new List(Nil());
+	}
+
 	List* cons(int item, List* l)
 	{
 		return new List(Cons(item, l));
@@ -129,7 +134,7 @@ unittest {
 	List* list(int[] items...)
 	{
 		if (items.length == 0)
-			return new List(Nil());
+			return nil;
 		else
 			return cons(items[0], list(items[1..$]));
 	}
