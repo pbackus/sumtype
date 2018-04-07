@@ -115,29 +115,29 @@ unittest {
 	import std.typecons: Tuple, tuple;
 
 	struct Nil {}
-	alias List(T) = SumType!(
+	alias List = SumType!(
 		Nil,
-		Tuple!(T, "head", This*, "tail")
+		Tuple!(int, "head", This*, "tail")
 	);
-	alias Cons(T) = Tuple!(T, "head", List!T*, "tail");
+	alias Cons = Tuple!(int, "head", List*, "tail");
 
-	List!T* list(T)(T[] items...)
+	List* list(int[] items...)
 	{
 		if (items.length == 0)
-			return new List!T(Nil());
+			return new List(Nil());
 		else
-			return new List!T(Cons!T(items[0], list(items[1..$])));
+			return new List(Cons(items[0], list(items[1..$])));
 	}
 
-	int sum(List!int l)
+	int sum(List l)
 	{
 		return l.match!(
 			(Nil _) => 0,
-			cons => cons.head + sum(*cons.tail)
+			(Cons cons) => cons.head + sum(*cons.tail)
 		);
 	}
 
-	List!int* myList = list(1, 2, 3, 4, 5);
+	List* myList = list(1, 2, 3, 4, 5);
 
 	assert(sum(*myList) == 15);
 }
