@@ -155,7 +155,7 @@ unittest {
  *
  * Handlers may be functions, delegates, or objects with opCall overloads.
  * Templated handlers are also accepted, and will match any type for which they
- * can be instantiated.
+ * can be implicitly instantiated.
  *
  * Returns:
  *   The value returned from the handler that matches the currently-held type.
