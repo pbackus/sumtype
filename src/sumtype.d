@@ -236,7 +236,7 @@ template match(handlers...)
 		final switch (self.tag) {
 			static foreach (i, T; Types) {
 				static assert(handlerIndices[i] != -1,
-					"No matching handler for type " ~ T.stringof);
+					"No matching handler for type `" ~ T.stringof ~ "`");
 
 					case i:
 						return handlers[handlerIndices[i]](self.value!T);
