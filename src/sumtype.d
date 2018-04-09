@@ -235,12 +235,11 @@ template match(handlers...)
 
 		final switch (self.tag) {
 			static foreach (i, T; Types) {
-				static if (handlerIndices[i] != -1) {
+				static assert(handlerIndices[i] != -1,
+					"No matching handler for type " ~ T.stringof);
+
 					case i:
 						return handlers[handlerIndices[i]](self.value!T);
-				} else {
-					static assert(false, "No matching handler for type " ~ T.stringof);
-				}
 			}
 		}
 		assert(false); // unreached
