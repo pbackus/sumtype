@@ -20,8 +20,6 @@ before_script:
 script:
   - dub test --compiler=${DC}
   - doc2 -i -o $TRAVIS_BUILD_DIR/generated-docs src
-  - pwd
-  - ls -l
 
 deploy:
   provider: pages
