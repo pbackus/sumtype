@@ -19,7 +19,7 @@ before_script:
 
 script:
   - dub test --compiler=${DC}
-  - doc2 -i .
+  - doc2 -i src
 
 deploy:
   provider: pages
