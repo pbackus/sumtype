@@ -24,7 +24,7 @@ script:
 deploy:
   provider: pages
   skip_cleanup: true
-  local_dir: $TRAVIS_BUILD_DIR/generated-docs
+  local_dir: generated-docs
   github_token: $GH_REPO_TOKEN
   on:
     branch: master
