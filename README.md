@@ -11,6 +11,11 @@ Features
 - Full attribute-correctness—`pure`, `@safe`, and `@nogc` where applicable.
 - No runtime dependency on `TypeInfo`.
 
+[Documentation][docs]
+---------------------
+
+[docs]: https://pbackus.github.io/sumtype/
+
 Example
 -------
 
