@@ -65,6 +65,14 @@ public:
 			}
 		}
 	}
+
+	/// Returns a string representation of the held value
+	auto toString()
+	{
+		import std.conv: to;
+
+		return this.match!(value => value.to!string);
+	}
 }
 
 // Construction
@@ -440,4 +448,26 @@ unittest {
 	assert(x.match!((float v) => false, (int v) => true, (int v) => false));
 	assert(x.match!(v => true, (int v) => false));
 	assert(x.match!(v => 2*v, v => v + 1) == 84);
+}
+
+// toString
+unittest {
+	import std.typecons: Tuple, tuple;
+	import std.conv: to;
+
+	class C {}
+
+	alias Foo = SumType!(int[], double, Tuple!(string, C));
+
+	int[] a = [1, 2, 3];
+	double b = 3.14;
+	Tuple!(string, C) c = tuple("test", new C);
+
+	Foo x = Foo(a);
+	Foo y = Foo(b);
+	Foo z = Foo(c);
+
+	assert(x.toString == a.to!string);
+	assert(y.toString == b.to!string);
+	assert(z.toString == c.to!string);
 }
