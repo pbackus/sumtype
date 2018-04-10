@@ -8,9 +8,10 @@ Features
 
 - Pattern matching.
 - Self-referential types (`This`).
-- Full attribute-correctness—`pure`, `@safe`, `@nogc`, and `nothrow` where
+- Full attribute correctness—`pure`, `@safe`, `@nogc`, and `nothrow` when
   applicable.
 - No runtime dependency on `TypeInfo`.
+- No heap allocation/boxing.
 
 [Documentation][docs]
 ---------------------

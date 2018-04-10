@@ -1,10 +1,9 @@
 /++
 A sum type for modern D.
 
-[SumType] serves the same purpose as Phobos's `std.variant.Algebraic`, but is
-free from some of `Algebraic`'s limitations; e.g., [SumType] can be used in
-`pure`, `@safe`, and `@nogc` code without issue, provided the underlying types
-allow it.
+[SumType] is an alternative to `std.variant.Algebraic` with improved
+pattern-matching, full attribute correctness (`pure`, `@safe`, `@nogc`, and
+`nothrow`), and no dependency on runtime type information (`TypeInfo`).
 
 License: MIT
 Author: Paul Backus
