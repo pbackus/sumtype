@@ -101,6 +101,18 @@ unittest {
 	assert(__traits(compiles, y = x));
 }
 
+// Equality
+unittest {
+	alias Foo = SumType!(int, float);
+
+	Foo x = Foo(42);
+	Foo y = x;
+	Foo z = Foo(3.14);
+
+	assert(x == y);
+	assert(x != z);
+}
+
 // Imported types
 unittest {
 	import std.typecons: Tuple;
