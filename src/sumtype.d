@@ -97,10 +97,8 @@ unittest {
 
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
-	y = x;
 
-	assert(y.tag == 0);
-	assert(y.value!int == 42);
+	assert(__traits(compiles, y = x));
 }
 
 // Imported types
