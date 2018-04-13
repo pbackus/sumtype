@@ -25,12 +25,13 @@ struct This;
  */
 struct SumType(TypesParam...)
 {
-private:
-
 	import std.meta: AliasSeq, staticIndexOf;
 	import std.typecons: ReplaceType;
 
+	/// `AliasSeq` of the types a [SumType] can hold
 	alias Types = AliasSeq!(ReplaceType!(This, typeof(this), TypesParam));
+
+private:
 
 	int tag;
 
@@ -191,6 +192,15 @@ unittest {
 	assert(x.toString == a.to!string);
 	assert(y.toString == b.to!string);
 	assert(z.toString == c.to!string);
+}
+
+// Allowed types
+unittest {
+	import std.meta: AliasSeq;
+
+	alias Foo = SumType!(int, float, This*);
+
+	assert(is(Foo.Types == AliasSeq!(int, float, Foo*)));
 }
 
 /**
