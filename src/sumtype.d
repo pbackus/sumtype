@@ -78,8 +78,8 @@ public:
 unittest {
 	alias Foo = SumType!(int, float);
 
-	assert(__traits(compiles, (){ Foo x = Foo(42); }));
-	assert(__traits(compiles, () { Foo y = Foo(3.14); }));
+	static assert(__traits(compiles, (){ Foo x = Foo(42); }));
+	static assert(__traits(compiles, () { Foo y = Foo(3.14); }));
 }
 
 // Assignment
@@ -88,7 +88,7 @@ unittest {
 
 	Foo x = Foo(42);
 
-	assert(__traits(compiles, (){ x = 3.14; }));
+	static assert(__traits(compiles, (){ x = 3.14; }));
 }
 
 // Self assignment
@@ -98,7 +98,7 @@ unittest {
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
 
-	assert(__traits(compiles, y = x));
+	static assert(__traits(compiles, y = x));
 }
 
 // Equality
@@ -117,12 +117,14 @@ unittest {
 unittest {
 	import std.typecons: Tuple;
 
-	assert(__traits(compiles, (){ alias Foo = SumType!(Tuple!(int, int)); }));
+	static assert(__traits(compiles, (){
+		alias Foo = SumType!(Tuple!(int, int));
+	}));
 }
 
 // const and immutable types
 unittest {
-	assert(__traits(compiles, (){
+	static assert(__traits(compiles, (){
 		alias Foo = SumType!(const(int), immutable(float));
 	}));
 }
@@ -302,8 +304,8 @@ unittest {
 
 	Foo x = Foo(42);
 
-	assert(!__traits(compiles, x.match!((int x) => true)));
-	assert(!__traits(compiles, x.match!()));
+	static assert(!__traits(compiles, x.match!((int x) => true)));
+	static assert(!__traits(compiles, x.match!()));
 }
 
 // No implicit converstion
@@ -312,7 +314,9 @@ unittest {
 
 	Foo x = Foo(42);
 
-	assert(!__traits(compiles, x.match!((long v) => true, (float v) => false)));
+	static assert(!__traits(compiles,
+		x.match!((long v) => true, (float v) => false)
+	));
 }
 
 // Handlers with qualified parameters
