@@ -334,7 +334,7 @@ unittest {
 unittest {
 	alias Foo = SumType!(immutable(int[]), immutable(float[]));
 
-	Foo x = Foo([1, 2, 3].idup);
+	Foo x = Foo([1, 2, 3]);
 
 	assert(x.match!((immutable(int[]) v) => true, (immutable(float[]) v) => false));
 	// FIXME: can we allow implicit qualifier conversion without allowing any
