@@ -125,7 +125,7 @@ unittest {
 // const and immutable types
 unittest {
 	static assert(__traits(compiles, (){
-		alias Foo = SumType!(const(int), immutable(float));
+		alias Foo = SumType!(const(int[]), immutable(float[]));
 	}));
 }
 
@@ -332,12 +332,14 @@ unittest {
 
 // Handlers for qualified types
 unittest {
-	alias Foo = SumType!(immutable(int), immutable(float));
+	alias Foo = SumType!(immutable(int[]), immutable(float[]));
 
-	Foo x = Foo(42);
+	Foo x = Foo([1, 2, 3].idup);
 
-	assert(x.match!((immutable(int) v) => true, (immutable(float) v) => false));
-	assert(x.match!((const(int) v) => true, (const(float) v) => false));
+	assert(x.match!((immutable(int[]) v) => true, (immutable(float[]) v) => false));
+	// FIXME: can we allow implicit qualifier conversion without allowing any
+	// other implicit conversions?
+	//assert(x.match!((const(int[]) v) => true, (const(float[]) v) => false));
 	assert(x.match!((immutable v) => true, v => false));
 	assert(x.match!((const v) => true, v => false));
 }
