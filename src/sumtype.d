@@ -273,7 +273,7 @@ template match(handlers...)
 							}
 						}
 					// Generic handlers
-					} else static if (is(typeof(h!T(T.init)))) {
+					} else static if (is(typeof((){ h(T.init); }))) {
 						setHandlerIndex!T(i);
 					}
 				}
