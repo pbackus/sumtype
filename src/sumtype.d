@@ -243,6 +243,7 @@ template match(handlers...)
 			enum sameUnqual(T, U) = is(Unqual!T == Unqual!U);
 
 			int[Types.length] indices;
+			indices[] = -1;
 
 			void setHandlerIndex(T)(int hid)
 				if (staticIndexOf!(T, Types) >= 0)
@@ -253,8 +254,6 @@ template match(handlers...)
 					indices[tid] = hid;
 				}
 			}
-
-			indices[] = -1;
 
 			static foreach (T; Types) {
 				static foreach (i, h; handlers) {
