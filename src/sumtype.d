@@ -1,9 +1,8 @@
 /++
-A sum type for modern D.
-
-[SumType] is an alternative to `std.variant.Algebraic` with improved
-pattern-matching, full attribute correctness (`pure`, `@safe`, `@nogc`, and
-`nothrow`), and no dependency on runtime type information (`TypeInfo`).
+This module provides [SumType], an alternative to `std.variant.Algebraic` with
+[match|improved pattern-matching], full attribute correctness (`pure`, `@safe`,
+`@nogc`, and `nothrow` are inferred whenever possible), and no dependency on
+runtime type information (`TypeInfo`).
 
 License: MIT
 Author: Paul Backus
