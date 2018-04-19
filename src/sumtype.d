@@ -79,7 +79,7 @@ unittest {
 	alias Foo = SumType!(int, float);
 
 	static assert(__traits(compiles, (){ Foo x = Foo(42); }));
-	static assert(__traits(compiles, () { Foo y = Foo(3.14); }));
+	static assert(__traits(compiles, (){ Foo y = Foo(3.14); }));
 }
 
 // Assignment
