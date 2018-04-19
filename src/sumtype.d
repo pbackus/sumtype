@@ -257,24 +257,26 @@ template match(handlers...)
 
 			static foreach (T; Types) {
 				static foreach (i, h; handlers) {
-					// Regular handlers
-					static if (isCallable!h && is(typeof(h(T.init)))) {
-						// Functions and delegates
-						static if (isSomeFunction!h) {
-							static if (sameUnqual!(T, Parameters!h[0])) {
-								setHandlerIndex!T(i);
-							}
-						// Objects with overloaded opCall
-						} else static if (hasMember!(typeof(h), "opCall")) {
-							static foreach (overload; __traits(getOverloads, typeof(h), "opCall")) {
-								static if (sameUnqual!(T, Parameters!overload[0])) {
+					static if (is(typeof(h(T.init)))) {
+						// Regular handlers
+						static if (isCallable!h) {
+							// Functions and delegates
+							static if (isSomeFunction!h) {
+								static if (sameUnqual!(T, Parameters!h[0])) {
 									setHandlerIndex!T(i);
 								}
+							// Objects with overloaded opCall
+							} else static if (hasMember!(typeof(h), "opCall")) {
+								static foreach (overload; __traits(getOverloads, typeof(h), "opCall")) {
+									static if (sameUnqual!(T, Parameters!overload[0])) {
+										setHandlerIndex!T(i);
+									}
+								}
 							}
+						// Generic handlers
+						} else {
+							setHandlerIndex!T(i);
 						}
-					// Generic handlers
-					} else static if (is(typeof((){ h(T.init); }))) {
-						setHandlerIndex!T(i);
 					}
 				}
 			}
