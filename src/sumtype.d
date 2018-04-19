@@ -208,9 +208,12 @@ unittest {
  *
  * For each possible type the [SumType] can hold, the given handlers are
  * checked, in order, to see whether they accept a single argument of that type.
- * The first one that does is chosen as the match for that type. Implicit
- * conversions are not taken into account, so, for example, a handler that
- * accepts a `long` will not match the type `int`.
+ * The first one that does is chosen as the match for that type.
+ *
+ * Implicit conversions are not taken into account, except between
+ * differently-qualified versions of the same type. For example, a handler that
+ * accepts a `long` will not match the type `int`, but a handler that accepts a
+ * `const(int)[]` will match the type `immutable(int)[]`.
  *
  * Every type must have a matching handler. This is enforced at compile-time.
  *
