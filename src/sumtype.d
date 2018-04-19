@@ -351,10 +351,15 @@ unittest {
 
 	assert(x.match!((immutable(int[]) v) => true, (immutable(float[]) v) => false));
 	assert(x.match!((const(int[]) v) => true, (const(float[]) v) => false));
+	// Tail-qualified parameters
+	assert(x.match!((immutable(int)[] v) => true, (immutable(float)[] v) => false));
+	assert(x.match!((const(int)[] v) => true, (const(float)[] v) => false));
+	// Generic parameters
 	assert(x.match!((immutable v) => true, v => false));
 	assert(x.match!((const v) => true, v => false));
+	// Unqualified parameters
 	static assert(!__traits(compiles,
-		x.match!((int[] v) => true, (immutable(float[]) v) => false)
+		x.match!((int[] v) => true, (float[] v) => false)
 	));
 }
 
