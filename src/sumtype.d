@@ -28,7 +28,7 @@ struct SumType(TypesParam...)
 	import std.meta: AliasSeq, staticIndexOf;
 	import std.typecons: ReplaceType;
 
-	/// `AliasSeq` of the types a `SumType` can hold
+	/// `AliasSeq` of the types this `SumType` can hold
 	alias Types = AliasSeq!(ReplaceType!(This, typeof(this), TypesParam));
 
 private:
