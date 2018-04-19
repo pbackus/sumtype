@@ -238,9 +238,11 @@ template match(handlers...)
 		pure static auto getHandlerIndices()
 		{
 			import std.meta: staticIndexOf;
-			import std.traits: hasMember, isCallable, isSomeFunction, Parameters, Unqual;
+			import std.traits: hasMember, isCallable, isSomeFunction, Parameters;
 
-			enum sameUnqual(T, U) = is(Unqual!T == Unqual!U);
+			// immutable overrides all other qualifiers, so this is true if and
+			// only if the two types are the same up to qualifiers.
+			enum sameBaseType(T, U) = is(immutable(T) == immutable(U));
 
 			int[Types.length] indices;
 			indices[] = -1;
@@ -262,13 +264,13 @@ template match(handlers...)
 						static if (isCallable!h) {
 							// Functions and delegates
 							static if (isSomeFunction!h) {
-								static if (sameUnqual!(T, Parameters!h[0])) {
+								static if (sameBaseType!(T, Parameters!h[0])) {
 									setHandlerIndex!T(i);
 								}
 							// Objects with overloaded opCall
 							} else static if (hasMember!(typeof(h), "opCall")) {
 								static foreach (overload; __traits(getOverloads, typeof(h), "opCall")) {
-									static if (sameUnqual!(T, Parameters!overload[0])) {
+									static if (sameBaseType!(T, Parameters!overload[0])) {
 										setHandlerIndex!T(i);
 									}
 								}
@@ -332,13 +334,13 @@ unittest {
 
 // Handlers with qualified parameters
 unittest {
-	alias Foo = SumType!(int, float);
+    alias Foo = SumType!(int[], float[]);
 
-	Foo x = Foo(42);
-	Foo y = Foo(3.14);
+    Foo x = Foo([1, 2, 3]);
+    Foo y = Foo([1.0, 2.0, 3.0]);
 
-	assert(x.match!((const int v) => true, (const float v) => false));
-	assert(y.match!((const int v) => false, (const float v) => true));
+    assert(x.match!((const(int[]) v) => true, (const(float[]) v) => false));
+    assert(y.match!((const(int[]) v) => false, (const(float[]) v) => true));
 }
 
 // Handlers for qualified types
@@ -348,11 +350,12 @@ unittest {
 	Foo x = Foo([1, 2, 3]);
 
 	assert(x.match!((immutable(int[]) v) => true, (immutable(float[]) v) => false));
-	// FIXME: can we allow implicit qualifier conversion without allowing any
-	// other implicit conversions?
-	//assert(x.match!((const(int[]) v) => true, (const(float[]) v) => false));
+	assert(x.match!((const(int[]) v) => true, (const(float[]) v) => false));
 	assert(x.match!((immutable v) => true, v => false));
 	assert(x.match!((const v) => true, v => false));
+	static assert(!__traits(compiles,
+		x.match!((int[] v) => true, (immutable(float[]) v) => false)
+	));
 }
 
 // Delegate handlers
