@@ -11,44 +11,44 @@ module sumtype;
 
 /// Recursive definition of a linked list:
 unittest {
-	import std.typecons: Tuple, tuple;
+	import std.typecons: Tuple;
 
 	struct Nil {}
-	alias List = SumType!(
+	alias List(T) = SumType!(
 		Nil,
-		Tuple!(int, "head", This*, "tail")
+		Tuple!(T, "head", This*, "tail")
 	);
-	alias Cons = Tuple!(int, "head", List*, "tail");
+	alias Cons(T) = List!T.Types[1];
 
-	List* nil()
+	List!T* nil(T)()
 	{
-		return new List(Nil());
+		return new List!T(Nil());
 	}
 
-	List* cons(int item, List* l)
+	List!T* cons(T)(T item, SumType!(Nil, Tuple!(T, "head", This*, "tail"))* l)
 	{
-		return new List(Cons(item, l));
+		return new List!T(Cons!T(item, l));
 	}
 
-	List* list(int[] items...)
+	List!T* list(T)(T[] items...)
 	{
 		if (items.length == 0)
-			return nil;
+			return nil!T;
 		else
 			return cons(items[0], list(items[1..$]));
 	}
 
-	int sum(List l)
+	R reduce(T, R)(SumType!(Nil, Tuple!(T, "head", This*, "tail")) l, R delegate (R, T) f, R init)
 	{
 		return l.match!(
-			(Nil _) => 0,
-			(Cons cons) => cons.head + sum(*cons.tail)
+			(Nil _) => init,
+			(Cons!T c) => reduce(*c.tail, f, f(init, c.head))
 		);
 	}
 
-	List* myList = list(1, 2, 3, 4, 5);
+	List!int* myList = list(1, 2, 3, 4, 5);
 
-	assert(sum(*myList) == 15);
+	assert(reduce(*myList, (int a, int e) => a + e, 0) == 15);
 }
 
 /// Arithmetic expression evaluator:
