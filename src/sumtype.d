@@ -295,7 +295,7 @@ unittest {
 }
 
 /**
- * Calls a type-appropriate handler with the value held in a [SumType].
+ * Calls a type-appropriate function with the value held in a [SumType].
  *
  * For each possible type the [SumType] can hold, the given handlers are
  * checked, in order, to see whether they accept a single argument of that type.
