@@ -90,7 +90,7 @@ unittest {
 	assert(pprint(*myExpr) == "(a + (2 * b))");
 }
 
-/** $(B Recursive definition of a linked list)
+/** $(B Generic linked list)
  *
  * Note: due to [dlang issue 1807](https://issues.dlang.org/show_bug.cgi?id=1807),
  * we can't use `List!T` as a parameter type directly, but instead must write
