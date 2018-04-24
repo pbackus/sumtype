@@ -43,7 +43,11 @@ unittest {
 			return cons(items[0], list(items[1..$]));
 	}
 
-	R reduce(T, R)(SumType!(Nil, Tuple!(T, "head", This*, "tail")) l, R delegate (R, T) f, R init)
+	R reduce(T, R)(
+		SumType!(Nil, Tuple!(T, "head", This*, "tail")) l,
+		R delegate (R, T) f,
+		R init
+	)
 	{
 		return l.match!(
 			(Nil _) => init,
