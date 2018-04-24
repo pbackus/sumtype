@@ -9,57 +9,6 @@ Author: Paul Backus
 +/
 module sumtype;
 
-/** $(B Recursive definition of a linked list)
- *
- * Note: due to [dlang issue 1807](https://issues.dlang.org/show_bug.cgi?id=1807),
- * we can't use `List!T` as a parameter type directly, but instead must write
- * out the full expansion: `SumType!(Nil, Tuple!(T, "head", This*, * "tail"))`.
- */
-unittest {
-	import std.typecons: Tuple;
-
-	struct Nil {}
-	alias List(T) = SumType!(
-		Nil,
-		Tuple!(T, "head", This*, "tail")
-	);
-	alias Cons(T) = List!T.Types[1];
-
-	List!T* nil(T)()
-	{
-		return new List!T(Nil());
-	}
-
-	List!T* cons(T)(T item, SumType!(Nil, Tuple!(T, "head", This*, "tail"))* l)
-	{
-		return new List!T(Cons!T(item, l));
-	}
-
-	List!T* list(T)(T[] items...)
-	{
-		if (items.length == 0)
-			return nil!T;
-		else
-			return cons(items[0], list(items[1..$]));
-	}
-
-	R reduce(T, R)(
-		SumType!(Nil, Tuple!(T, "head", This*, "tail")) l,
-		R delegate (R, T) f,
-		R init
-	)
-	{
-		return l.match!(
-			(Nil _) => init,
-			(Cons!T c) => reduce(*c.tail, f, f(init, c.head))
-		);
-	}
-
-	List!int* myList = list(1, 2, 3, 4, 5);
-
-	assert(reduce(*myList, (int a, int e) => a + e, 0) == 15);
-}
-
 /// $(B Arithmetic expression evaluator)
 unittest {
 	import std.functional: partial;
@@ -139,6 +88,57 @@ unittest {
 
 	assert(eval(*myExpr, myEnv) == 11);
 	assert(pprint(*myExpr) == "(a + (2 * b))");
+}
+
+/** $(B Recursive definition of a linked list)
+ *
+ * Note: due to [dlang issue 1807](https://issues.dlang.org/show_bug.cgi?id=1807),
+ * we can't use `List!T` as a parameter type directly, but instead must write
+ * out the full expansion: `SumType!(Nil, Tuple!(T, "head", This*, * "tail"))`.
+ */
+unittest {
+	import std.typecons: Tuple;
+
+	struct Nil {}
+	alias List(T) = SumType!(
+		Nil,
+		Tuple!(T, "head", This*, "tail")
+	);
+	alias Cons(T) = List!T.Types[1];
+
+	List!T* nil(T)()
+	{
+		return new List!T(Nil());
+	}
+
+	List!T* cons(T)(T item, SumType!(Nil, Tuple!(T, "head", This*, "tail"))* l)
+	{
+		return new List!T(Cons!T(item, l));
+	}
+
+	List!T* list(T)(T[] items...)
+	{
+		if (items.length == 0)
+			return nil!T;
+		else
+			return cons(items[0], list(items[1..$]));
+	}
+
+	R reduce(T, R)(
+		SumType!(Nil, Tuple!(T, "head", This*, "tail")) l,
+		R delegate (R, T) f,
+		R init
+	)
+	{
+		return l.match!(
+			(Nil _) => init,
+			(Cons!T c) => reduce(*c.tail, f, f(init, c.head))
+		);
+	}
+
+	List!int* myList = list(1, 2, 3, 4, 5);
+
+	assert(reduce(*myList, (int a, int e) => a + e, 0) == 15);
 }
 
 struct This;
