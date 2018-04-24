@@ -21,44 +21,83 @@ Features
 Example
 -------
 
-    import std.typecons: Tuple, tuple;
+    import std.functional: partial;
+    import std.traits: EnumMembers;
+    import std.typecons: Tuple;
 
-    struct Nil {}
-    alias List = SumType!(
-        Nil,
-        Tuple!(int, "head", This*, "tail")
+    enum Op : string
+    {
+        Plus  = "+",
+        Minus = "-",
+        Times = "*",
+        Div   = "/"
+    }
+
+    alias Expr = SumType!(
+        double,
+        string,
+        Tuple!(Op, "op", This*, "lhs", This*, "rhs")
     );
-    alias Cons = Tuple!(int, "head", List*, "tail");
+    alias BinOp = Expr.Types[2];
 
-    List* nil()
+    Expr* num(double value)
     {
-        return new List(Nil());
+        return new Expr(value);
     }
 
-    List* cons(int item, List* l)
+    Expr* var(string name)
     {
-        return new List(Cons(item, l));
+        return new Expr(name);
     }
 
-    List* list(int[] items...)
+    Expr* binOp(Op op, Expr* lhs, Expr* rhs)
     {
-        if (items.length == 0)
-            return nil;
-        else
-            return cons(items[0], list(items[1..$]));
+        return new Expr(BinOp(op, lhs, rhs));
     }
 
-    int sum(List l)
+    alias sum  = partial!(binOp, Op.Plus);
+    alias diff = partial!(binOp, Op.Minus);
+    alias prod = partial!(binOp, Op.Times);
+    alias quot = partial!(binOp, Op.Div);
+
+    double eval(Expr expr, double[string] env)
     {
-        return l.match!(
-            (Nil _) => 0,
-            (Cons cons) => cons.head + sum(*cons.tail)
+        return expr.match!(
+            (double num) => num,
+            (string var) => env[var],
+            (BinOp bop) {
+                double lhs = eval(*bop.lhs, env);
+                double rhs = eval(*bop.rhs, env);
+                final switch(bop.op) {
+                    static foreach(op; EnumMembers!Op) {
+                        case op:
+                            return mixin("lhs" ~ op ~ "rhs");
+                    }
+                }
+            }
         );
     }
 
-    List* myList = list(1, 2, 3, 4, 5);
+    string pprint(Expr expr)
+    {
+        import std.format;
 
-    assert(sum(*myList) == 15);
+        return expr.match!(
+            (double num) => "%g".format(num),
+            (string var) => var,
+            (BinOp bop) => "(%s %s %s)".format(
+                pprint(*bop.lhs),
+                bop.op,
+                pprint(*bop.rhs)
+            )
+        );
+    }
+
+    Expr* myExpr = sum(var("a"), prod(num(2), var("b")));
+    double[string] myEnv = ["a":3, "b":4, "c":7];
+
+    assert(eval(*myExpr, myEnv) == 11);
+    assert(pprint(*myExpr) == "(a + (2 * b))");
 
 
 Installation
