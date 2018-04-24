@@ -11,7 +11,7 @@ module sumtype;
 
 /** $(B Recursive definition of a linked list)
  *
- * Because of [dlang issue 1807](https://issues.dlang.org/show_bug.cgi?id=1807),
+ * Note: due to [dlang issue 1807](https://issues.dlang.org/show_bug.cgi?id=1807),
  * we can't use `List!T` as a parameter type directly, but instead must write
  * out the full expansion: `SumType!(Nil, Tuple!(T, "head", This*, * "tail"))`.
  */
