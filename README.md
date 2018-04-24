@@ -16,7 +16,7 @@ Features
 [Documentation][docs]
 ---------------------
 
-[docs]: https://pbackus.github.io/sumtype/
+[docs]: https://pbackus.github.io/sumtype/sumtype.html
 
 Example
 -------
