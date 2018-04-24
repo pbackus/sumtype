@@ -56,13 +56,20 @@ unittest {
 	assert(reduce(*myList, (int a, int e) => a + e, 0) == 15);
 }
 
-/// Arithmetic expression evaluator:
+/// $(B Arithmetic expression evaluator)
 unittest {
 	import std.functional: partial;
 	import std.traits: EnumMembers;
 	import std.typecons: Tuple;
 
-	enum Op : string { Plus = "+", Minus = "-", Times = "*", Div = "/" }
+	enum Op : string
+	{
+		Plus  = "+",
+		Minus = "-",
+		Times = "*",
+		Div   = "/"
+	}
+
 	alias Expr = SumType!(
 		double,
 		string,
