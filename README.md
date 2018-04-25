@@ -21,83 +21,35 @@ Features
 Example
 -------
 
-    import std.functional: partial;
-    import std.traits: EnumMembers;
-    import std.typecons: Tuple;
+    import std.math: approxEqual, cos, PI, sqrt;
 
-    enum Op : string
+    struct Rectangular { double x, y; }
+    struct Polar { double r, theta; }
+    alias Vector = SumType!(Rectangular, Polar);
+
+    double length(Vector v)
     {
-        Plus  = "+",
-        Minus = "-",
-        Times = "*",
-        Div   = "/"
-    }
-
-    alias Expr = SumType!(
-        double,
-        string,
-        Tuple!(Op, "op", This*, "lhs", This*, "rhs")
-    );
-    alias BinOp = Expr.Types[2];
-
-    Expr* num(double value)
-    {
-        return new Expr(value);
-    }
-
-    Expr* var(string name)
-    {
-        return new Expr(name);
-    }
-
-    Expr* binOp(Op op, Expr* lhs, Expr* rhs)
-    {
-        return new Expr(BinOp(op, lhs, rhs));
-    }
-
-    alias sum  = partial!(binOp, Op.Plus);
-    alias diff = partial!(binOp, Op.Minus);
-    alias prod = partial!(binOp, Op.Times);
-    alias quot = partial!(binOp, Op.Div);
-
-    double eval(Expr expr, double[string] env)
-    {
-        return expr.match!(
-            (double num) => num,
-            (string var) => env[var],
-            (BinOp bop) {
-                double lhs = eval(*bop.lhs, env);
-                double rhs = eval(*bop.rhs, env);
-                final switch(bop.op) {
-                    static foreach(op; EnumMembers!Op) {
-                        case op:
-                            return mixin("lhs" ~ op ~ "rhs");
-                    }
-                }
-            }
+        return v.match!(
+            rect => sqrt(rect.x^^2 + rect.y^^2),
+            polar => polar.r
         );
     }
 
-    string pprint(Expr expr)
+    double horiz(Vector v)
     {
-        import std.format;
-
-        return expr.match!(
-            (double num) => "%g".format(num),
-            (string var) => var,
-            (BinOp bop) => "(%s %s %s)".format(
-                pprint(*bop.lhs),
-                bop.op,
-                pprint(*bop.rhs)
-            )
+        return v.match!(
+            rect => rect.x,
+            polar => polar.r * cos(polar.theta)
         );
     }
 
-    Expr* myExpr = sum(var("a"), prod(num(2), var("b")));
-    double[string] myEnv = ["a":3, "b":4, "c":7];
+    Vector u = Rectangular(1, 1);
+    Vector v = Polar(1, PI/4);
 
-    assert(eval(*myExpr, myEnv) == 11);
-    assert(pprint(*myExpr) == "(a + (2 * b))");
+    assert(length(u).approxEqual(sqrt(2.0)));
+    assert(length(v).approxEqual(1));
+    assert(horiz(u).approxEqual(1));
+    assert(horiz(v).approxEqual(sqrt(0.5)));
 
 
 Installation
