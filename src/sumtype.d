@@ -112,6 +112,9 @@ unittest {
 
 /** $(H3 Generic linked list)
  *
+ * This is a commonly-used type in functional programming languages, so it
+ * works well as a point of comparison.
+ *
  * Note: due to [dlang issue 1807](https://issues.dlang.org/show_bug.cgi?id=1807),
  * we can't use `List!T` as a parameter type directly, but instead must write
  * out the full expansion: `SumType!(Nil, Tuple!(T, "head", This*, * "tail"))`.
