@@ -11,7 +11,7 @@ Author: Paul Backus
 +/
 module sumtype;
 
-/** $(B Arithmetic expression evaluator)
+/** $(H3 Arithmetic expression evaluator)
  *
  * The example below defines functions to create and evaluate simple
  * arithmetic expressions. The expressions are represented as
@@ -110,7 +110,7 @@ unittest {
 	assert(pprint(*myExpr) == "(a + (2 * b))");
 }
 
-/** $(B Generic linked list)
+/** $(H3 Generic linked list)
  *
  * Note: due to [dlang issue 1807](https://issues.dlang.org/show_bug.cgi?id=1807),
  * we can't use `List!T` as a parameter type directly, but instead must write
@@ -545,7 +545,7 @@ unittest {
 	assert(z.match!(v => v*2, v => v.length) == 3);
 }
 
-/** $(B Structural matching)
+/** $(H3 Structural matching)
  *
  * In the `length` and `horiz` functions below, the handlers for `match` do not
  * specify the types of their arguments. Instead, matching is done based on the
