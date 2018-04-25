@@ -11,7 +11,13 @@ Author: Paul Backus
 +/
 module sumtype;
 
-/// $(B Arithmetic expression evaluator)
+/** $(B Arithmetic expression evaluator)
+ *
+ * The example below defines functions to create and evaluate simple
+ * arithmetic expressions. The expressions are represented as
+ * [https://en.wikipedia.org/wiki/Abstract_syntax_tree|abstract syntax trees],
+ * and may include both numbers and variables.
+ */
 unittest {
 	import std.functional: partial;
 	import std.traits: EnumMembers;
@@ -25,33 +31,44 @@ unittest {
 		Div   = "/"
 	}
 
+	// An expression is either
+	//  - a number,
+	//  - a variable, or
+	//  - a binary operation combining two sub-expressions.
 	alias Expr = SumType!(
 		double,
 		string,
 		Tuple!(Op, "op", This*, "lhs", This*, "rhs")
 	);
+
+	// Shorthand for a binary operation
 	alias BinOp = Expr.Types[2];
 
+	// Construct and allocate a number expression
 	Expr* num(double value)
 	{
 		return new Expr(value);
 	}
 
+	// Construct and allocate a variable expression
 	Expr* var(string name)
 	{
 		return new Expr(name);
 	}
 
+	// Construct and allocate a binary operation expression
 	Expr* binOp(Op op, Expr* lhs, Expr* rhs)
 	{
 		return new Expr(BinOp(op, lhs, rhs));
 	}
 
+	// Shorthand constructors for binary operation expressions
 	alias sum  = partial!(binOp, Op.Plus);
 	alias diff = partial!(binOp, Op.Minus);
 	alias prod = partial!(binOp, Op.Times);
 	alias quot = partial!(binOp, Op.Div);
 
+	// Evaluate expr, looking up variables in env
 	double eval(Expr expr, double[string] env)
 	{
 		return expr.match!(
@@ -70,6 +87,7 @@ unittest {
 		);
 	}
 
+	// Return a "pretty-printed" representation of expr
 	string pprint(Expr expr)
 	{
 		import std.format;
@@ -101,23 +119,36 @@ unittest {
 unittest {
 	import std.typecons: Tuple;
 
+	// An empty list
 	struct Nil {}
+
+	// A linked list of T is either
+	//  - an empty list, or
+	//  - a T, and a pointer to the rest of the list.
 	alias List(T) = SumType!(
 		Nil,
 		Tuple!(T, "head", This*, "tail")
 	);
+
+	// Shorthand for a non-empty list
 	alias Cons(T) = List!T.Types[1];
 
+	// Construct and allocate an empty list
 	List!T* nil(T)()
 	{
 		return new List!T(Nil());
 	}
 
-	List!T* cons(T)(T item, SumType!(Nil, Tuple!(T, "head", This*, "tail"))* l)
+	// Construct and allocate a non-empty list
+	List!T* cons(T)(
+		T item,
+		SumType!(Nil, Tuple!(T, "head", This*, "tail"))* lst
+	)
 	{
-		return new List!T(Cons!T(item, l));
+		return new List!T(Cons!T(item, lst));
 	}
 
+	// Construct a list of multiple items
 	List!T* list(T)(T[] items...)
 	{
 		if (items.length == 0)
@@ -126,15 +157,17 @@ unittest {
 			return cons(items[0], list(items[1..$]));
 	}
 
+	// Build up a result by applying a function to each element of a list
+	// in succession. Also known as "left fold".
 	R reduce(T, R)(
-		SumType!(Nil, Tuple!(T, "head", This*, "tail")) l,
-		R delegate (R, T) f,
+		SumType!(Nil, Tuple!(T, "head", This*, "tail")) lst,
+		R delegate (R, T) func,
 		R init
 	)
 	{
-		return l.match!(
+		return lst.match!(
 			(Nil _) => init,
-			(Cons!T c) => reduce(*c.tail, f, f(init, c.head))
+			(Cons!T c) => reduce(*c.tail, func, func(init, c.head))
 		);
 	}
 
@@ -512,9 +545,16 @@ unittest {
 	assert(z.match!(v => v*2, v => v.length) == 3);
 }
 
-/// Generic handlers with implicit matching:
+/** $(B Structural matching)
+ *
+ * In the `length` and `horiz` functions below, the handlers for `match` do not
+ * specify the types of their arguments. Instead, matching is done based on the
+ * type's structure: any type with `x` and `y` properties will be matched by the
+ * `rect` handlers, and any type with `r` and `theta` properties will be matched
+ * by the `polar` handlers.
+ */
 unittest {
-	import std.math: approxEqual, PI, sqrt;
+	import std.math: approxEqual, cos, PI, sqrt;
 
 	struct Rectangular { double x, y; }
 	struct Polar { double r, theta; }
@@ -528,11 +568,21 @@ unittest {
 		);
 	}
 
+	double horiz(Vector v)
+	{
+		return v.match!(
+			rect => rect.x,
+			polar => polar.r * cos(polar.theta)
+		);
+	}
+
 	Vector u = Rectangular(1, 1);
 	Vector v = Polar(1, PI/4);
 
 	assert(length(u).approxEqual(sqrt(2.0)));
 	assert(length(v).approxEqual(1));
+	assert(horiz(u).approxEqual(1));
+	assert(horiz(v).approxEqual(sqrt(0.5)));
 }
 
 // Separate opCall handlers
