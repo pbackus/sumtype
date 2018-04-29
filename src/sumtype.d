@@ -11,6 +11,46 @@ Author: Paul Backus
 +/
 module sumtype;
 
+/** $(H3 Structural matching)
+ *
+ * In the `length` and `horiz` functions below, the handlers for `match` do not
+ * specify the types of their arguments. Instead, matching is done based on the
+ * type's structure: any type with `x` and `y` properties will be matched by the
+ * `rect` handlers, and any type with `r` and `theta` properties will be matched
+ * by the `polar` handlers.
+ */
+unittest {
+	import std.math: approxEqual, cos, PI, sqrt;
+
+	struct Rectangular { double x, y; }
+	struct Polar { double r, theta; }
+	alias Vector = SumType!(Rectangular, Polar);
+
+	double length(Vector v)
+	{
+		return v.match!(
+			rect => sqrt(rect.x^^2 + rect.y^^2),
+			polar => polar.r
+		);
+	}
+
+	double horiz(Vector v)
+	{
+		return v.match!(
+			rect => rect.x,
+			polar => polar.r * cos(polar.theta)
+		);
+	}
+
+	Vector u = Rectangular(1, 1);
+	Vector v = Polar(1, PI/4);
+
+	assert(length(u).approxEqual(sqrt(2.0)));
+	assert(length(v).approxEqual(1));
+	assert(horiz(u).approxEqual(1));
+	assert(horiz(v).approxEqual(sqrt(0.5)));
+}
+
 /** $(H3 Arithmetic expression evaluator)
  *
  * The example below defines functions to create and evaluate simple
@@ -490,46 +530,6 @@ unittest {
 
 	assert(a.match!(s1 => s1.x + 1, s2 => s2.y - 1) == 1);
 	assert(b.match!(s1 => s1.x + 1, s2 => s2.y - 1) == -1);
-}
-
-/** $(H3 Structural matching)
- *
- * In the `length` and `horiz` functions below, the handlers for `match` do not
- * specify the types of their arguments. Instead, matching is done based on the
- * type's structure: any type with `x` and `y` properties will be matched by the
- * `rect` handlers, and any type with `r` and `theta` properties will be matched
- * by the `polar` handlers.
- */
-unittest {
-	import std.math: approxEqual, cos, PI, sqrt;
-
-	struct Rectangular { double x, y; }
-	struct Polar { double r, theta; }
-	alias Vector = SumType!(Rectangular, Polar);
-
-	double length(Vector v)
-	{
-		return v.match!(
-			rect => sqrt(rect.x^^2 + rect.y^^2),
-			polar => polar.r
-		);
-	}
-
-	double horiz(Vector v)
-	{
-		return v.match!(
-			rect => rect.x,
-			polar => polar.r * cos(polar.theta)
-		);
-	}
-
-	Vector u = Rectangular(1, 1);
-	Vector v = Polar(1, PI/4);
-
-	assert(length(u).approxEqual(sqrt(2.0)));
-	assert(length(v).approxEqual(1));
-	assert(horiz(u).approxEqual(1));
-	assert(horiz(v).approxEqual(sqrt(0.5)));
 }
 
 // Separate opCall handlers
