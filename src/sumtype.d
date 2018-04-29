@@ -479,6 +479,19 @@ unittest {
 	assert(z.match!(v => v*2, v => v.length) == 3);
 }
 
+// Structural matching
+unittest {
+	struct S1 { int x; }
+	struct S2 { int y; }
+	alias Foo = SumType!(S1, S2);
+
+	Foo a = Foo(S1(0));
+	Foo b = Foo(S2(0));
+
+	assert(a.match!(s1 => s1.x + 1, s2 => s2.y - 1) == 1);
+	assert(b.match!(s1 => s1.x + 1, s2 => s2.y - 1) == -1);
+}
+
 /** $(H3 Structural matching)
  *
  * In the `length` and `horiz` functions below, the handlers for `match` do not
