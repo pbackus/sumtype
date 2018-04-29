@@ -53,10 +53,10 @@ unittest {
 
 /** $(H3 Arithmetic expression evaluator)
  *
- * The example below defines functions to create and evaluate simple
- * arithmetic expressions. The expressions are represented as
- * [https://en.wikipedia.org/wiki/Abstract_syntax_tree|abstract syntax trees],
- * and may include both numbers and variables.
+ * This example makes use of the special placeholder type `This` to define a
+ * [https://en.wikipedia.org/wiki/Recursive_data_type|recursive data type]: an
+ * [https://en.wikipedia.org/wiki/Abstract_syntax_tree|abstract syntax tree] for
+ * representing simple arithmetic expressions.
  */
 unittest {
 	import std.functional: partial;
