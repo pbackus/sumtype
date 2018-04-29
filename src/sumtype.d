@@ -168,7 +168,7 @@ struct SumType(TypesParam...)
 	import std.meta: AliasSeq, staticIndexOf;
 	import std.typecons: ReplaceType;
 
-	/// `AliasSeq` of the types this `SumType` can hold
+	/// The types a `SumType` can hold
 	alias Types = AliasSeq!(ReplaceType!(This, typeof(this), TypesParam));
 
 private:
@@ -197,7 +197,7 @@ public:
 
 	static foreach (i, T; Types) {
 		static if (isAssignable!T) {
-			/// Assigns a value to a `SumType` that can hold it
+			/// Assigns a value to a `SumType`
 			void opAssign(T rhs)
 			{
 				tag = i;
@@ -206,7 +206,7 @@ public:
 		}
 	}
 
-	/// Returns a string representation of the held value
+	/// Returns a string representation of the currently-held value
 	auto toString()
 	{
 		import std.conv: to;
