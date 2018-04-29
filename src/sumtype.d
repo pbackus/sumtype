@@ -26,6 +26,7 @@ unittest {
 	struct Polar { double r, theta; }
 	alias Vector = SumType!(Rectangular, Polar);
 
+	pure @safe
 	double length(Vector v)
 	{
 		return v.match!(
@@ -34,6 +35,7 @@ unittest {
 		);
 	}
 
+	pure @safe
 	double horiz(Vector v)
 	{
 		return v.match!(
@@ -85,18 +87,21 @@ unittest {
 	alias BinOp = Expr.Types[2];
 
 	// Construct and allocate a number expression
+	pure @safe
 	Expr* num(double value)
 	{
 		return new Expr(value);
 	}
 
 	// Construct and allocate a variable expression
+	pure @safe
 	Expr* var(string name)
 	{
 		return new Expr(name);
 	}
 
 	// Construct and allocate a binary operation expression
+	pure @safe
 	Expr* binOp(Op op, Expr* lhs, Expr* rhs)
 	{
 		return new Expr(BinOp(op, lhs, rhs));
@@ -109,6 +114,7 @@ unittest {
 	alias quot = partial!(binOp, Op.Div);
 
 	// Evaluate expr, looking up variables in env
+	pure @safe
 	double eval(Expr expr, double[string] env)
 	{
 		return expr.match!(
@@ -128,6 +134,7 @@ unittest {
 	}
 
 	// Return a "pretty-printed" representation of expr
+	@safe
 	string pprint(Expr expr)
 	{
 		import std.format;
