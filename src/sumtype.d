@@ -86,28 +86,28 @@ unittest {
 	// Shorthand for a binary operation
 	alias BinOp = Expr.Types[2];
 
-	// Construct and allocate a number expression
+	// Factory for number expressions
 	pure @safe
 	Expr* num(double value)
 	{
 		return new Expr(value);
 	}
 
-	// Construct and allocate a variable expression
+	// Factory for variable expressions
 	pure @safe
 	Expr* var(string name)
 	{
 		return new Expr(name);
 	}
 
-	// Construct and allocate a binary operation expression
+	// Factory for binary operation expressions
 	pure @safe
 	Expr* binOp(Op op, Expr* lhs, Expr* rhs)
 	{
 		return new Expr(BinOp(op, lhs, rhs));
 	}
 
-	// Shorthand constructors for binary operation expressions
+	// Convenience wrappers for creating BinOp expressions
 	alias sum  = partial!(binOp, Op.Plus);
 	alias diff = partial!(binOp, Op.Minus);
 	alias prod = partial!(binOp, Op.Times);
