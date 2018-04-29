@@ -26,7 +26,7 @@ unittest {
 	struct Polar { double r, theta; }
 	alias Vector = SumType!(Rectangular, Polar);
 
-	pure @safe
+	pure @safe @nogc nothrow
 	double length(Vector v)
 	{
 		return v.match!(
@@ -35,7 +35,7 @@ unittest {
 		);
 	}
 
-	pure @safe
+	pure @safe @nogc nothrow
 	double horiz(Vector v)
 	{
 		return v.match!(
@@ -114,7 +114,7 @@ unittest {
 	alias quot = partial!(binOp, Op.Div);
 
 	// Evaluate expr, looking up variables in env
-	pure @safe
+	pure @safe nothrow
 	double eval(Expr expr, double[string] env)
 	{
 		return expr.match!(

@@ -27,7 +27,7 @@ Example
     struct Polar { double r, theta; }
     alias Vector = SumType!(Rectangular, Polar);
 
-    pure @safe
+    pure @safe @nogc nothrow
     double length(Vector v)
     {
         return v.match!(
@@ -36,7 +36,7 @@ Example
         );
     }
 
-    pure @safe
+    pure @safe @nogc nothrow
     double horiz(Vector v)
     {
         return v.match!(
