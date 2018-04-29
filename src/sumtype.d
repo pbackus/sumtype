@@ -277,6 +277,12 @@ unittest {
 	}));
 }
 
+// Recursive types
+unittest {
+	alias Foo = SumType!(This*);
+	assert(is(Foo.Types[0] == Foo*));
+}
+
 // toString
 unittest {
 	import std.typecons: Tuple, tuple;
