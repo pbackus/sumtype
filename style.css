@@ -70,6 +70,10 @@ pre {
 	max-width: calc(80vw - 16em - 4em);
 }
 
+pre {
+	tab-size: 4;
+	-moz-tab-size: 4;
+}
 
 #page-header {
 	height: 32px;
