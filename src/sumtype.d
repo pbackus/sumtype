@@ -170,13 +170,13 @@ struct This;
  *
  * See_Also: `std.variant.Algebraic`
  */
-struct SumType(TypeParams...)
+struct SumType(TypeArgs...)
 {
 	import std.meta: AliasSeq, staticIndexOf;
 	import std.typecons: ReplaceType;
 
 	/// The types a `SumType` can hold
-	alias Types = AliasSeq!(ReplaceType!(This, typeof(this), TypeParams));
+	alias Types = AliasSeq!(ReplaceType!(This, typeof(this), TypeArgs));
 
 private:
 
@@ -345,7 +345,7 @@ template match(handlers...)
 	 * Params:
 	 *   self = A [SumType] object
 	 */
-	auto match(Self : SumType!TypeParams, TypeParams...)(Self self)
+	auto match(Self : SumType!TypeArgs, TypeArgs...)(Self self)
 	{
 		alias Types = self.Types;
 
