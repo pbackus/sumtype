@@ -157,7 +157,7 @@ unittest {
 	assert(pprint(*myExpr) == "(a + (2 * b))");
 }
 
-struct This;
+public import std.variant: This;
 
 /**
  * A tagged union that can hold a single value from any of a specified set of
@@ -312,6 +312,15 @@ unittest {
 	alias Foo = SumType!(int, float, This*);
 
 	assert(is(Foo.Types == AliasSeq!(int, float, Foo*)));
+}
+
+// Works alongside Algebraic
+unittest {
+	import std.variant;
+
+	alias Bar = Algebraic!(This*);
+
+	assert(is(Bar.AllowedTypes[0] == Bar*));
 }
 
 /**
