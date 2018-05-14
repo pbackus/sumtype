@@ -11,6 +11,37 @@ Author: Paul Backus
 +/
 module sumtype;
 
+/// $(H3 Basic usage)
+unittest {
+	import std.math: approxEqual;
+
+	struct Fahrenheit { double degrees; }
+	struct Celsius { double degrees; }
+	struct Kelvin { double degrees; }
+
+	alias Temperature = SumType!(Fahrenheit, Celsius, Kelvin);
+
+	pure @safe @nogc nothrow
+	Fahrenheit toFahrenheit(Temperature t)
+	{
+		return Fahrenheit(
+			t.match!(
+				(Fahrenheit f) => f.degrees,
+				(Celsius c) => c.degrees * 9.0/5 + 32,
+				(Kelvin k) => k.degrees * 9.0/5 - 459.4
+			)
+		);
+	}
+
+	Temperature t1 = Fahrenheit(98.6);
+	Temperature t2 = Celsius(100);
+	Temperature t3 = Kelvin(273);
+
+	assert(toFahrenheit(t1).degrees.approxEqual(98.6));
+	assert(toFahrenheit(t2).degrees.approxEqual(212));
+	assert(toFahrenheit(t3).degrees.approxEqual(32));
+}
+
 /** $(H3 Structural matching)
  *
  * In the `length` and `horiz` functions below, the handlers for `match` do not
