@@ -6,12 +6,12 @@ A sum type for modern D.
 Features
 --------
 
-- Pattern matching.
-- Self-referential types (`This`).
-- Full attribute correctness—`pure`, `@safe`, `@nogc`, and `nothrow` when
-  applicable.
-- No runtime dependency on `TypeInfo`.
-- No heap allocation/boxing.
+- Pattern matching, including support for structural matching
+- Self-referential types, using `This`
+- Works with `pure`, `@safe`, `@nogc`, `nothrow`, and `immutable`
+- Zero runtime overhead compared to hand-written C
+    - No heap allocation
+    - Does not rely on runtime type information (`TypeInfo`)
 
 [Documentation][docs]
 ---------------------
