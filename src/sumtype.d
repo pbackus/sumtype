@@ -114,24 +114,24 @@ unittest {
 		Tuple!(Op, "op", This*, "lhs", This*, "rhs")
 	);
 
-	// Shorthand for a binary operation
+	// Shorthand for the Tuple type above
 	alias BinOp = Expr.Types[2];
 
-	// Factory for number expressions
+	// Factory function for number expressions
 	pure @safe
 	Expr* num(double value)
 	{
 		return new Expr(value);
 	}
 
-	// Factory for variable expressions
+	// Factory function for variable expressions
 	pure @safe
 	Expr* var(string name)
 	{
 		return new Expr(name);
 	}
 
-	// Factory for binary operation expressions
+	// Factory function for binary operation expressions
 	pure @safe
 	Expr* binOp(Op op, Expr* lhs, Expr* rhs)
 	{
