@@ -379,6 +379,8 @@ unittest {
  */
 template match(handlers...)
 {
+	import std.typecons: Yes;
+
 	/**
 	 * The actual `match` function.
 	 *
@@ -388,13 +390,55 @@ template match(handlers...)
 	auto match(Self)(Self self)
 		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
-		return self.matchImpl!handlers;
+		return self.matchImpl!(Yes.exhaustive, handlers);
+	}
+}
+
+/**
+ * Performs non-exhaustive matching on a [SumType].
+ *
+ * Same as [match], but does not require there to be a handler for every
+ * possible type. If an unexpected type is encountered at runtime, an exception
+ * is thrown.
+ *
+ * Returns:
+ *   The value returned from the handler that matches the currently-held type,
+ *   if such a handler exists.
+ *
+ * Throws:
+ *   [MatchFailure], if the currently-held type has no matching handler.
+ *
+ * See_Also: [match], `std.variant.tryVisit`
+ */
+template tryMatch(handlers...)
+{
+	import std.typecons: No;
+
+	/**
+	 * The actual `tryMatch` function.
+	 *
+	 * Params:
+	 *   self = A [SumType] object
+	 */
+	auto tryMatch(Self)(Self self)
+		if (is(Self : SumType!TypeArgs, TypeArgs...))
+	{
+		return self.matchImpl!(No.exhaustive, handlers);
+	}
+}
+
+/// Thrown by [tryMatch] when an unhandled type is encountered.
+class MatchFailure : Exception
+{
+	this(string msg, string file = __FILE__, size_t line = __LINE__)
+	{
+		super(msg, file, line);
 	}
 }
 
 import std.typecons: Flag;
 
-private template matchImpl(handlers...)
+private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 {
 	auto matchImpl(Self)(Self self)
 		if (is(Self : SumType!TypeArgs, TypeArgs...))
@@ -455,11 +499,18 @@ private template matchImpl(handlers...)
 
 		final switch (self.tag) {
 			static foreach (i, T; Types) {
-				static assert(handlerIndices[i] != -1,
-					"No matching handler for type `" ~ T.stringof ~ "`");
-
-					case i:
+				case i:
+					static if (handlerIndices[i] != -1) {
 						return handlers[handlerIndices[i]](self.value!T);
+					} else {
+						static if(exhaustive) {
+							static assert(0,
+								"No matching handler for type `" ~ T.stringof ~ "`");
+						} else {
+							throw new MatchFailure(
+								"No Matching handler for type `" ~ T.stringof ~ "`");
+						}
+					}
 			}
 		}
 		assert(false); // unreached
@@ -660,4 +711,17 @@ unittest {
 	assert(x.match!((float v) => false, (int v) => true, (int v) => false));
 	assert(x.match!(v => true, (int v) => false));
 	assert(x.match!(v => 2*v, v => v + 1) == 84);
+}
+
+// Non-exhaustive matching
+unittest {
+	import std.exception: assertThrown, assertNotThrown;
+
+	alias Foo = SumType!(int, float);
+
+	Foo x = Foo(42);
+	Foo y = Foo(3.14);
+
+	assertNotThrown!MatchFailure(x.tryMatch!((int n) => true));
+	assertThrown!MatchFailure(y.tryMatch!((int n) => true));
 }
