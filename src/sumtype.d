@@ -379,13 +379,14 @@ unittest {
  */
 template match(handlers...)
 {
-	/**
-	 * The actual `match` function.
-	 *
-	 * Params:
-	 *   self = A [SumType] object
-	 */
-	auto match(Self : SumType!TypeArgs, TypeArgs...)(Self self)
+	alias match = matchImpl!handlers;
+}
+
+import std.typecons: Flag;
+
+private template matchImpl(handlers...)
+{
+	auto matchImpl(Self : SumType!TypeArgs, TypeArgs...)(Self self)
 	{
 		alias Types = self.Types;
 
