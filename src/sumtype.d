@@ -396,7 +396,8 @@ import std.typecons: Flag;
 
 private template matchImpl(handlers...)
 {
-	auto matchImpl(Self : SumType!TypeArgs, TypeArgs...)(Self self)
+	auto matchImpl(Self)(Self self)
+		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
 		alias Types = self.Types;
 
