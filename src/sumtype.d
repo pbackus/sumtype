@@ -396,7 +396,7 @@ template match(handlers...)
 
 /**
  * Attempts to call a type-appropriate function with the value held in a
- * [SumType].
+ * [SumType], and throws on failure.
  *
  * Matches are chosen using the same rules as [match], but are not required to
  * be exhaustive—in other words, a type is allowed to have no matching handler.
