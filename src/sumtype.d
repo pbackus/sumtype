@@ -395,20 +395,22 @@ template match(handlers...)
 }
 
 /**
- * Performs non-exhaustive matching on a [SumType].
+ * Attempts to call a type-appropriate function with the value held in a
+ * [SumType].
  *
- * Same as [match], but does not require there to be a handler for every
- * possible type. If an unexpected type is encountered at runtime, an exception
- * is thrown.
+ * Matches are chosen using the same rules as [match], but are not required to
+ * be exhaustive—in other words, a type is allowed to have no matching handler.
+ * If a type without a handler is encountered at runtime, a [MatchFailure]
+ * exception is thrown.
  *
  * Returns:
  *   The value returned from the handler that matches the currently-held type,
- *   if such a handler exists.
+ *   if a handler was given for that type.
  *
  * Throws:
  *   [MatchFailure], if the currently-held type has no matching handler.
  *
- * See_Also: [match], `std.variant.tryVisit`
+ * See_Also: `std.variant.tryVisit`
  */
 template tryMatch(handlers...)
 {
