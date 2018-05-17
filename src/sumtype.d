@@ -400,15 +400,15 @@ template match(handlers...)
  *
  * Matches are chosen using the same rules as [match], but are not required to
  * be exhaustive—in other words, a type is allowed to have no matching handler.
- * If a type without a handler is encountered at runtime, a [MatchFailure]
- * exception is thrown.
+ * If a type without a handler is encountered at runtime, a [MatchException]
+ * is thrown.
  *
  * Returns:
  *   The value returned from the handler that matches the currently-held type,
  *   if a handler was given for that type.
  *
  * Throws:
- *   [MatchFailure], if the currently-held type has no matching handler.
+ *   [MatchException], if the currently-held type has no matching handler.
  *
  * See_Also: `std.variant.tryVisit`
  */
@@ -430,7 +430,7 @@ template tryMatch(handlers...)
 }
 
 /// Thrown by [tryMatch] when an unhandled type is encountered.
-class MatchFailure : Exception
+class MatchException : Exception
 {
 	this(string msg, string file = __FILE__, size_t line = __LINE__)
 	{
@@ -509,7 +509,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 							static assert(0,
 								"No matching handler for type `" ~ T.stringof ~ "`");
 						} else {
-							throw new MatchFailure(
+							throw new MatchException(
 								"No Matching handler for type `" ~ T.stringof ~ "`");
 						}
 					}
@@ -724,6 +724,6 @@ unittest {
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
 
-	assertNotThrown!MatchFailure(x.tryMatch!((int n) => true));
-	assertThrown!MatchFailure(y.tryMatch!((int n) => true));
+	assertNotThrown!MatchException(x.tryMatch!((int n) => true));
+	assertThrown!MatchException(y.tryMatch!((int n) => true));
 }
