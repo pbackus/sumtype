@@ -245,7 +245,7 @@ public:
 	}
 
 	/// Returns a string representation of the currently-held value
-	auto toString()
+	string toString()
 	{
 		import std.conv: to;
 
