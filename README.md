@@ -16,7 +16,13 @@ Features
 [Documentation][docs]
 ---------------------
 
+`sumtype` uses [adrdox][] to generate its documentation. To build your own
+copy, run the following command from the root of the `sumtype` repository:
+
+    path/to/adrdox/doc2 --genSearchIndex --genSource -o generated-docs src
+
 [docs]: https://pbackus.github.io/sumtype/sumtype.html
+[adrdox]: https://github.com/adamdruppe/adrdox
 
 Example
 -------
