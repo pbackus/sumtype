@@ -387,7 +387,7 @@ template match(handlers...)
 	 * Params:
 	 *   self = A [SumType] object
 	 */
-	auto match(Self)(Self self)
+	auto match(Self)(auto ref Self self)
 		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
 		return self.matchImpl!(Yes.exhaustive, handlers);
@@ -422,7 +422,7 @@ template tryMatch(handlers...)
 	 * Params:
 	 *   self = A [SumType] object
 	 */
-	auto tryMatch(Self)(Self self)
+	auto tryMatch(Self)(auto ref Self self)
 		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
 		return self.matchImpl!(No.exhaustive, handlers);
@@ -442,7 +442,7 @@ import std.typecons: Flag;
 
 private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 {
-	auto matchImpl(Self)(Self self)
+	auto matchImpl(Self)(auto ref Self self)
 		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
 		alias Types = self.Types;
@@ -471,7 +471,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 			static foreach (T; Types) {
 				static foreach (i, h; handlers) {
-					static if (is(typeof(h(T.init)))) {
+					static if (is(typeof({ T arg; h(arg); }))) {
 						// Regular handlers
 						static if (isCallable!h) {
 							// Functions and delegates
@@ -726,4 +726,20 @@ unittest {
 
 	assertNotThrown!MatchException(x.tryMatch!((int n) => true));
 	assertThrown!MatchException(y.tryMatch!((int n) => true));
+}
+
+// Handlers with ref parameters
+unittest {
+	import std.math: approxEqual;
+
+	alias Value = SumType!(long, double);
+
+	auto value = Value(3.14);
+
+	value.match!(
+		(long) {},
+		(ref double d) { d *= 2; }
+	);
+
+	assert(value.value!double.approxEqual(6.28));
 }
