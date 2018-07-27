@@ -199,6 +199,9 @@ public import std.variant: This;
  * The special type `This` can be used as a placeholder to create
  * self-referential types, just like with `Algebraic`.
  *
+ * A `SumType` is initialized by default with the `.init` property of its first
+ * member type, just like a regular union.
+ *
  * See_Also: `std.variant.Algebraic`
  */
 struct SumType(TypeArgs...)
