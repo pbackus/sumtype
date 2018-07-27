@@ -452,9 +452,10 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			import std.meta: staticIndexOf;
 			import std.traits: hasMember, isCallable, isSomeFunction, Parameters;
 
-			// immutable overrides all other qualifiers, so this is true if and
-			// only if the two types are the same up to qualifiers.
-			enum sameBaseType(T, U) = is(immutable(T) == immutable(U));
+			// immutable recursively overrides all other qualifiers, so the
+			// right-hand side is true if and only if the two types are the
+			// same up to qualifiers (i.e., they have the same structure).
+			enum sameUpToQuals(T, U) = is(immutable(T) == immutable(U));
 
 			int[Types.length] indices;
 			indices[] = -1;
@@ -470,19 +471,19 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			}
 
 			static foreach (T; Types) {
-				static foreach (i, h; handlers) {
-					static if (is(typeof({ T arg; h(arg); }))) {
+				static foreach (i, handler; handlers) {
+					static if (is(typeof(handler(self.value!T)))) {
 						// Regular handlers
-						static if (isCallable!h) {
+						static if (isCallable!handler) {
 							// Functions and delegates
-							static if (isSomeFunction!h) {
-								static if (sameBaseType!(T, Parameters!h[0])) {
+							static if (isSomeFunction!handler) {
+								static if (sameUpToQuals!(T, Parameters!handler[0])) {
 									setHandlerIndex!T(i);
 								}
 							// Objects with overloaded opCall
-							} else static if (hasMember!(typeof(h), "opCall")) {
-								static foreach (overload; __traits(getOverloads, typeof(h), "opCall")) {
-									static if (sameBaseType!(T, Parameters!overload[0])) {
+							} else static if (hasMember!(typeof(handler), "opCall")) {
+								static foreach (overload; __traits(getOverloads, typeof(handler), "opCall")) {
+									static if (sameUpToQuals!(T, Parameters!overload[0])) {
 										setHandlerIndex!T(i);
 									}
 								}
