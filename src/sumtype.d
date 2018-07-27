@@ -197,7 +197,9 @@ public import std.variant: This;
  * The stored value can be operated on using [match|pattern matching].
  *
  * The special type `This` can be used as a placeholder to create
- * self-referential types, just like with `Algebraic`.
+ * self-referential types, just like with `Algebraic`. See the
+ * [sumtype#arithmetic-expression-evaluator|"Arithmetic expression evaluator" example] for
+ * usage.
  *
  * A `SumType` is initialized by default with the `.init` property of its first
  * member type, just like a regular union.
@@ -373,7 +375,8 @@ unittest {
  *
  * Handlers may be functions, delegates, or objects with opCall overloads.
  * Templated handlers are also accepted, and will match any type for which they
- * can be implicitly instantiated.
+ * can be implicitly instantiated. See [sumtype#structural-matching|"Structural matching"] for
+ * an example of templated handler usage.
  *
  * Returns:
  *   The value returned from the handler that matches the currently-held type.
