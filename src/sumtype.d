@@ -506,6 +506,18 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 		enum handlerIndices = getHandlerIndices;
 
+		import std.algorithm.searching: canFind;
+		import std.format: format;
+
+		static foreach (i, h; handlers) {
+			static assert(handlerIndices[].canFind(i),
+				"handler `%s` of type `%s` never matches".format(
+					h.stringof,
+					typeof(h).stringof
+				)
+			);
+		}
+
 		final switch (self.tag) {
 			static foreach (i, T; Types) {
 				case i:
@@ -581,8 +593,8 @@ unittest {
 	assert(x.match!((immutable(int)[] v) => true, (immutable(float)[] v) => false));
 	assert(x.match!((const(int)[] v) => true, (const(float)[] v) => false));
 	// Generic parameters
-	assert(x.match!((immutable v) => true, v => false));
-	assert(x.match!((const v) => true, v => false));
+	assert(x.match!((immutable v) => true));
+	assert(x.match!((const v) => true));
 	// Unqualified parameters
 	static assert(!__traits(compiles,
 		x.match!((int[] v) => true, (float[] v) => false)
@@ -717,9 +729,7 @@ unittest {
 
 	Foo x = Foo(42);
 
-	assert(x.match!((float v) => false, (int v) => true, (int v) => false));
-	assert(x.match!(v => true, (int v) => false));
-	assert(x.match!(v => 2*v, v => v + 1) == 84);
+	assert(x.match!((int v) => true, v => false));
 }
 
 // Non-exhaustive matching
@@ -749,4 +759,26 @@ unittest {
 	);
 
 	assert(value.value!double.approxEqual(6.28));
+}
+
+// Unreachable handlers
+unittest {
+	alias MySum = SumType!(int, string);
+
+	MySum s;
+
+	static assert(!__traits(compiles,
+		s.match!(
+			(int _) => 0,
+			(string _) => 1,
+			(double _) => 2
+		)
+	));
+
+	static assert(!__traits(compiles,
+		s.match!(
+			_ => 0,
+			(int _) => 1
+		)
+	));
 }
