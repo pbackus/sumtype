@@ -477,26 +477,26 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			}
 
 			static foreach (T; Types) {
-				static foreach (i, handler; handlers) {
+				static foreach (hid, handler; handlers) {
 					static if (is(typeof(handler(self.value!T)))) {
 						// Regular handlers
 						static if (isCallable!handler) {
 							// Functions and delegates
 							static if (isSomeFunction!handler) {
 								static if (sameUpToQuals!(T, Parameters!handler[0])) {
-									setHandlerIndex!T(i);
+									setHandlerIndex!T(hid);
 								}
 							// Objects with overloaded opCall
 							} else static if (hasMember!(typeof(handler), "opCall")) {
 								static foreach (overload; __traits(getOverloads, typeof(handler), "opCall")) {
 									static if (sameUpToQuals!(T, Parameters!overload[0])) {
-										setHandlerIndex!T(i);
+										setHandlerIndex!T(hid);
 									}
 								}
 							}
 						// Generic handlers
 						} else {
-							setHandlerIndex!T(i);
+							setHandlerIndex!T(hid);
 						}
 					}
 				}
@@ -509,20 +509,20 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		import std.algorithm.searching: canFind;
 		import std.format: format;
 
-		static foreach (i, h; handlers) {
-			static assert(handlerIndices[].canFind(i),
+		static foreach (hid, handler; handlers) {
+			static assert(handlerIndices[].canFind(hid),
 				"handler `%s` of type `%s` never matches".format(
-					h.stringof,
-					typeof(h).stringof
+					handler.stringof,
+					typeof(handler).stringof
 				)
 			);
 		}
 
 		final switch (self.tag) {
-			static foreach (i, T; Types) {
-				case i:
-					static if (handlerIndices[i] != -1) {
-						return handlers[handlerIndices[i]](self.value!T);
+			static foreach (tid, T; Types) {
+				case tid:
+					static if (handlerIndices[tid] != -1) {
+						return handlers[handlerIndices[tid]](self.value!T);
 					} else {
 						static if(exhaustive) {
 							static assert(0,
