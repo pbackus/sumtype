@@ -507,7 +507,6 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		enum handlerIndices = getHandlerIndices;
 
 		import std.algorithm.searching: canFind;
-		import std.format: format;
 
 		static foreach (hid, handler; handlers) {
 			static assert(handlerIndices[].canFind(hid),
