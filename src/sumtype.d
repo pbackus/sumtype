@@ -511,10 +511,9 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 		static foreach (hid, handler; handlers) {
 			static assert(handlerIndices[].canFind(hid),
-				"handler `%s` of type `%s` never matches".format(
-					handler.stringof,
-					typeof(handler).stringof
-				)
+				"handler `" ~ handler.stringof ~ "` " ~
+				"of type `" ~ typeof(handler).stringof ~ "` " ~
+				"never matches"
 			);
 		}
 
