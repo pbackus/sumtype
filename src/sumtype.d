@@ -529,7 +529,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 								"No matching handler for type `" ~ T.stringof ~ "`");
 						} else {
 							throw new MatchException(
-								"No Matching handler for type `" ~ T.stringof ~ "`");
+								"No matching handler for type `" ~ T.stringof ~ "`");
 						}
 					}
 			}
