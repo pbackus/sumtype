@@ -453,7 +453,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 	{
 		alias Types = self.Types;
 
-		pure static auto getHandlerIndices()
+		pure static int[Types.length] getHandlerIndices()
 		{
 			import std.meta: staticIndexOf;
 			import std.traits: hasMember, isCallable, isSomeFunction, Parameters;
