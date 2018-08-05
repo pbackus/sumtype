@@ -243,8 +243,11 @@ public:
 			/// Assigns a value to a `SumType`
 			void opAssign(T rhs)
 			{
+				import std.algorithm.mutation: moveEmplace;
+
+				this.match!((ref value) { destroy(value); });
 				tag = i;
-				storage.values[i] = rhs;
+				() @trusted { moveEmplace(rhs, storage.values[i]); }();
 			}
 		}
 	}
@@ -255,6 +258,16 @@ public:
 		import std.conv: to;
 
 		return this.match!(value => value.to!string);
+	}
+
+	import std.meta: anySatisfy;
+	import std.traits: hasElaborateDestructor;
+
+	static if (anySatisfy!(hasElaborateDestructor, Types)) {
+		~this()
+		{
+			this.match!((ref value) { destroy(value); });
+		}
 	}
 }
 
@@ -357,6 +370,51 @@ unittest {
 	alias Bar = Algebraic!(This*);
 
 	assert(is(Bar.AllowedTypes[0] == Bar*));
+}
+
+// Types with destructors
+unittest {
+	int destroyed;
+
+	struct HasDtor
+	{
+		int n = 0;
+
+		~this()
+		{
+			destroyed = n;
+		}
+	}
+
+	alias Foo = SumType!(int, HasDtor);
+
+	HasDtor h = HasDtor(123);
+
+	{
+		Foo x = h;
+		destroyed = 0;
+	}
+	assert(destroyed == 123);
+
+	{
+		Foo x = 456;
+		destroyed = 0;
+	}
+	assert(destroyed == 0);
+
+	{
+		Foo x = h;
+		destroyed = 0;
+		x = 456;
+		assert(destroyed == 123);
+	}
+
+	{
+		Foo x = 456;
+		destroyed = 0;
+		x = h;
+		assert(destroyed == 0);
+	}
 }
 
 /**
