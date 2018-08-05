@@ -208,7 +208,7 @@ public import std.variant: This;
  */
 struct SumType(TypeArgs...)
 {
-	import std.meta: AliasSeq, staticIndexOf;
+	import std.meta: AliasSeq;
 	import std.typecons: ReplaceType;
 
 	/// The types a `SumType` can hold
@@ -218,12 +218,12 @@ private:
 
 	int tag;
 
-	union
+	union Storage
 	{
 		Types values;
 	}
 
-	alias value(T) = values[staticIndexOf!(T, Types)];
+	Storage storage;
 
 public:
 
@@ -232,7 +232,7 @@ public:
 		this(T val)
 		{
 			tag = i;
-			value!T = val;
+			storage.values[i] = val;
 		}
 	}
 
@@ -244,7 +244,7 @@ public:
 			void opAssign(T rhs)
 			{
 				tag = i;
-				value!T = rhs;
+				storage.values[i] = rhs;
 			}
 		}
 	}
@@ -455,7 +455,6 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 		pure static int[Types.length] getHandlerIndices()
 		{
-			import std.meta: staticIndexOf;
 			import std.traits: hasMember, isCallable, isSomeFunction, Parameters;
 
 			// immutable recursively overrides all other qualifiers, so the
@@ -466,37 +465,34 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			int[Types.length] indices;
 			indices[] = -1;
 
-			void setHandlerIndex(T)(int hid)
-				if (staticIndexOf!(T, Types) >= 0)
+			void setHandlerIndex(int tid, int hid)
 			{
-				int tid = staticIndexOf!(T, Types);
-
 				if (indices[tid] == -1) {
 					indices[tid] = hid;
 				}
 			}
 
-			static foreach (T; Types) {
+			static foreach (tid, T; Types) {
 				static foreach (hid, handler; handlers) {
-					static if (is(typeof(handler(self.value!T)))) {
+					static if (is(typeof(handler(self.storage.values[tid])))) {
 						// Regular handlers
 						static if (isCallable!handler) {
 							// Functions and delegates
 							static if (isSomeFunction!handler) {
 								static if (sameUpToQuals!(T, Parameters!handler[0])) {
-									setHandlerIndex!T(hid);
+									setHandlerIndex(tid, hid);
 								}
 							// Objects with overloaded opCall
 							} else static if (hasMember!(typeof(handler), "opCall")) {
 								static foreach (overload; __traits(getOverloads, typeof(handler), "opCall")) {
 									static if (sameUpToQuals!(T, Parameters!overload[0])) {
-										setHandlerIndex!T(hid);
+										setHandlerIndex(tid, hid);
 									}
 								}
 							}
 						// Generic handlers
 						} else {
-							setHandlerIndex!T(hid);
+							setHandlerIndex(tid, hid);
 						}
 					}
 				}
@@ -520,7 +516,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			static foreach (tid, T; Types) {
 				case tid:
 					static if (handlerIndices[tid] != -1) {
-						return handlers[handlerIndices[tid]](self.value!T);
+						return handlers[handlerIndices[tid]](self.storage.values[tid]);
 					} else {
 						static if(exhaustive) {
 							static assert(0,
@@ -746,6 +742,7 @@ unittest {
 // Handlers with ref parameters
 unittest {
 	import std.math: approxEqual;
+	import std.meta: staticIndexOf;
 
 	alias Value = SumType!(long, double);
 
@@ -756,7 +753,9 @@ unittest {
 		(ref double d) { d *= 2; }
 	);
 
-	assert(value.value!double.approxEqual(6.28));
+	enum tid = staticIndexOf!(double, Value.Types);
+
+	assert(value.storage.values[tid].approxEqual(6.28));
 }
 
 // Unreachable handlers
