@@ -261,12 +261,23 @@ public:
 	}
 
 	import std.meta: anySatisfy;
-	import std.traits: hasElaborateDestructor;
+	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
 
 	static if (anySatisfy!(hasElaborateDestructor, Types)) {
 		~this()
 		{
 			this.match!((ref value) { destroy(value); });
+		}
+	}
+
+	static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
+		this(this)
+		{
+			this.match!((ref value) {
+				static if (hasElaborateCopyConstructor!(typeof(value))) {
+					value.__xpostblit;
+				}
+			});
 		}
 	}
 }
@@ -415,6 +426,32 @@ unittest {
 		x = h;
 		assert(destroyed == 0);
 	}
+}
+
+// Types with postblits
+unittest {
+	bool postblitted;
+
+	struct HasPostblit
+	{
+		this(this)
+		{
+			postblitted = true;
+		}
+	}
+
+	alias Foo = SumType!(int, HasPostblit);
+
+	Foo a = HasPostblit();
+
+	postblitted = false;
+	Foo b = a;
+	assert(postblitted);
+
+	Foo c;
+	postblitted = false;
+	c = a;
+	assert(postblitted);
 }
 
 /**
