@@ -245,7 +245,12 @@ public:
 			{
 				import std.algorithm.mutation: moveEmplace;
 
-				this.match!((ref value) { destroy(value); });
+				this.match!((ref value) {
+					static if (hasElaborateDestructor!(typeof(value))) {
+						destroy(value);
+					}
+				});
+
 				tag = i;
 				() @trusted { moveEmplace(rhs, storage.values[i]); }();
 			}
@@ -266,7 +271,11 @@ public:
 	static if (anySatisfy!(hasElaborateDestructor, Types)) {
 		~this()
 		{
-			this.match!((ref value) { destroy(value); });
+			this.match!((ref value) {
+				static if (hasElaborateDestructor!(typeof(value))) {
+					destroy(value);
+				}
+			});
 		}
 	}
 
@@ -425,6 +434,40 @@ unittest {
 		destroyed = 0;
 		x = h;
 		assert(destroyed == 0);
+	}
+}
+
+// Doesn't destroy reference types
+unittest {
+	bool destroyed;
+
+	class C
+	{
+		~this()
+		{
+			destroyed = true;
+		}
+	}
+
+	struct S
+	{
+		~this() {}
+	}
+
+	alias Foo = SumType!(S, C);
+
+	C c = new C();
+	{
+		Foo x = c;
+		destroyed = false;
+	}
+	assert(!destroyed);
+
+	{
+		Foo x = c;
+		destroyed = false;
+		x = S();
+		assert(!destroyed);
 	}
 }
 
