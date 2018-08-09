@@ -59,6 +59,7 @@ Example
     assert(horiz(u).approxEqual(1));
     assert(horiz(v).approxEqual(sqrt(0.5)));
 
+[![Open on run.dlang.io](https://img.shields.io/badge/run.dlang.io-open-blue.svg)](https://run.dlang.io/is/X4jUxq)
 
 Installation
 ------------
