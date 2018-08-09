@@ -207,6 +207,7 @@ public import std.variant: This;
  * See_Also: `std.variant.Algebraic`
  */
 struct SumType(TypeArgs...)
+	if (TypeArgs.length > 0)
 {
 	import std.meta: AliasSeq;
 	import std.typecons: ReplaceType;
