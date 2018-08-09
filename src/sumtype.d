@@ -221,6 +221,13 @@ private:
 	union Storage
 	{
 		Types values;
+
+		static foreach (i, T; Types) {
+			this(T val)
+			{
+				values[i] = val;
+			}
+		}
 	}
 
 	Storage storage;
@@ -232,7 +239,7 @@ public:
 		this(T val)
 		{
 			tag = i;
-			storage.values[i] = val;
+			storage = Storage(val);
 		}
 	}
 
@@ -495,6 +502,19 @@ unittest {
 	postblitted = false;
 	c = a;
 	assert(postblitted);
+}
+
+// Types with @disable this()
+unittest {
+	struct NoInit
+	{
+		@disable this();
+	}
+
+	alias MySum = SumType!(NoInit, int);
+
+	static assert(!__traits(compiles, MySum()));
+	static assert(__traits(compiles, MySum(42)));
 }
 
 /**
