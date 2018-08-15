@@ -217,8 +217,6 @@ struct SumType(TypeArgs...)
 
 private:
 
-	int tag;
-
 	union Storage
 	{
 		Types values;
@@ -231,6 +229,7 @@ private:
 		}
 	}
 
+	int tag;
 	Storage storage;
 
 public:
