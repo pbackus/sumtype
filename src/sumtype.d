@@ -207,7 +207,7 @@ public import std.variant: This;
  * See_Also: `std.variant.Algebraic`
  */
 struct SumType(TypeArgs...)
-	if (TypeArgs.length > 0)
+	if (TypeArgs.length > 0 && TypeArgs.length < size_t.max)
 {
 	import std.meta: AliasSeq;
 	import std.typecons: ReplaceType;
@@ -229,7 +229,7 @@ private:
 		}
 	}
 
-	int tag;
+	size_t tag;
 	Storage storage;
 
 public:
@@ -610,8 +610,9 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
 		alias Types = self.Types;
+		enum size_t noMatch = size_t.max;
 
-		pure static int[Types.length] getHandlerIndices()
+		pure static size_t[Types.length] getHandlerIndices()
 		{
 			import std.traits: hasMember, isCallable, isSomeFunction, Parameters;
 
@@ -620,12 +621,12 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			// same up to qualifiers (i.e., they have the same structure).
 			enum sameUpToQuals(T, U) = is(immutable(T) == immutable(U));
 
-			int[Types.length] indices;
-			indices[] = -1;
+			size_t[Types.length] indices;
+			indices[] = noMatch;
 
-			void setHandlerIndex(int tid, int hid)
+			void setHandlerIndex(size_t tid, size_t hid)
 			{
-				if (indices[tid] == -1) {
+				if (indices[tid] == noMatch) {
 					indices[tid] = hid;
 				}
 			}
@@ -673,7 +674,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		final switch (self.tag) {
 			static foreach (tid, T; Types) {
 				case tid:
-					static if (handlerIndices[tid] != -1) {
+					static if (handlerIndices[tid] != noMatch) {
 						return handlers[handlerIndices[tid]](self.storage.values[tid]);
 					} else {
 						static if(exhaustive) {
