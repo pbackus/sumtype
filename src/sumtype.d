@@ -207,7 +207,7 @@ public import std.variant: This;
  * See_Also: `std.variant.Algebraic`
  */
 struct SumType(TypeArgs...)
-	if (TypeArgs.length > 0 && TypeArgs.length < size_t.max)
+	if (TypeArgs.length > 0 && TypeArgs.length < ulong.max)
 {
 	import std.meta: AliasSeq;
 	import std.typecons: ReplaceType;
@@ -216,6 +216,16 @@ struct SumType(TypeArgs...)
 	alias Types = AliasSeq!(ReplaceType!(This, typeof(this), TypeArgs));
 
 private:
+
+	import std.meta: AliasSeq, Filter;
+	import std.traits: isUnsigned;
+
+	// Tag.max is reserved for use as a "not found" value in `match`
+	enum bool isValidTagType(T) = Types.length < T.max;
+	alias Tag = Filter!(
+		isValidTagType,
+		AliasSeq!(ubyte, ushort, uint, ulong)
+	)[0];
 
 	union Storage
 	{
@@ -229,7 +239,7 @@ private:
 		}
 	}
 
-	size_t tag;
+	Tag tag;
 	Storage storage;
 
 public:
@@ -610,7 +620,8 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
 		alias Types = self.Types;
-		enum size_t noMatch = size_t.max;
+		alias Tag = self.Tag;
+		enum noMatch = Tag.max;
 
 		pure static size_t[Types.length] getHandlerIndices()
 		{
@@ -624,7 +635,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			size_t[Types.length] indices;
 			indices[] = noMatch;
 
-			void setHandlerIndex(size_t tid, size_t hid)
+			void setHandlerIndex(Tag tid, size_t hid)
 			{
 				if (indices[tid] == noMatch) {
 					indices[tid] = hid;
