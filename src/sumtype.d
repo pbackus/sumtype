@@ -207,7 +207,7 @@ public import std.variant: This;
  * See_Also: `std.variant.Algebraic`
  */
 struct SumType(TypeArgs...)
-	if (TypeArgs.length > 0 && TypeArgs.length < ulong.max)
+	if (TypeArgs.length > 0 && TypeArgs.length < size_t.max)
 {
 	import std.meta: AliasSeq;
 	import std.typecons: ReplaceType;
@@ -220,8 +220,7 @@ private:
 	import std.meta: AliasSeq, Filter;
 	import std.traits: isUnsigned;
 
-	// Tag.max is reserved for use as a "not found" value in `match`
-	enum bool isValidTagType(T) = Types.length < T.max;
+	enum bool isValidTagType(T) = Types.length <= T.max;
 	alias Tag = Filter!(
 		isValidTagType,
 		AliasSeq!(ubyte, ushort, uint, ulong)
@@ -621,7 +620,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 	{
 		alias Types = self.Types;
 		alias Tag = self.Tag;
-		enum noMatch = Tag.max;
+		enum noMatch = size_t.max;
 
 		pure static size_t[Types.length] getHandlerIndices()
 		{
