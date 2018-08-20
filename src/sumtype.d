@@ -194,15 +194,15 @@ public import std.variant: This;
  * A tagged union that can hold a single value from any of a specified set of
  * types
  *
- * The stored value can be operated on using [match|pattern matching].
+ * The value in a `SumType` can be operated on using [match|pattern matching].
  *
  * The special type `This` can be used as a placeholder to create
  * self-referential types, just like with `Algebraic`. See the
  * [sumtype#arithmetic-expression-evaluator|"Arithmetic expression evaluator" example] for
  * usage.
  *
- * A `SumType` is initialized by default with the `.init` property of its first
- * member type, just like a regular union.
+ * A `SumType` is initialized by default to hold the `.init` property of its
+ * first member type, just like a regular union.
  *
  * See_Also: `std.variant.Algebraic`
  */
