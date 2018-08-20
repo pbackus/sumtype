@@ -410,47 +410,47 @@ unittest {
 
 // Types with destructors
 unittest {
-	int destroyed;
+	int destructorCalls;
 
 	struct HasDtor
 	{
-		int n = 0;
-
 		~this()
 		{
-			destroyed = n;
+			destructorCalls++;
 		}
 	}
 
 	alias Foo = SumType!(int, HasDtor);
 
-	HasDtor h = HasDtor(123);
+	HasDtor h;
 
 	{
 		Foo x = h;
-		destroyed = 0;
+		destructorCalls = 0;
 	}
-	assert(destroyed == 123);
+	assert(destructorCalls == 1);
 
 	{
 		Foo x = 456;
-		destroyed = 0;
+		destructorCalls = 0;
 	}
-	assert(destroyed == 0);
+	assert(destructorCalls == 0);
 
 	{
 		Foo x = h;
-		destroyed = 0;
+		destructorCalls = 0;
 		x = 456;
-		assert(destroyed == 123);
+		assert(destructorCalls == 1);
 	}
+	assert(destructorCalls == 1);
 
 	{
 		Foo x = 456;
-		destroyed = 0;
+		destructorCalls = 0;
 		x = h;
-		assert(destroyed == 0);
+		assert(destructorCalls == 1); // from opAssign
 	}
+	assert(destructorCalls == 2); // from x's dtor
 }
 
 // Doesn't destroy reference types
