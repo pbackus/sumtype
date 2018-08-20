@@ -260,6 +260,7 @@ public:
 			void opAssign(T rhs)
 			{
 				import std.algorithm.mutation: moveEmplace;
+				import std.traits: hasElaborateDestructor;
 
 				this.match!((ref value) {
 					static if (hasElaborateDestructor!(typeof(value))) {
@@ -268,7 +269,17 @@ public:
 				});
 
 				tag = i;
-				() @trusted { moveEmplace(rhs, storage.values[i]); }();
+
+				static if (hasElaborateDestructor!T) {
+					// Destructors aren't called on union members, so move from
+					// inside a union to avoid destroying T.init (which may be
+					// invalid).
+					union DontDestroy { T value; }
+					auto tmp = DontDestroy(rhs);
+					() @trusted { moveEmplace(tmp.value, storage.values[i]); }();
+				} else {
+					() @trusted { moveEmplace(rhs, storage.values[i]); }();
+				}
 			}
 		}
 	}
@@ -524,6 +535,27 @@ unittest {
 
 	static assert(!__traits(compiles, MySum()));
 	static assert(__traits(compiles, MySum(42)));
+}
+
+// Types with .init values that violate their invariants
+unittest {
+	import core.exception: AssertError;
+	import std.exception: assertNotThrown;
+
+	// FeepingCreature's diabolical test case
+	struct Evil
+	{
+		@disable this();
+		~this() pure @safe { }
+		this(int i) pure @safe { this.i = i; }
+		void opAssign(Evil) { assert(false); }
+		immutable int i;
+		invariant { assert(i != 0); }
+	}
+
+	SumType!(Evil, int) x = 123;
+
+	assertNotThrown!AssertError(x = Evil(456));
 }
 
 /**
