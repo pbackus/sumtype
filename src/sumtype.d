@@ -259,7 +259,6 @@ public:
 			/// Assigns a value to a `SumType`
 			void opAssign(T rhs)
 			{
-				import std.algorithm.mutation: moveEmplace;
 				import std.traits: hasElaborateDestructor;
 
 				this.match!((ref value) {
@@ -269,17 +268,7 @@ public:
 				});
 
 				tag = i;
-
-				static if (hasElaborateDestructor!T) {
-					// Destructors aren't called on union members, so move from
-					// inside a union to avoid destroying T.init (which may be
-					// invalid).
-					union DontDestroy { T value; }
-					auto tmp = DontDestroy(rhs);
-					() @trusted { moveEmplace(tmp.value, storage.values[i]); }();
-				} else {
-					() @trusted { moveEmplace(rhs, storage.values[i]); }();
-				}
+				storage = Storage(rhs);
 			}
 		}
 	}
