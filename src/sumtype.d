@@ -218,9 +218,9 @@ struct SumType(TypeArgs...)
 private:
 
 	import std.meta: AliasSeq, Filter;
-	import std.traits: isUnsigned;
 
 	enum bool isValidTagType(T) = Types.length <= T.max;
+
 	alias Tag = Filter!(
 		isValidTagType,
 		AliasSeq!(ubyte, ushort, uint, ulong)
