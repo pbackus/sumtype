@@ -679,7 +679,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 						return handlers[handlerIndices[tid]](self.storage.values[tid]);
 					} else {
 						static if(exhaustive) {
-							static assert(0,
+							static assert(false,
 								"No matching handler for type `" ~ T.stringof ~ "`");
 						} else {
 							throw new MatchException(
