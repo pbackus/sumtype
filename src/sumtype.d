@@ -419,49 +419,45 @@ unittest {
 	assert(is(Bar.AllowedTypes[0] == Bar*));
 }
 
-// Types with destructors
+// Types with destructors and postblits
 unittest {
-	int destructorCalls;
+	int copies;
 
-	struct HasDtor
+	struct Test
 	{
-		~this()
-		{
-			destructorCalls++;
-		}
+		this(this) { copies++; }
+		~this() { copies--; }
 	}
 
-	alias Foo = SumType!(int, HasDtor);
+	alias Foo = SumType!(int, Test);
 
-	HasDtor h;
+	Test t;
 
 	{
-		Foo x = h;
-		destructorCalls = 0;
+		Foo x = t;
+		assert(copies == 1);
 	}
-	assert(destructorCalls == 1);
+	assert(copies == 0);
 
 	{
 		Foo x = 456;
-		destructorCalls = 0;
+		assert(copies == 0);
 	}
-	assert(destructorCalls == 0);
+	assert(copies == 0);
 
 	{
-		Foo x = h;
-		destructorCalls = 0;
+		Foo x = t;
+		assert(copies == 1);
 		x = 456;
-		assert(destructorCalls == 1);
+		assert(copies == 0);
 	}
-	assert(destructorCalls == 1);
 
 	{
 		Foo x = 456;
-		destructorCalls = 0;
-		x = h;
-		assert(destructorCalls == 1); // from opAssign
+		assert(copies == 0);
+		x = t;
+		assert(copies == 1);
 	}
-	assert(destructorCalls == 2); // from x's dtor
 }
 
 // Doesn't destroy reference types
@@ -496,32 +492,6 @@ unittest {
 		x = S();
 		assert(!destroyed);
 	}
-}
-
-// Types with postblits
-unittest {
-	bool postblitted;
-
-	struct HasPostblit
-	{
-		this(this)
-		{
-			postblitted = true;
-		}
-	}
-
-	alias Foo = SumType!(int, HasPostblit);
-
-	Foo a = HasPostblit();
-
-	postblitted = false;
-	Foo b = a;
-	assert(postblitted);
-
-	Foo c;
-	postblitted = false;
-	c = a;
-	assert(postblitted);
 }
 
 // Types with @disable this()
