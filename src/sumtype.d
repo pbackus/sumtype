@@ -309,38 +309,38 @@ public:
 
 // Construction
 unittest {
-	alias Foo = SumType!(int, float);
+	alias MySum = SumType!(int, float);
 
-	assert(__traits(compiles, Foo(42)));
-	assert(__traits(compiles, Foo(3.14)));
+	assert(__traits(compiles, MySum(42)));
+	assert(__traits(compiles, MySum(3.14)));
 }
 
 // Assignment
 unittest {
-	alias Foo = SumType!(int, float);
+	alias MySum = SumType!(int, float);
 
-	Foo x = Foo(42);
+	MySum x = MySum(42);
 
 	assert(__traits(compiles, x = 3.14));
 }
 
 // Self assignment
 unittest {
-	alias Foo = SumType!(int, float);
+	alias MySum = SumType!(int, float);
 
-	Foo x = Foo(42);
-	Foo y = Foo(3.14);
+	MySum x = MySum(42);
+	MySum y = MySum(3.14);
 
 	assert(__traits(compiles, y = x));
 }
 
 // Equality
 unittest {
-	alias Foo = SumType!(int, float);
+	alias MySum = SumType!(int, float);
 
-	Foo x = Foo(42);
-	Foo y = x;
-	Foo z = Foo(3.14);
+	MySum x = MySum(42);
+	MySum y = x;
+	MySum z = MySum(3.14);
 
 	assert(x == y);
 	assert(x != z);
@@ -351,21 +351,21 @@ unittest {
 	import std.typecons: Tuple;
 
 	assert(__traits(compiles, {
-		alias Foo = SumType!(Tuple!(int, int));
+		alias MySum = SumType!(Tuple!(int, int));
 	}));
 }
 
 // const and immutable types
 unittest {
 	assert(__traits(compiles, {
-		alias Foo = SumType!(const(int[]), immutable(float[]));
+		alias MySum = SumType!(const(int[]), immutable(float[]));
 	}));
 }
 
 // Recursive types
 unittest {
-	alias Foo = SumType!(This*);
-	assert(is(Foo.Types[0] == Foo*));
+	alias MySum = SumType!(This*);
+	assert(is(MySum.Types[0] == MySum*));
 }
 
 // toString
@@ -375,15 +375,15 @@ unittest {
 
 	class C {}
 
-	alias Foo = SumType!(int[], double, Tuple!(string, C));
+	alias MySum = SumType!(int[], double, Tuple!(string, C));
 
 	int[] a = [1, 2, 3];
 	double b = 3.14;
 	Tuple!(string, C) c = tuple("test", new C);
 
-	Foo x = Foo(a);
-	Foo y = Foo(b);
-	Foo z = Foo(c);
+	MySum x = MySum(a);
+	MySum y = MySum(b);
+	MySum z = MySum(c);
 
 	assert(x.toString == a.to!string);
 	assert(y.toString == b.to!string);
@@ -394,9 +394,9 @@ unittest {
 unittest {
 	import std.meta: AliasSeq;
 
-	alias Foo = SumType!(int, float, This*);
+	alias MySum = SumType!(int, float, This*);
 
-	assert(is(Foo.Types == AliasSeq!(int, float, Foo*)));
+	assert(is(MySum.Types == AliasSeq!(int, float, MySum*)));
 }
 
 // Works alongside Algebraic
@@ -418,31 +418,31 @@ unittest {
 		~this() { copies--; }
 	}
 
-	alias Foo = SumType!(int, Test);
+	alias MySum = SumType!(int, Test);
 
 	Test t;
 
 	{
-		Foo x = t;
+		MySum x = t;
 		assert(copies == 1);
 	}
 	assert(copies == 0);
 
 	{
-		Foo x = 456;
+		MySum x = 456;
 		assert(copies == 0);
 	}
 	assert(copies == 0);
 
 	{
-		Foo x = t;
+		MySum x = t;
 		assert(copies == 1);
 		x = 456;
 		assert(copies == 0);
 	}
 
 	{
-		Foo x = 456;
+		MySum x = 456;
 		assert(copies == 0);
 		x = t;
 		assert(copies == 1);
@@ -466,17 +466,17 @@ unittest {
 		~this() {}
 	}
 
-	alias Foo = SumType!(S, C);
+	alias MySum = SumType!(S, C);
 
 	C c = new C();
 	{
-		Foo x = c;
+		MySum x = c;
 		destroyed = false;
 	}
 	assert(!destroyed);
 
 	{
-		Foo x = c;
+		MySum x = c;
 		destroyed = false;
 		x = S();
 		assert(!destroyed);
@@ -693,10 +693,10 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 // Matching
 unittest {
-	alias Foo = SumType!(int, float);
+	alias MySum = SumType!(int, float);
 
-	Foo x = Foo(42);
-	Foo y = Foo(3.14);
+	MySum x = MySum(42);
+	MySum y = MySum(3.14);
 
 	assert(x.match!((int v) => true, (float v) => false));
 	assert(y.match!((int v) => false, (float v) => true));
@@ -704,9 +704,9 @@ unittest {
 
 // Missing handlers
 unittest {
-	alias Foo = SumType!(int, float);
+	alias MySum = SumType!(int, float);
 
-	Foo x = Foo(42);
+	MySum x = MySum(42);
 
 	assert(!__traits(compiles, x.match!((int x) => true)));
 	assert(!__traits(compiles, x.match!()));
@@ -714,9 +714,9 @@ unittest {
 
 // No implicit converstion
 unittest {
-	alias Foo = SumType!(int, float);
+	alias MySum = SumType!(int, float);
 
-	Foo x = Foo(42);
+	MySum x = MySum(42);
 
 	assert(!__traits(compiles,
 		x.match!((long v) => true, (float v) => false)
@@ -725,10 +725,10 @@ unittest {
 
 // Handlers with qualified parameters
 unittest {
-    alias Foo = SumType!(int[], float[]);
+    alias MySum = SumType!(int[], float[]);
 
-    Foo x = Foo([1, 2, 3]);
-    Foo y = Foo([1.0, 2.0, 3.0]);
+    MySum x = MySum([1, 2, 3]);
+    MySum y = MySum([1.0, 2.0, 3.0]);
 
     assert(x.match!((const(int[]) v) => true, (const(float[]) v) => false));
     assert(y.match!((const(int[]) v) => false, (const(float[]) v) => true));
@@ -736,9 +736,9 @@ unittest {
 
 // Handlers for qualified types
 unittest {
-	alias Foo = SumType!(immutable(int[]), immutable(float[]));
+	alias MySum = SumType!(immutable(int[]), immutable(float[]));
 
-	Foo x = Foo([1, 2, 3]);
+	MySum x = MySum([1, 2, 3]);
 
 	assert(x.match!((immutable(int[]) v) => true, (immutable(float[]) v) => false));
 	assert(x.match!((const(int[]) v) => true, (const(float[]) v) => false));
@@ -756,11 +756,11 @@ unittest {
 
 // Delegate handlers
 unittest {
-	alias Foo = SumType!(int, float);
+	alias MySum = SumType!(int, float);
 
 	int answer = 42;
-	Foo x = Foo(42);
-	Foo y = Foo(3.14);
+	MySum x = MySum(42);
+	MySum y = MySum(3.14);
 
 	assert(x.match!((int v) => v == answer, (float v) => v == answer));
 	assert(!y.match!((int v) => v == answer, (float v) => v == answer));
@@ -770,10 +770,10 @@ unittest {
 unittest {
 	import std.math: approxEqual;
 
-	alias Foo = SumType!(int, float);
+	alias MySum = SumType!(int, float);
 
-	Foo x = Foo(42);
-	Foo y = Foo(3.14);
+	MySum x = MySum(42);
+	MySum y = MySum(3.14);
 
 	assert(x.match!(v => v*2) == 84);
 	assert(y.match!(v => v*2).approxEqual(6.28));
@@ -783,10 +783,10 @@ unittest {
 unittest {
 	import std.conv: to;
 
-	alias Foo = SumType!(int, float, string);
+	alias MySum = SumType!(int, float, string);
 
-	Foo x = Foo(42);
-	Foo y = Foo("42");
+	MySum x = MySum(42);
+	MySum y = MySum("42");
 
 	assert(x.match!((string v) => v.to!int, v => v*2) == 84);
 	assert(y.match!((string v) => v.to!int, v => v*2) == 42);
@@ -796,12 +796,12 @@ unittest {
 unittest {
 	import std.math: approxEqual;
 
-	alias Foo = SumType!(int, float, int[], char[]);
+	alias MySum = SumType!(int, float, int[], char[]);
 
-	Foo x = Foo(42);
-	Foo y = Foo(3.14);
-	Foo z = Foo([1, 2, 3]);
-	Foo w = Foo(['a', 'b', 'c']);
+	MySum x = MySum(42);
+	MySum y = MySum(3.14);
+	MySum z = MySum([1, 2, 3]);
+	MySum w = MySum(['a', 'b', 'c']);
 
 	assert(x.match!(v => v*2, v => v.length) == 84);
 	assert(y.match!(v => v*2, v => v.length).approxEqual(6.28));
@@ -813,10 +813,10 @@ unittest {
 unittest {
 	struct S1 { int x; }
 	struct S2 { int y; }
-	alias Foo = SumType!(S1, S2);
+	alias MySum = SumType!(S1, S2);
 
-	Foo a = Foo(S1(0));
-	Foo b = Foo(S2(0));
+	MySum a = MySum(S1(0));
+	MySum b = MySum(S2(0));
 
 	assert(a.match!(s1 => s1.x + 1, s2 => s2.y - 1) == 1);
 	assert(b.match!(s1 => s1.x + 1, s2 => s2.y - 1) == -1);
@@ -840,10 +840,10 @@ unittest {
 		}
 	}
 
-	alias Foo = SumType!(int, float);
+	alias MySum = SumType!(int, float);
 
-	Foo x = Foo(42);
-	Foo y = Foo(3.14);
+	MySum x = MySum(42);
+	MySum y = MySum(3.14);
 	IntHandler handleInt;
 	FloatHandler handleFloat;
 
@@ -866,10 +866,10 @@ unittest {
 		}
 	}
 
-	alias Foo = SumType!(int, float);
+	alias MySum = SumType!(int, float);
 
-	Foo x = Foo(42);
-	Foo y = Foo(3.14);
+	MySum x = MySum(42);
+	MySum y = MySum(3.14);
 	CompoundHandler handleBoth;
 
 	assert(x.match!handleBoth);
@@ -878,9 +878,9 @@ unittest {
 
 // Ordered matching
 unittest {
-	alias Foo = SumType!(int, float);
+	alias MySum = SumType!(int, float);
 
-	Foo x = Foo(42);
+	MySum x = MySum(42);
 
 	assert(x.match!((int v) => true, v => false));
 }
@@ -889,10 +889,10 @@ unittest {
 unittest {
 	import std.exception: assertThrown, assertNotThrown;
 
-	alias Foo = SumType!(int, float);
+	alias MySum = SumType!(int, float);
 
-	Foo x = Foo(42);
-	Foo y = Foo(3.14);
+	MySum x = MySum(42);
+	MySum y = MySum(3.14);
 
 	assertNotThrown!MatchException(x.tryMatch!((int n) => true));
 	assertThrown!MatchException(y.tryMatch!((int n) => true));
