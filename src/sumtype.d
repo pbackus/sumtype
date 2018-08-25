@@ -610,7 +610,6 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
 		alias Types = self.Types;
-		alias Tag = self.Tag;
 		enum noMatch = size_t.max;
 
 		pure static size_t[Types.length] getHandlerIndices()
@@ -625,7 +624,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			size_t[Types.length] indices;
 			indices[] = noMatch;
 
-			void setHandlerIndex(Tag tid, size_t hid)
+			void setHandlerIndex(size_t tid, size_t hid)
 			{
 				if (indices[tid] == noMatch) {
 					indices[tid] = hid;
