@@ -192,7 +192,7 @@ public import std.variant: This;
 
 /**
  * A tagged union that can hold a single value from any of a specified set of
- * types
+ * types.
  *
  * The value in a `SumType` can be operated on using [match|pattern matching].
  *
@@ -212,7 +212,7 @@ struct SumType(TypeArgs...)
 	import std.meta: AliasSeq;
 	import std.typecons: ReplaceType;
 
-	/// The types a `SumType` can hold
+	/// The types a `SumType` can hold.
 	alias Types = AliasSeq!(ReplaceType!(This, typeof(this), TypeArgs));
 
 private:
@@ -244,7 +244,7 @@ private:
 public:
 
 	static foreach (i, T; Types) {
-		/// Constructs a `SumType` holding a specific value
+		/// Constructs a `SumType` holding a specific value.
 		this(T val)
 		{
 			tag = i;
@@ -256,7 +256,7 @@ public:
 
 	static foreach (i, T; Types) {
 		static if (isAssignable!T) {
-			/// Assigns a value to a `SumType`
+			/// Assigns a value to a `SumType`.
 			void opAssign(T rhs)
 			{
 				import std.traits: hasElaborateDestructor;
@@ -273,7 +273,7 @@ public:
 		}
 	}
 
-	/// Returns a string representation of the currently-held value
+	/// Returns a string representation of the currently-held value.
 	string toString()
 	{
 		import std.conv: to;
