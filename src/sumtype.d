@@ -311,8 +311,8 @@ public:
 unittest {
 	alias Foo = SumType!(int, float);
 
-	static assert(__traits(compiles, (){ Foo x = Foo(42); }));
-	static assert(__traits(compiles, (){ Foo y = Foo(3.14); }));
+	assert(__traits(compiles, Foo(42)));
+	assert(__traits(compiles, Foo(3.14)));
 }
 
 // Assignment
@@ -321,7 +321,7 @@ unittest {
 
 	Foo x = Foo(42);
 
-	static assert(__traits(compiles, (){ x = 3.14; }));
+	assert(__traits(compiles, x = 3.14));
 }
 
 // Self assignment
@@ -331,7 +331,7 @@ unittest {
 	Foo x = Foo(42);
 	Foo y = Foo(3.14);
 
-	static assert(__traits(compiles, y = x));
+	assert(__traits(compiles, y = x));
 }
 
 // Equality
@@ -350,14 +350,14 @@ unittest {
 unittest {
 	import std.typecons: Tuple;
 
-	static assert(__traits(compiles, (){
+	assert(__traits(compiles, {
 		alias Foo = SumType!(Tuple!(int, int));
 	}));
 }
 
 // const and immutable types
 unittest {
-	static assert(__traits(compiles, (){
+	assert(__traits(compiles, {
 		alias Foo = SumType!(const(int[]), immutable(float[]));
 	}));
 }
@@ -492,8 +492,8 @@ unittest {
 
 	alias MySum = SumType!(NoInit, int);
 
-	static assert(!__traits(compiles, MySum()));
-	static assert(__traits(compiles, MySum(42)));
+	assert(!__traits(compiles, MySum()));
+	assert(__traits(compiles, MySum(42)));
 }
 
 // Types with .init values that violate their invariants
@@ -709,8 +709,8 @@ unittest {
 
 	Foo x = Foo(42);
 
-	static assert(!__traits(compiles, x.match!((int x) => true)));
-	static assert(!__traits(compiles, x.match!()));
+	assert(!__traits(compiles, x.match!((int x) => true)));
+	assert(!__traits(compiles, x.match!()));
 }
 
 // No implicit converstion
@@ -719,7 +719,7 @@ unittest {
 
 	Foo x = Foo(42);
 
-	static assert(!__traits(compiles,
+	assert(!__traits(compiles,
 		x.match!((long v) => true, (float v) => false)
 	));
 }
@@ -750,7 +750,7 @@ unittest {
 	assert(x.match!((immutable v) => true));
 	assert(x.match!((const v) => true));
 	// Unqualified parameters
-	static assert(!__traits(compiles,
+	assert(!__traits(compiles,
 		x.match!((int[] v) => true, (float[] v) => false)
 	));
 }
@@ -924,7 +924,7 @@ unittest {
 
 	MySum s;
 
-	static assert(!__traits(compiles,
+	assert(!__traits(compiles,
 		s.match!(
 			(int _) => 0,
 			(string _) => 1,
@@ -932,7 +932,7 @@ unittest {
 		)
 	));
 
-	static assert(!__traits(compiles,
+	assert(!__traits(compiles,
 		s.match!(
 			_ => 0,
 			(int _) => 1
