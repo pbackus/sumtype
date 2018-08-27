@@ -13,8 +13,10 @@ Features
     - No heap allocation
     - Does not rely on runtime type information (`TypeInfo`)
 
-[Documentation][docs]
----------------------
+Documentation
+-------------
+
+[View online on Github Pages.][docs]
 
 `sumtype` uses [adrdox][] to generate its documentation. To build your own
 copy, run the following command from the root of the `sumtype` repository:
