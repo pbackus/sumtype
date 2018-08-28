@@ -274,7 +274,7 @@ public:
 	}
 
 	/// Returns a string representation of the currently-held value.
-	string toString()
+	string toString() const
 	{
 		import std.conv: to;
 
@@ -515,6 +515,12 @@ unittest {
 	SumType!(Evil, int) x = 123;
 
 	assertNotThrown!AssertError(x = Evil(456));
+}
+
+// Can call non-mutating methods on const SumTypes
+unittest {
+	const(SumType!(int, double)) x = 123;
+	assert(x.toString == "123");
 }
 
 /**
