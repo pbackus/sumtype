@@ -13,33 +13,33 @@ module sumtype;
 
 /// $(H3 Basic usage)
 unittest {
-	import std.math: approxEqual;
+    import std.math: approxEqual;
 
-	struct Fahrenheit { double degrees; }
-	struct Celsius { double degrees; }
-	struct Kelvin { double degrees; }
+    struct Fahrenheit { double degrees; }
+    struct Celsius { double degrees; }
+    struct Kelvin { double degrees; }
 
-	alias Temperature = SumType!(Fahrenheit, Celsius, Kelvin);
+    alias Temperature = SumType!(Fahrenheit, Celsius, Kelvin);
 
-	pure @safe @nogc nothrow
-	Fahrenheit toFahrenheit(Temperature t)
-	{
-		return Fahrenheit(
-			t.match!(
-				(Fahrenheit f) => f.degrees,
-				(Celsius c) => c.degrees * 9.0/5 + 32,
-				(Kelvin k) => k.degrees * 9.0/5 - 459.4
-			)
-		);
-	}
+    pure @safe @nogc nothrow
+    Fahrenheit toFahrenheit(Temperature t)
+    {
+        return Fahrenheit(
+            t.match!(
+                (Fahrenheit f) => f.degrees,
+                (Celsius c) => c.degrees * 9.0/5 + 32,
+                (Kelvin k) => k.degrees * 9.0/5 - 459.4
+            )
+        );
+    }
 
-	Temperature t1 = Fahrenheit(98.6);
-	Temperature t2 = Celsius(100);
-	Temperature t3 = Kelvin(273);
+    Temperature t1 = Fahrenheit(98.6);
+    Temperature t2 = Celsius(100);
+    Temperature t3 = Kelvin(273);
 
-	assert(toFahrenheit(t1).degrees.approxEqual(98.6));
-	assert(toFahrenheit(t2).degrees.approxEqual(212));
-	assert(toFahrenheit(t3).degrees.approxEqual(32));
+    assert(toFahrenheit(t1).degrees.approxEqual(98.6));
+    assert(toFahrenheit(t2).degrees.approxEqual(212));
+    assert(toFahrenheit(t3).degrees.approxEqual(32));
 }
 
 /** $(H3 Structural matching)
@@ -51,37 +51,37 @@ unittest {
  * by the `polar` handlers.
  */
 unittest {
-	import std.math: approxEqual, cos, PI, sqrt;
+    import std.math: approxEqual, cos, PI, sqrt;
 
-	struct Rectangular { double x, y; }
-	struct Polar { double r, theta; }
-	alias Vector = SumType!(Rectangular, Polar);
+    struct Rectangular { double x, y; }
+    struct Polar { double r, theta; }
+    alias Vector = SumType!(Rectangular, Polar);
 
-	pure @safe @nogc nothrow
-	double length(Vector v)
-	{
-		return v.match!(
-			rect => sqrt(rect.x^^2 + rect.y^^2),
-			polar => polar.r
-		);
-	}
+    pure @safe @nogc nothrow
+    double length(Vector v)
+    {
+        return v.match!(
+            rect => sqrt(rect.x^^2 + rect.y^^2),
+            polar => polar.r
+        );
+    }
 
-	pure @safe @nogc nothrow
-	double horiz(Vector v)
-	{
-		return v.match!(
-			rect => rect.x,
-			polar => polar.r * cos(polar.theta)
-		);
-	}
+    pure @safe @nogc nothrow
+    double horiz(Vector v)
+    {
+        return v.match!(
+            rect => rect.x,
+            polar => polar.r * cos(polar.theta)
+        );
+    }
 
-	Vector u = Rectangular(1, 1);
-	Vector v = Polar(1, PI/4);
+    Vector u = Rectangular(1, 1);
+    Vector v = Polar(1, PI/4);
 
-	assert(length(u).approxEqual(sqrt(2.0)));
-	assert(length(v).approxEqual(1));
-	assert(horiz(u).approxEqual(1));
-	assert(horiz(v).approxEqual(sqrt(0.5)));
+    assert(length(u).approxEqual(sqrt(2.0)));
+    assert(length(v).approxEqual(1));
+    assert(horiz(u).approxEqual(1));
+    assert(horiz(v).approxEqual(sqrt(0.5)));
 }
 
 /** $(H3 Arithmetic expression evaluator)
@@ -92,100 +92,100 @@ unittest {
  * representing simple arithmetic expressions.
  */
 unittest {
-	import std.functional: partial;
-	import std.traits: EnumMembers;
-	import std.typecons: Tuple;
+    import std.functional: partial;
+    import std.traits: EnumMembers;
+    import std.typecons: Tuple;
 
-	enum Op : string
-	{
-		Plus  = "+",
-		Minus = "-",
-		Times = "*",
-		Div   = "/"
-	}
+    enum Op : string
+    {
+        Plus  = "+",
+        Minus = "-",
+        Times = "*",
+        Div   = "/"
+    }
 
-	// An expression is either
-	//  - a number,
-	//  - a variable, or
-	//  - a binary operation combining two sub-expressions.
-	alias Expr = SumType!(
-		double,
-		string,
-		Tuple!(Op, "op", This*, "lhs", This*, "rhs")
-	);
+    // An expression is either
+    //  - a number,
+    //  - a variable, or
+    //  - a binary operation combining two sub-expressions.
+    alias Expr = SumType!(
+        double,
+        string,
+        Tuple!(Op, "op", This*, "lhs", This*, "rhs")
+    );
 
-	// Shorthand for the Tuple type above
-	alias BinOp = Expr.Types[2];
+    // Shorthand for the Tuple type above
+    alias BinOp = Expr.Types[2];
 
-	// Factory function for number expressions
-	pure @safe
-	Expr* num(double value)
-	{
-		return new Expr(value);
-	}
+    // Factory function for number expressions
+    pure @safe
+    Expr* num(double value)
+    {
+        return new Expr(value);
+    }
 
-	// Factory function for variable expressions
-	pure @safe
-	Expr* var(string name)
-	{
-		return new Expr(name);
-	}
+    // Factory function for variable expressions
+    pure @safe
+    Expr* var(string name)
+    {
+        return new Expr(name);
+    }
 
-	// Factory function for binary operation expressions
-	pure @safe
-	Expr* binOp(Op op, Expr* lhs, Expr* rhs)
-	{
-		return new Expr(BinOp(op, lhs, rhs));
-	}
+    // Factory function for binary operation expressions
+    pure @safe
+    Expr* binOp(Op op, Expr* lhs, Expr* rhs)
+    {
+        return new Expr(BinOp(op, lhs, rhs));
+    }
 
-	// Convenience wrappers for creating BinOp expressions
-	alias sum  = partial!(binOp, Op.Plus);
-	alias diff = partial!(binOp, Op.Minus);
-	alias prod = partial!(binOp, Op.Times);
-	alias quot = partial!(binOp, Op.Div);
+    // Convenience wrappers for creating BinOp expressions
+    alias sum  = partial!(binOp, Op.Plus);
+    alias diff = partial!(binOp, Op.Minus);
+    alias prod = partial!(binOp, Op.Times);
+    alias quot = partial!(binOp, Op.Div);
 
-	// Evaluate expr, looking up variables in env
-	pure @safe nothrow
-	double eval(Expr expr, double[string] env)
-	{
-		return expr.match!(
-			(double num) => num,
-			(string var) => env[var],
-			(BinOp bop) {
-				double lhs = eval(*bop.lhs, env);
-				double rhs = eval(*bop.rhs, env);
-				final switch(bop.op) {
-					static foreach(op; EnumMembers!Op) {
-						case op:
-							return mixin("lhs" ~ op ~ "rhs");
-					}
-				}
-			}
-		);
-	}
+    // Evaluate expr, looking up variables in env
+    pure @safe nothrow
+    double eval(Expr expr, double[string] env)
+    {
+        return expr.match!(
+            (double num) => num,
+            (string var) => env[var],
+            (BinOp bop) {
+                double lhs = eval(*bop.lhs, env);
+                double rhs = eval(*bop.rhs, env);
+                final switch(bop.op) {
+                    static foreach(op; EnumMembers!Op) {
+                        case op:
+                            return mixin("lhs" ~ op ~ "rhs");
+                    }
+                }
+            }
+        );
+    }
 
-	// Return a "pretty-printed" representation of expr
-	@safe
-	string pprint(Expr expr)
-	{
-		import std.format;
+    // Return a "pretty-printed" representation of expr
+    @safe
+    string pprint(Expr expr)
+    {
+        import std.format;
 
-		return expr.match!(
-			(double num) => "%g".format(num),
-			(string var) => var,
-			(BinOp bop) => "(%s %s %s)".format(
-				pprint(*bop.lhs),
-				bop.op,
-				pprint(*bop.rhs)
-			)
-		);
-	}
+        return expr.match!(
+            (double num) => "%g".format(num),
+            (string var) => var,
+            (BinOp bop) => "(%s %s %s)".format(
+                pprint(*bop.lhs),
+                bop.op,
+                pprint(*bop.rhs)
+            )
+        );
+    }
 
-	Expr* myExpr = sum(var("a"), prod(num(2), var("b")));
-	double[string] myEnv = ["a":3, "b":4, "c":7];
+    Expr* myExpr = sum(var("a"), prod(num(2), var("b")));
+    double[string] myEnv = ["a":3, "b":4, "c":7];
 
-	assert(eval(*myExpr, myEnv) == 11);
-	assert(pprint(*myExpr) == "(a + (2 * b))");
+    assert(eval(*myExpr, myEnv) == 11);
+    assert(pprint(*myExpr) == "(a + (2 * b))");
 }
 
 public import std.variant: This;
