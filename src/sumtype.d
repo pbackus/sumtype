@@ -220,11 +220,9 @@ private:
 	import std.meta: AliasSeq, Filter;
 
 	enum bool isValidTagType(T) = Types.length <= T.max;
+	alias unsignedInts = AliasSeq!(ubyte, ushort, uint, ulong);
 
-	alias Tag = Filter!(
-		isValidTagType,
-		AliasSeq!(ubyte, ushort, uint, ulong)
-	)[0];
+	alias Tag = Filter!(isValidTagType, unsignedInts)[0];
 
 	union Storage
 	{
