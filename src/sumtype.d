@@ -11,6 +11,8 @@ Author: Paul Backus
 +/
 module sumtype;
 
+@safe:
+
 /// $(H3 Basic usage)
 unittest {
     import std.math: approxEqual;
@@ -229,6 +231,7 @@ private:
 		Types values;
 
 		static foreach (i, T; Types) {
+			@trusted
 			this(T val)
 			{
 				values[i] = val;
@@ -238,6 +241,16 @@ private:
 
 	Tag tag;
 	Storage storage;
+
+	@trusted
+	ref inout(T) trustedGet(T)() inout
+	{
+		import std.meta: staticIndexOf;
+
+		enum tid = staticIndexOf!(T, Types);
+		assert(tag == tid);
+		return storage.values[tid];
+	}
 
 public:
 
@@ -495,7 +508,7 @@ unittest {
 }
 
 // Types with .init values that violate their invariants
-unittest {
+@system unittest {
 	import core.exception: AssertError;
 	import std.exception: assertNotThrown;
 
@@ -637,7 +650,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 			static foreach (tid, T; Types) {
 				static foreach (hid, handler; handlers) {
-					static if (is(typeof(handler(self.storage.values[tid])))) {
+					static if (is(typeof(handler(self.trustedGet!T)))) {
 						// Regular handlers
 						static if (isCallable!handler) {
 							// Functions and delegates
@@ -679,7 +692,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			static foreach (tid, T; Types) {
 				case tid:
 					static if (handlerIndices[tid] != noMatch) {
-						return handlers[handlerIndices[tid]](self.storage.values[tid]);
+						return handlers[handlerIndices[tid]](self.trustedGet!T);
 					} else {
 						static if(exhaustive) {
 							static assert(false,
@@ -916,9 +929,7 @@ unittest {
 		(ref double d) { d *= 2; }
 	);
 
-	enum tid = staticIndexOf!(double, Value.Types);
-
-	assert(value.storage.values[tid].approxEqual(6.28));
+	assert(value.trustedGet!double.approxEqual(6.28));
 }
 
 // Unreachable handlers
