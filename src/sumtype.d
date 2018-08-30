@@ -284,14 +284,6 @@ public:
 		}
 	}
 
-	/// Returns a string representation of the currently-held value.
-	string toString() const
-	{
-		import std.conv: to;
-
-		return this.match!(value => value.to!string);
-	}
-
 	import std.meta: anySatisfy;
 	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
 
@@ -377,28 +369,6 @@ unittest {
 unittest {
 	alias MySum = SumType!(This*);
 	assert(is(MySum.Types[0] == MySum*));
-}
-
-// toString
-unittest {
-	import std.typecons: Tuple, tuple;
-	import std.conv: to;
-
-	class C {}
-
-	alias MySum = SumType!(int[], double, Tuple!(string, C));
-
-	int[] a = [1, 2, 3];
-	double b = 3.14;
-	Tuple!(string, C) c = tuple("test", new C);
-
-	MySum x = MySum(a);
-	MySum y = MySum(b);
-	MySum z = MySum(c);
-
-	assert(x.toString == a.to!string);
-	assert(y.toString == b.to!string);
-	assert(z.toString == c.to!string);
 }
 
 // Allowed types
@@ -526,12 +496,6 @@ unittest {
 	SumType!(Evil, int) x = 123;
 
 	assertNotThrown!AssertError(x = Evil(456));
-}
-
-// Can call non-mutating methods on const SumTypes
-unittest {
-	const(SumType!(int, double)) x = 123;
-	assert(x.toString == "123");
 }
 
 /**
