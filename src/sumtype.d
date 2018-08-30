@@ -11,10 +11,8 @@ Author: Paul Backus
 +/
 module sumtype;
 
-@safe:
-
 /// $(H3 Basic usage)
-unittest {
+@safe unittest {
     import std.math: approxEqual;
 
     struct Fahrenheit { double degrees; }
@@ -52,7 +50,7 @@ unittest {
  * `rect` handlers, and any type with `r` and `theta` properties will be matched
  * by the `polar` handlers.
  */
-unittest {
+@safe unittest {
     import std.math: approxEqual, cos, PI, sqrt;
 
     struct Rectangular { double x, y; }
@@ -93,7 +91,7 @@ unittest {
  * [https://en.wikipedia.org/wiki/Abstract_syntax_tree|abstract syntax tree] for
  * representing simple arithmetic expressions.
  */
-unittest {
+@safe unittest {
     import std.functional: partial;
     import std.traits: EnumMembers;
     import std.typecons: Tuple;
@@ -311,7 +309,7 @@ public:
 }
 
 // Construction
-unittest {
+@safe unittest {
 	alias MySum = SumType!(int, float);
 
 	assert(__traits(compiles, MySum(42)));
@@ -319,7 +317,7 @@ unittest {
 }
 
 // Assignment
-unittest {
+@safe unittest {
 	alias MySum = SumType!(int, float);
 
 	MySum x = MySum(42);
@@ -328,7 +326,7 @@ unittest {
 }
 
 // Self assignment
-unittest {
+@safe unittest {
 	alias MySum = SumType!(int, float);
 
 	MySum x = MySum(42);
@@ -338,7 +336,7 @@ unittest {
 }
 
 // Equality
-unittest {
+@safe unittest {
 	alias MySum = SumType!(int, float);
 
 	MySum x = MySum(42);
@@ -350,7 +348,7 @@ unittest {
 }
 
 // Imported types
-unittest {
+@safe unittest {
 	import std.typecons: Tuple;
 
 	assert(__traits(compiles, {
@@ -359,20 +357,20 @@ unittest {
 }
 
 // const and immutable types
-unittest {
+@safe unittest {
 	assert(__traits(compiles, {
 		alias MySum = SumType!(const(int[]), immutable(float[]));
 	}));
 }
 
 // Recursive types
-unittest {
+@safe unittest {
 	alias MySum = SumType!(This*);
 	assert(is(MySum.Types[0] == MySum*));
 }
 
 // Allowed types
-unittest {
+@safe unittest {
 	import std.meta: AliasSeq;
 
 	alias MySum = SumType!(int, float, This*);
@@ -381,7 +379,7 @@ unittest {
 }
 
 // Works alongside Algebraic
-unittest {
+@safe unittest {
 	import std.variant;
 
 	alias Bar = Algebraic!(This*);
@@ -390,7 +388,7 @@ unittest {
 }
 
 // Types with destructors and postblits
-unittest {
+@safe unittest {
 	int copies;
 
 	struct Test
@@ -431,7 +429,7 @@ unittest {
 }
 
 // Doesn't destroy reference types
-unittest {
+@safe unittest {
 	bool destroyed;
 
 	class C
@@ -465,7 +463,7 @@ unittest {
 }
 
 // Types with @disable this()
-unittest {
+@safe unittest {
 	struct NoInit
 	{
 		@disable this();
@@ -673,7 +671,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 }
 
 // Matching
-unittest {
+@safe unittest {
 	alias MySum = SumType!(int, float);
 
 	MySum x = MySum(42);
@@ -684,7 +682,7 @@ unittest {
 }
 
 // Missing handlers
-unittest {
+@safe unittest {
 	alias MySum = SumType!(int, float);
 
 	MySum x = MySum(42);
@@ -694,7 +692,7 @@ unittest {
 }
 
 // No implicit converstion
-unittest {
+@safe unittest {
 	alias MySum = SumType!(int, float);
 
 	MySum x = MySum(42);
@@ -705,7 +703,7 @@ unittest {
 }
 
 // Handlers with qualified parameters
-unittest {
+@safe unittest {
     alias MySum = SumType!(int[], float[]);
 
     MySum x = MySum([1, 2, 3]);
@@ -716,7 +714,7 @@ unittest {
 }
 
 // Handlers for qualified types
-unittest {
+@safe unittest {
 	alias MySum = SumType!(immutable(int[]), immutable(float[]));
 
 	MySum x = MySum([1, 2, 3]);
@@ -736,7 +734,7 @@ unittest {
 }
 
 // Delegate handlers
-unittest {
+@safe unittest {
 	alias MySum = SumType!(int, float);
 
 	int answer = 42;
@@ -748,7 +746,7 @@ unittest {
 }
 
 // Generic handler
-unittest {
+@safe unittest {
 	import std.math: approxEqual;
 
 	alias MySum = SumType!(int, float);
@@ -761,7 +759,7 @@ unittest {
 }
 
 // Fallback to generic handler
-unittest {
+@safe unittest {
 	import std.conv: to;
 
 	alias MySum = SumType!(int, float, string);
@@ -774,7 +772,7 @@ unittest {
 }
 
 // Multiple non-overlapping generic handlers
-unittest {
+@safe unittest {
 	import std.math: approxEqual;
 
 	alias MySum = SumType!(int, float, int[], char[]);
@@ -791,7 +789,7 @@ unittest {
 }
 
 // Structural matching
-unittest {
+@safe unittest {
 	struct S1 { int x; }
 	struct S2 { int y; }
 	alias MySum = SumType!(S1, S2);
@@ -804,7 +802,7 @@ unittest {
 }
 
 // Separate opCall handlers
-unittest {
+@safe unittest {
 	struct IntHandler
 	{
 		bool opCall(int arg)
@@ -833,7 +831,7 @@ unittest {
 }
 
 // Compound opCall handler
-unittest {
+@safe unittest {
 	struct CompoundHandler
 	{
 		bool opCall(int arg)
@@ -858,7 +856,7 @@ unittest {
 }
 
 // Ordered matching
-unittest {
+@safe unittest {
 	alias MySum = SumType!(int, float);
 
 	MySum x = MySum(42);
@@ -867,7 +865,7 @@ unittest {
 }
 
 // Non-exhaustive matching
-unittest {
+@system unittest {
 	import std.exception: assertThrown, assertNotThrown;
 
 	alias MySum = SumType!(int, float);
@@ -880,7 +878,7 @@ unittest {
 }
 
 // Handlers with ref parameters
-unittest {
+@safe unittest {
 	import std.math: approxEqual;
 	import std.meta: staticIndexOf;
 
@@ -897,7 +895,7 @@ unittest {
 }
 
 // Unreachable handlers
-unittest {
+@safe unittest {
 	alias MySum = SumType!(int, string);
 
 	MySum s;
@@ -916,4 +914,23 @@ unittest {
 			(int _) => 1
 		)
 	));
+}
+
+// Unsafe handlers
+unittest {
+	SumType!(int, char*) x;
+
+	assert(!__traits(compiles, () @safe {
+		x.match!(
+			(ref int n) => &n,
+			_ => null,
+		);
+	}));
+
+	assert(__traits(compiles, () @system {
+		return x.match!(
+			(ref int n) => &n,
+			_ => null
+		);
+	}));
 }
