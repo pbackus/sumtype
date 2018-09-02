@@ -575,6 +575,7 @@ template tryMatch(handlers...)
 /// Thrown by [tryMatch] when an unhandled type is encountered.
 class MatchException : Exception
 {
+	pure @safe @nogc nothrow
 	this(string msg, string file = __FILE__, size_t line = __LINE__)
 	{
 		super(msg, file, line);
@@ -875,6 +876,18 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 	assertNotThrown!MatchException(x.tryMatch!((int n) => true));
 	assertThrown!MatchException(y.tryMatch!((int n) => true));
+}
+
+// Non-exhaustive matching in @safe code
+@safe unittest {
+	SumType!(int, float) x;
+
+	assert(__traits(compiles,
+		x.tryMatch!(
+			(int n) => n + 1,
+		)
+	));
+
 }
 
 // Handlers with ref parameters
