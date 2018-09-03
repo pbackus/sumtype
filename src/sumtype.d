@@ -230,7 +230,7 @@ private:
 
 		static foreach (i, T; Types) {
 			@trusted
-			this(T val)
+			this(inout(T) val) inout
 			{
 				values[i] = val;
 			}
@@ -254,10 +254,10 @@ public:
 
 	static foreach (i, T; Types) {
 		/// Constructs a `SumType` holding a specific value.
-		this(T val)
+		this(inout(T) val) inout
 		{
 			tag = i;
-			storage = Storage(val);
+			storage = inout(Storage)(val);
 		}
 	}
 
@@ -494,6 +494,13 @@ public:
 	SumType!(Evil, int) x = 123;
 
 	assertNotThrown!AssertError(x = Evil(456));
+}
+
+// const SumTypes
+unittest {
+	assert(__traits(compiles,
+		const(SumType!(int[]))([1, 2, 3])
+	));
 }
 
 /**
