@@ -306,6 +306,10 @@ public:
 			});
 		}
 	}
+
+	version(SumTypeNoDefaultCtor) {
+		@disable this();
+	}
 }
 
 // Construction
