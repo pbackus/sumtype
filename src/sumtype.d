@@ -202,7 +202,8 @@ public import std.variant: This;
  * usage.
  *
  * A `SumType` is initialized by default to hold the `.init` property of its
- * first member type, just like a regular union.
+ * first member type, just like a regular union. The version identifier
+ * `SumTypeNoDefaultCtor` can be used to disable this behavior.
  *
  * See_Also: `std.variant.Algebraic`
  */
