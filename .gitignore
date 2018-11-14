@@ -12,3 +12,4 @@ sumtype-test-*
 *.o
 *.obj
 *.lst
+*.a
