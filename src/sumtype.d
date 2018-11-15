@@ -283,6 +283,20 @@ public:
 		}
 	}
 
+	/// Compares two `SumType`s for equality
+	bool opEquals(SumType!(TypeArgs) rhs)
+	{
+		return this.match!((ref value) {
+			return rhs.match!((ref rhsValue) {
+				static if (is(typeof(value) == typeof(rhsValue))) {
+					return value == rhsValue;
+				} else {
+					return false;
+				}
+			});
+		});
+	}
+
 	import std.meta: anySatisfy;
 	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
 
@@ -506,6 +520,18 @@ unittest {
 	assert(__traits(compiles,
 		const(SumType!(int[]))([1, 2, 3])
 	));
+}
+
+// Compares reference types using value equality
+unittest {
+	struct Field {}
+	struct Struct { Field[] fields; }
+	alias MySum = SumType!Struct;
+
+	auto a = MySum(Struct([Field()]));
+	auto b = MySum(Struct([Field()]));
+
+	assert(a == b);
 }
 
 /**
