@@ -284,7 +284,7 @@ public:
 	}
 
 	/// Compares two `SumType`s for equality
-	bool opEquals(SumType!(TypeArgs) rhs)
+	bool opEquals(in SumType!(TypeArgs) rhs) const
 	{
 		return this.match!((ref value) {
 			return rhs.match!((ref rhsValue) {
@@ -528,8 +528,8 @@ unittest {
 	struct Struct { Field[] fields; }
 	alias MySum = SumType!Struct;
 
-	auto a = MySum(Struct([Field()]));
-	auto b = MySum(Struct([Field()]));
+	const a = MySum(Struct([Field()]));
+	const b = MySum(Struct([Field()]));
 
 	assert(a == b);
 }
