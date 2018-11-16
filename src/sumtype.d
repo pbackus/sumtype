@@ -1015,10 +1015,62 @@ version(unittest) {
 	struct Double { double d; }
 	alias Number = SumType!(Int, Double);
 
-	private void matchNumber(Number number) @safe {
-		number.match!matchNumber;
+	private void matchNumber0(Number number) @safe {
+		number.match!matchNumber0;
 	}
+
+	private void matchNumber0(Double) @safe {}
+	private void matchNumber0(Int) @safe {}
+
+	mixin(patternMatch!("matchNumber", Number));
+	static assert(__traits(compiles, matchNumber(Number(Int(42)))));
+	static assert(__traits(compiles, matchNumber(Number(Double(33.3)))));
 
 	private void matchNumber(Double) @safe {}
 	private void matchNumber(Int) @safe {}
+}
+
+
+/**
+   A string to mixin that generates a function that pattern matches on all
+   overloads of `functionName`. e.g.
+   ----------------------------
+   alias MySum = SumType!(Foo, Bar);
+   int myfunc(Foo foo) { ... }
+   int myFunc(Bar bar) { ... }
+   mixin(patternMatch!("myfunc", MySum));
+   // Now there exists a function that takes MySum and dispatches to each
+   // instance (Foo, Bar) at compile-time.
+   static assert(__traits(compiles, myfunc(MySum(Foo()))));
+   ----------------------------
+ */
+string patternMatch(string functionName, S, string moduleName = __MODULE__)() {
+	if(!__ctfe) return "";
+
+	import std.format: format;
+	import std.meta: staticMap, allSatisfy;
+	import std.traits: ReturnType;
+
+	mixin(`import ` ~ moduleName ~ `;`);
+	alias function_ = Identity!(__traits(getMember, mixin(moduleName), functionName));
+	alias overloads = Identity!(__traits(getOverloads, mixin(moduleName), functionName));
+
+	static assert(overloads.length > 0, "Overloads of `" ~ functionName ~ "` must exist to pattern match`");
+	alias returnTypes = staticMap!(ReturnType, overloads);
+	enum isSameReturnType(T) = is(T == returnTypes[0]);
+
+	static assert(allSatisfy!(isSameReturnType, returnTypes),
+				  "The `" ~ functionName ~ "` overloads must all have the same return type");
+
+	const returnType = returnTypes[0].stringof;
+	const return_ = returnType == "void" ? "" : "return ";
+
+	const mixinStr = q{
+		%s %s()(%s arg) {
+				import sumtype: match;
+				%sarg.match!%s;
+			}
+	}.format(returnType, functionName, S.stringof, return_, functionName);
+
+	return mixinStr;
 }
