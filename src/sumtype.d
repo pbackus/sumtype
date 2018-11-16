@@ -45,10 +45,10 @@ module sumtype;
 /** $(H3 Structural matching)
  *
  * In the `length` and `horiz` functions below, the handlers for `match` do not
- * specify the types of their arguments. Instead, matching is done based on the
- * type's structure: any type with `x` and `y` properties will be matched by the
- * `rect` handlers, and any type with `r` and `theta` properties will be matched
- * by the `polar` handlers.
+ * specify the types of their arguments. Instead, matching is done based on how
+ * the argument is used in the body of the handler: any type with `x` and `y`
+ * properties will be matched by the `rect` handlers, and any type with `r` and
+ * `theta` properties will be matched by the `polar` handlers.
  */
 @safe unittest {
     import std.math: approxEqual, cos, PI, sqrt;
@@ -647,8 +647,9 @@ unittest {
  *
  * Handlers may be functions, delegates, or objects with opCall overloads.
  * Templated handlers are also accepted, and will match any type for which they
- * can be implicitly instantiated. See [sumtype#structural-matching|"Structural matching"] for
- * an example of templated handler usage.
+ * can be [implicitly instantiated](https://dlang.org/glossary.html#ifti). See
+ * [sumtype#structural-matching|"Structural matching"] for an example of
+ * templated handler usage.
  *
  * Returns:
  *   The value returned from the handler that matches the currently-held type.
