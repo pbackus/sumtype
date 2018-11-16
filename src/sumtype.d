@@ -622,13 +622,28 @@ class MatchException : Exception
 
 import std.typecons: Flag;
 
+private alias Identity(T...) = T;
+
+private template overloads(alias F) {
+	import std.traits: isFunction, moduleName;
+	static if(isFunction!F) {
+		mixin(`import ` ~ moduleName!F ~ `;`);
+		alias overloads = Identity!(__traits(getOverloads, mixin(moduleName!F), __traits(identifier, F)));
+	} else
+		alias overloads = F;
+}
+
 private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 {
 	auto matchImpl(Self)(auto ref Self self)
 		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
+		import std.meta: staticMap, AliasSeq;
+
 		alias Types = self.Types;
 		enum noMatch = size_t.max;
+
+		alias allHandlers = staticMap!(overloads, handlers);
 
 		pure static size_t[Types.length] getHandlerIndices()
 		{
@@ -650,7 +665,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			}
 
 			static foreach (tid, T; Types) {
-				static foreach (hid, handler; handlers) {
+				static foreach (hid, handler; allHandlers) {
 					static if (is(typeof(handler(self.trustedGet!T)))) {
 						// Regular handlers
 						static if (isCallable!handler) {
@@ -681,7 +696,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 		import std.algorithm.searching: canFind;
 
-		static foreach (hid, handler; handlers) {
+		static foreach (hid, handler; allHandlers) {
 			static assert(handlerIndices[].canFind(hid),
 				"handler `" ~ handler.stringof ~ "` " ~
 				"of type `" ~ typeof(handler).stringof ~ "` " ~
@@ -693,7 +708,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			static foreach (tid, T; Types) {
 				case tid:
 					static if (handlerIndices[tid] != noMatch) {
-						return handlers[handlerIndices[tid]](self.trustedGet!T);
+						return allHandlers[handlerIndices[tid]](self.trustedGet!T);
 					} else {
 						static if(exhaustive) {
 							static assert(false,
@@ -984,4 +999,18 @@ unittest {
 			_ => null
 		);
 	}));
+}
+
+
+version(unittest) {
+	struct Int { int i; }
+	struct Double { double d; }
+	alias Number = SumType!(Int, Double);
+
+	private void matchNumber(Number number) @safe {
+		number.match!matchNumber_;
+	}
+
+	private void matchNumber_(Double) @safe {}
+	private void matchNumber_(Int) @safe {}
 }
