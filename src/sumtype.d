@@ -642,7 +642,8 @@ unittest {
  * accepts a `long` will not match the type `int`, but a handler that accepts a
  * `const(int)[]` will match the type `immutable(int)[]`.
  *
- * Every type must have a matching handler. This is enforced at compile-time.
+ * Every type must have a matching handler, and every handler must match at
+ * least one type. This is enforced at compile time.
  *
  * Handlers may be functions, delegates, or objects with opCall overloads.
  * Templated handlers are also accepted, and will match any type for which they
