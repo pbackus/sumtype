@@ -287,7 +287,7 @@ public:
 	import std.traits: isEqualityComparable, ConstOf;
 
 	static if (allSatisfy!(isEqualityComparable, staticMap!(ConstOf, Types))) {
-		/// Compares two `SumType`s for equality
+		/// Compares two `SumType`s for equality.
 		bool opEquals(const SumType!(TypeArgs) rhs) const
 		{
 			return this.match!((ref value) {
