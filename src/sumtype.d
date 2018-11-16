@@ -283,18 +283,47 @@ public:
 		}
 	}
 
-	/// Compares two `SumType`s for equality
-	bool opEquals(const SumType!(TypeArgs) rhs) const
-	{
-		return this.match!((ref value) {
-			return rhs.match!((ref rhsValue) {
-				static if (is(typeof(value) == typeof(rhsValue))) {
-					return value == rhsValue;
-				} else {
-					return false;
-				}
+	import std.meta: allSatisfy, staticMap;
+	import std.traits: isEqualityComparable, ConstOf;
+
+	static if (allSatisfy!(isEqualityComparable, staticMap!(ConstOf, Types))) {
+		/// Compares two `SumType`s for equality
+		bool opEquals(const SumType!(TypeArgs) rhs) const
+		{
+			return this.match!((ref value) {
+				return rhs.match!((ref rhsValue) {
+					static if (is(typeof(value) == typeof(rhsValue))) {
+						return value == rhsValue;
+					} else {
+						return false;
+					}
+				});
 			});
-		});
+		}
+	}
+
+	static if (allSatisfy!(isEqualityComparable, Types)) {
+		/// ditto
+		bool opEquals(SumType!(TypeArgs) rhs)
+		{
+			return this.match!((ref value) {
+				return rhs.match!((ref rhsValue) {
+					static if (is(typeof(value) == typeof(rhsValue))) {
+						return value == rhsValue;
+					} else {
+						return false;
+					}
+				});
+			});
+		}
+	}
+
+	// Don't fall back to default (bitwise) equality if neither overload works
+	static if (
+		!allSatisfy!(isEqualityComparable, Types)
+		&& !allSatisfy!(isEqualityComparable, staticMap!(ConstOf, Types))
+	) {
+		@disable bool opEquals(const SumType!(TypeArgs) rhs) const;
 	}
 
 	import std.meta: anySatisfy;
@@ -548,6 +577,52 @@ unittest {
 	auto b = MySum(Struct([Field()]));
 
 	assert(a == b);
+}
+
+// Compares types with const-only, mutable-only, and disabled opEquals
+// overloads without breaking value equality
+unittest {
+	import std.traits;
+
+	struct MutableEquals
+	{
+		bool opEquals(MutableEquals rhs)
+		{
+			return true;
+		}
+	}
+
+	struct ConstEquals
+	{
+		bool opEquals(const ConstEquals rhs) const
+		{
+			return true;
+		}
+
+		@disable bool opEquals(ConstEquals rhs);
+	}
+
+	struct NoEquals
+	{
+		@disable bool opEquals(const NoEquals rhs) const;
+	}
+
+	alias SumA = SumType!(MutableEquals, int[]);
+	assert(__traits(compiles,
+		SumA(MutableEquals()) == SumA(MutableEquals())
+	));
+	assert(SumA([1, 2, 3]) == SumA([1, 2, 3]));
+
+	alias SumB = SumType!(ConstEquals, int[]);
+	assert(__traits(compiles,
+		SumB(ConstEquals()) == SumB(ConstEquals())
+	));
+	assert(SumB([1, 2, 3]) == SumB([1, 2, 3]));
+
+	alias SumC = SumType!NoEquals;
+	assert(!__traits(compiles,
+		SumC(NoEquals()) == SumC(NoEquals())
+	));
 }
 
 // toString
