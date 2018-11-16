@@ -300,14 +300,17 @@ public:
 	import std.meta: anySatisfy;
 	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
 
-	static if (anySatisfy!(hasElaborateDestructor, Types)) {
-		~this()
-		{
-			this.match!((ref value) {
-				static if (hasElaborateDestructor!(typeof(value))) {
-					destroy(value);
-				}
-			});
+	// See https://issues.dlang.org/show_bug.cgi?id=19407 for the compilation check
+	static if(__traits(compiles, anySatisfy!(hasElaborateDestructor, Types))) {
+		static if (anySatisfy!(hasElaborateDestructor, Types)) {
+			~this()
+			{
+				this.match!((ref value) {
+					static if (hasElaborateDestructor!(typeof(value))) {
+						destroy(value);
+					}
+				});
+			}
 		}
 	}
 
