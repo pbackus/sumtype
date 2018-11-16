@@ -300,9 +300,7 @@ public:
 				});
 			});
 		}
-	}
-
-	static if (allSatisfy!(isEqualityComparable, Types)) {
+	} else static if (allSatisfy!(isEqualityComparable, Types)) {
 		/// ditto
 		bool opEquals(SumType!(TypeArgs) rhs)
 		{
@@ -316,13 +314,8 @@ public:
 				});
 			});
 		}
-	}
-
-	// Don't fall back to default (bitwise) equality if neither overload works
-	static if (
-		!allSatisfy!(isEqualityComparable, Types)
-		&& !allSatisfy!(isEqualityComparable, staticMap!(ConstOf, Types))
-	) {
+	} else {
+		// Don't fall back to default (bitwise) equality
 		@disable bool opEquals(const SumType!(TypeArgs) rhs) const;
 	}
 
