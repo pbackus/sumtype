@@ -683,7 +683,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 		static foreach (hid, handler; handlers) {
 			static assert(handlerIndices[].canFind(hid),
-				"handler `" ~ handler.stringof ~ "` " ~
+				"handler `" ~ __traits(identifier, handler) ~ "` " ~
 				"of type `" ~ typeof(handler).stringof ~ "` " ~
 				"never matches"
 			);
