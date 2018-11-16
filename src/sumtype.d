@@ -325,7 +325,24 @@ public:
 	version(SumTypeNoDefaultCtor) {
 		@disable this();
 	}
+
+	string toString() const {
+		import std.conv: text;
+		return this.match!((auto ref value) {
+			return value.text;
+		});
+	}
 }
+
+@safe unittest {
+	import std.conv: text;
+	static struct Int { int i; }
+	static struct Double { double d; }
+	alias Sum = SumType!(Int, Double);
+	assert(Sum(Int(42)).text == `const(Int)(42)`, Sum(Int(42)).text);
+	assert(Sum(Double(33.3)).text == `const(Double)(33.3)`, Sum(Double(33.3)).text);
+}
+
 
 // Construction
 @safe unittest {
