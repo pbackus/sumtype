@@ -624,13 +624,21 @@ import std.typecons: Flag;
 
 private alias Identity(T...) = T;
 
-private template overloads(alias F) {
-	import std.traits: isFunction, moduleName;
+/**
+   Returns all overloads for F, except the one that takes a single SumType parameter
+ */
+private template matchOverloads(alias F) {
+	import std.traits: isFunction, moduleName, Parameters;
+	import std.meta: Filter, Not = templateNot;
+
 	static if(isFunction!F) {
 		mixin(`import ` ~ moduleName!F ~ `;`);
-		alias overloads = Identity!(__traits(getOverloads, mixin(moduleName!F), __traits(identifier, F)));
+		private alias overloads = Identity!(__traits(getOverloads, mixin(moduleName!F), __traits(identifier, F)));
+		private enum isSumType(T) = is(T == SumType!A, A...);
+		private enum takesOneSumType(alias O) = Parameters!O.length == 1 && isSumType!(Parameters!O[0]);
+		alias matchOverloads = Filter!(Not!takesOneSumType, overloads);
 	} else
-		alias overloads = F;
+		alias matchOverloads = F;
 }
 
 private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
@@ -643,7 +651,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		alias Types = self.Types;
 		enum noMatch = size_t.max;
 
-		alias allHandlers = staticMap!(overloads, handlers);
+		alias allHandlers = staticMap!(matchOverloads, handlers);
 
 		pure static size_t[Types.length] getHandlerIndices()
 		{
@@ -1008,9 +1016,9 @@ version(unittest) {
 	alias Number = SumType!(Int, Double);
 
 	private void matchNumber(Number number) @safe {
-		number.match!matchNumber_;
+		number.match!matchNumber;
 	}
 
-	private void matchNumber_(Double) @safe {}
-	private void matchNumber_(Int) @safe {}
+	private void matchNumber(Double) @safe {}
+	private void matchNumber(Int) @safe {}
 }
