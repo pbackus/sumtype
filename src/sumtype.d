@@ -284,7 +284,7 @@ public:
 	}
 
 	/// Compares two `SumType`s for equality
-	bool opEquals(SumType!(TypeArgs) rhs)
+	bool opEquals(const SumType!(TypeArgs) rhs) const
 	{
 		return this.match!((ref value) {
 			return rhs.match!((ref rhsValue) {
@@ -526,6 +526,15 @@ public:
 unittest {
 	assert(__traits(compiles,
 		const(SumType!(int[]))([1, 2, 3])
+	));
+}
+
+// Equality of const SumTypes
+unittest {
+	alias MySum = SumType!int;
+
+	assert(__traits(compiles,
+		const(MySum)(123) == const(MySum)(456)
 	));
 }
 
