@@ -7,7 +7,7 @@ This module provides [SumType], an alternative to `std.variant.Algebraic` with
 runtime type information (`TypeInfo`).
 
 License: MIT
-Author: Paul Backus
+Authors: Paul Backus, Atila Neves
 +/
 module sumtype;
 
