@@ -622,18 +622,16 @@ class MatchException : Exception
 
 import std.typecons: Flag;
 
-private alias Identity(T...) = T;
-
 /**
    Returns all overloads for F, except the one that takes a single SumType parameter
  */
 private template matchOverloads(alias F) {
 	import std.traits: isFunction, moduleName, Parameters;
-	import std.meta: Filter, Not = templateNot;
+	import std.meta: Filter, Not = templateNot, AliasSeq;
 
 	static if(isFunction!F) {
 		mixin(`import ` ~ moduleName!F ~ `;`);
-		private alias overloads = Identity!(__traits(getOverloads, mixin(moduleName!F), __traits(identifier, F)));
+		private alias overloads = AliasSeq!(__traits(getOverloads, mixin(moduleName!F), __traits(identifier, F)));
 		private enum isSumType(T) = is(T == SumType!A, A...);
 		private enum takesOneSumType(alias O) = Parameters!O.length == 1 && isSumType!(Parameters!O[0]);
 		alias matchOverloads = Filter!(Not!takesOneSumType, overloads);
@@ -646,7 +644,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 	auto matchImpl(Self)(auto ref Self self)
 		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
-		import std.meta: staticMap, AliasSeq;
+		import std.meta: staticMap;
 
 		alias Types = self.Types;
 		enum noMatch = size_t.max;
@@ -1048,12 +1046,12 @@ string patternMatch(string functionName, S, string moduleName = __MODULE__)() {
 	if(!__ctfe) return "";
 
 	import std.format: format;
-	import std.meta: staticMap, allSatisfy;
+	import std.meta: staticMap, allSatisfy, AliasSeq;
 	import std.traits: ReturnType;
 
 	mixin(`import ` ~ moduleName ~ `;`);
-	alias function_ = Identity!(__traits(getMember, mixin(moduleName), functionName));
-	alias overloads = Identity!(__traits(getOverloads, mixin(moduleName), functionName));
+	alias function_ = AliasSeq!(__traits(getMember, mixin(moduleName), functionName));
+	alias overloads = AliasSeq!(__traits(getOverloads, mixin(moduleName), functionName));
 
 	static assert(overloads.length > 0, "Overloads of `" ~ functionName ~ "` must exist to pattern match`");
 	alias returnTypes = staticMap!(ReturnType, overloads);
