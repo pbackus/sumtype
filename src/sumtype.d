@@ -322,7 +322,16 @@ public:
 	import std.meta: anySatisfy;
 	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
 
-	static if (anySatisfy!(hasElaborateDestructor, Types)) {
+	// Workaround for dlang issue 19407
+	static if (__traits(compiles, anySatisfy!(hasElaborateDestructor, Types))) {
+		// If possible, include the destructor only when it's needed
+		private enum includeDtor = anySatisfy!(hasElaborateDestructor, Types);
+	} else {
+		// If we can't tell, always include it, even when it does nothing
+		private enum includeDtor = true;
+	}
+
+	static if (includeDtor) {
 		~this()
 		{
 			this.match!((ref value) {
