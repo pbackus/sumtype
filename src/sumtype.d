@@ -545,14 +545,14 @@ public:
 }
 
 // const SumTypes
-unittest {
+@safe unittest {
 	assert(__traits(compiles,
 		const(SumType!(int[]))([1, 2, 3])
 	));
 }
 
 // Equality of const SumTypes
-unittest {
+@safe unittest {
 	alias MySum = SumType!int;
 
 	assert(__traits(compiles,
@@ -561,7 +561,7 @@ unittest {
 }
 
 // Compares reference types using value equality
-unittest {
+@safe unittest {
 	struct Field {}
 	struct Struct { Field[] fields; }
 	alias MySum = SumType!Struct;
@@ -574,7 +574,7 @@ unittest {
 
 // Compares types with const-only, mutable-only, and disabled opEquals
 // overloads without breaking value equality
-unittest {
+@safe unittest {
 	import std.traits;
 
 	struct MutableEquals
