@@ -727,6 +727,43 @@ class MatchException : Exception
 	}
 }
 
+import std.traits: isFunction;
+
+// A handler with an opCall overload for each overload of fun
+private template overloadHandler(alias fun)
+	if (isFunction!fun)
+{
+	struct OverloadHandler
+	{
+		import std.traits: Parameters, ReturnType;
+		import std.meta: AliasSeq;
+
+		alias overloads = AliasSeq!(__traits(getOverloads,
+			__traits(parent, fun), __traits(identifier, fun)
+		));
+
+		static foreach(overload; overloads) {
+			ReturnType!overload opCall(Parameters!overload args)
+			{
+				return overload(args);
+			}
+		}
+	}
+
+	enum overloadHandler = OverloadHandler.init;
+}
+
+// A handler that includes all overloads of fun, if applicable
+private template handleOverloads(alias fun)
+{
+	// Delegates and function pointers can't have overloads
+	static if (isFunction!fun) {
+		alias handleOverloads = overloadHandler!fun;
+	} else {
+		alias handleOverloads = fun;
+	}
+}
+
 import std.typecons: Flag;
 
 private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
@@ -734,8 +771,12 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 	auto matchImpl(Self)(auto ref Self self)
 		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
+		import std.meta: staticMap;
+
 		alias Types = self.Types;
 		enum noMatch = size_t.max;
+
+		alias allHandlers = staticMap!(handleOverloads, handlers);
 
 		pure static size_t[Types.length] getHandlerIndices()
 		{
@@ -757,7 +798,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			}
 
 			static foreach (tid, T; Types) {
-				static foreach (hid, handler; handlers) {
+				static foreach (hid, handler; allHandlers) {
 					static if (is(typeof(handler(self.trustedGet!T)))) {
 						// Regular handlers
 						static if (isCallable!handler) {
@@ -788,7 +829,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 		import std.algorithm.searching: canFind;
 
-		static foreach (hid, handler; handlers) {
+		static foreach (hid, handler; allHandlers) {
 			static assert(handlerIndices[].canFind(hid),
 				"handler `" ~ __traits(identifier, handler) ~ "` " ~
 				"of type `" ~ typeof(handler).stringof ~ "` " ~
@@ -800,7 +841,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			static foreach (tid, T; Types) {
 				case tid:
 					static if (handlerIndices[tid] != noMatch) {
-						return handlers[handlerIndices[tid]](self.trustedGet!T);
+						return allHandlers[handlerIndices[tid]](self.trustedGet!T);
 					} else {
 						static if(exhaustive) {
 							static assert(false,
@@ -1091,4 +1132,21 @@ unittest {
 			_ => null
 		);
 	}));
+}
+
+// Overloaded handlers
+@safe unittest {
+	static struct OverloadSet
+	{
+		static string fun(int i) { return "int"; }
+		static string fun(double d) { return "double"; }
+	}
+
+	alias MySum = SumType!(int, double);
+
+	MySum a = 42;
+	MySum b = 3.14;
+
+	assert(a.match!(OverloadSet.fun) == "int");
+	assert(b.match!(OverloadSet.fun) == "double");
 }
