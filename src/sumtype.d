@@ -729,6 +729,17 @@ class MatchException : Exception
 
 import std.traits: isFunction;
 
+// An AliasSeq of a function's overloads
+private template FunctionOverloads(alias fun)
+	if (isFunction!fun)
+{
+	import std.meta: AliasSeq;
+
+	alias FunctionOverloads = AliasSeq!(__traits(getOverloads,
+		__traits(parent, fun), __traits(identifier, fun)
+	));
+}
+
 // A handler with an opCall overload for each overload of fun
 private template overloadHandler(alias fun)
 	if (isFunction!fun)
@@ -736,13 +747,8 @@ private template overloadHandler(alias fun)
 	struct OverloadHandler
 	{
 		import std.traits: Parameters, ReturnType;
-		import std.meta: AliasSeq;
 
-		alias overloads = AliasSeq!(__traits(getOverloads,
-			__traits(parent, fun), __traits(identifier, fun)
-		));
-
-		static foreach(overload; overloads) {
+		static foreach(overload; FunctionOverloads!fun) {
 			ReturnType!overload opCall(Parameters!overload args)
 			{
 				return overload(args);
