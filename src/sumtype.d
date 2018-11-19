@@ -1156,3 +1156,27 @@ unittest {
 	assert(a.match!(OverloadSet.fun) == "int");
 	assert(b.match!(OverloadSet.fun) == "double");
 }
+
+// Overload sets that include SumType arguments
+@safe unittest {
+	alias Inner = SumType!(int, double);
+	alias Outer = SumType!(Inner, string);
+
+	static struct OverloadSet
+	{
+		@safe:
+		static string fun(int i) { return "int"; }
+		static string fun(double d) { return "double"; }
+		static string fun(string s) { return "string"; }
+		static string fun(Inner i) { return i.match!fun; }
+		static string fun(Outer o) { return o.match!fun; }
+	}
+
+	Outer a = Inner(42);
+	Outer b = Inner(3.14);
+	Outer c = "foo";
+
+	assert(OverloadSet.fun(a) == "int");
+	assert(OverloadSet.fun(b) == "double");
+	assert(OverloadSet.fun(c) == "string");
+}
