@@ -842,16 +842,6 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 		enum handlerIndices = getHandlerIndices;
 
-		import std.algorithm.searching: canFind;
-
-		static foreach (hid, handler; allHandlers) {
-			static assert(handlerIndices[].canFind(hid),
-				"handler `" ~ __traits(identifier, handler) ~ "` " ~
-				"of type `" ~ typeof(handler).stringof ~ "` " ~
-				"never matches"
-			);
-		}
-
 		final switch (self.tag) {
 			static foreach (tid, T; Types) {
 				case tid:
@@ -869,6 +859,17 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			}
 		}
 		assert(false); // unreached
+
+		import std.algorithm.searching: canFind;
+
+		// Check for unreachable handlers
+		static foreach (hid, handler; allHandlers) {
+			static assert(handlerIndices[].canFind(hid),
+				"handler `" ~ __traits(identifier, handler) ~ "` " ~
+				"of type `" ~ typeof(handler).stringof ~ "` " ~
+				"never matches"
+			);
+		}
 	}
 }
 
