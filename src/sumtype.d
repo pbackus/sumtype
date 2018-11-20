@@ -654,7 +654,10 @@ public:
  * Every type must have a matching handler, and every handler must match at
  * least one type. This is enforced at compile time.
  *
- * Handlers may be functions, delegates, or objects with opCall overloads.
+ * Handlers may be functions, delegates, or objects with opCall overloads. If a
+ * function with more than one overload is given as a handler, all of the
+ * overloads are considered as potential matches.
+ *
  * Templated handlers are also accepted, and will match any type for which they
  * can be [implicitly instantiated](https://dlang.org/glossary.html#ifti). See
  * [sumtype#structural-matching|"Structural matching"] for an example of
