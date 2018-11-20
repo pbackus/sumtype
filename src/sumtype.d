@@ -338,6 +338,7 @@ public:
 	}
 
 	static if (includeDtor) {
+		/// Calls the destructor of the `SumType`'s current value.
 		~this()
 		{
 			this.match!((ref value) {
@@ -349,6 +350,7 @@ public:
 	}
 
 	static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
+		/// Calls the postblit of the `SumType`'s current value.
 		this(this)
 		{
 			this.match!((ref value) {
@@ -363,6 +365,7 @@ public:
 		@disable this();
 	}
 
+	/// Returns a string representation of a `SumType`'s value.
 	string toString() const {
 		import std.conv: text;
 		return this.match!((auto ref value) {
