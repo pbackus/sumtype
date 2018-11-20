@@ -190,6 +190,10 @@ module sumtype;
 
 public import std.variant: This;
 
+import std.meta: NoDuplicates;
+
+private enum allDistinct(Args...) = is(NoDuplicates!Args == Args);
+
 /**
  * A tagged union that can hold a single value from any of a specified set of
  * types.
@@ -208,7 +212,9 @@ public import std.variant: This;
  * See_Also: `std.variant.Algebraic`
  */
 struct SumType(TypeArgs...)
-	if (TypeArgs.length > 0 && TypeArgs.length < size_t.max)
+	if (allDistinct!TypeArgs
+	    && TypeArgs.length > 0
+	    && TypeArgs.length < size_t.max)
 {
 	import std.meta: AliasSeq;
 	import std.typecons: ReplaceType;
