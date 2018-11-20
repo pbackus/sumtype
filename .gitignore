@@ -13,3 +13,5 @@ sumtype-test-*
 *.obj
 *.lst
 *.a
+skeleton.html
+generated-docs/
