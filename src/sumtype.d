@@ -296,7 +296,7 @@ public:
 		bool opEquals(in SumType rhs) @safe const {
 			return this.match!((ref value) {
 				return rhs.match!((ref rhsValue) {
-					static if (is(typeof(value) == typeof(rhsValue))) {
+					static if (is(typeof(value == rhsValue) == bool)) {
 						return () @trusted { return value == rhsValue; }();
 					} else {
 						return false;
