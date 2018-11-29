@@ -293,11 +293,11 @@ public:
 	import std.traits: isEqualityComparable;
 
 	static if( allSatisfy!(isEqualityComparable, Types)) {
-		bool opEquals(in SumType rhs) const {
+		bool opEquals(in SumType rhs) @safe const {
 			return this.match!((ref value) {
 				return rhs.match!((ref rhsValue) {
 					static if (is(typeof(value) == typeof(rhsValue))) {
-						return value == rhsValue;
+						return () @trusted { return value == rhsValue; }();
 					} else {
 						return false;
 					}
@@ -1134,7 +1134,7 @@ unittest {
 
 
 // Github issue #16
-/*@safe pure*/ unittest {
+@safe unittest {
 
 	assert(
 		Node(Struct(
