@@ -293,7 +293,12 @@ public:
 	import std.traits: isEqualityComparable, ConstOf;
 
 	static if (allSatisfy!(isEqualityComparable, staticMap!(ConstOf, Types))) {
-		/// Compares two `SumType`s for equality.
+		/**
+		 * Compares two `SumType`s for equality.
+		 *
+		 * Two `SumType`s are equal if they contain values of the same type,
+		 * and those values are equal.
+		 */
 		bool opEquals(const SumType!(TypeArgs) rhs) const
 		{
 			return this.match!((ref value) {
@@ -405,12 +410,16 @@ public:
 @safe unittest {
 	alias MySum = SumType!(int, float);
 
-	MySum x = MySum(42);
-	MySum y = x;
-	MySum z = MySum(3.14);
+	MySum x = MySum(123);
+	MySum y = MySum(123);
+	MySum z = MySum(456);
+	MySum w = MySum(123.0);
+	MySum v = MySum(456.0);
 
 	assert(x == y);
 	assert(x != z);
+	assert(x != w);
+	assert(x != v);
 }
 
 // Imported types
