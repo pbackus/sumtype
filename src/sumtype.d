@@ -268,6 +268,10 @@ public:
 		}
 	}
 
+	version(SumTypeNoDefaultCtor) {
+		@disable this();
+	}
+
 	import std.traits: isAssignable;
 
 	static foreach (i, T; Types) {
@@ -349,10 +353,6 @@ public:
 				}
 			});
 		}
-	}
-
-	version(SumTypeNoDefaultCtor) {
-		@disable this();
 	}
 
 	/// Returns a string representation of a `SumType`'s value.
