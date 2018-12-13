@@ -5,5 +5,14 @@
 	],
 	"description": "A sum type with pattern matching",
 	"copyright": "Copyright © 2018, Paul Backus",
-	"license": "MIT"
+	"license": "MIT",
+	"configurations": [
+		{
+			"name": "default"
+		},
+		{
+			"name": "unittest",
+			"versions": ["Testing_sumtype"]
+		}
+	]
 }

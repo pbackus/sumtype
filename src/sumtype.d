@@ -289,32 +289,11 @@ public:
 		}
 	}
 
-	import std.meta: allSatisfy, staticMap;
-	import std.traits: isEqualityComparable, ConstOf;
+	import std.meta: allSatisfy;
+	import std.traits: isEqualityComparable;
 
-	static if (allSatisfy!(isEqualityComparable, staticMap!(ConstOf, Types))) {
-		/**
-		 * Compares two `SumType`s for equality.
-		 *
-		 * Two `SumType`s are equal if they contain values of the same type,
-		 * and those values are equal.
-		 */
-		bool opEquals(const SumType!(TypeArgs) rhs) const
-		{
-			return this.match!((ref value) {
-				return rhs.match!((ref rhsValue) {
-					static if (is(typeof(value) == typeof(rhsValue))) {
-						return value == rhsValue;
-					} else {
-						return false;
-					}
-				});
-			});
-		}
-	} else static if (allSatisfy!(isEqualityComparable, Types)) {
-		/// ditto
-		bool opEquals(SumType!(TypeArgs) rhs)
-		{
+	static if (allSatisfy!(isEqualityComparable, Types)) {
+		bool opEquals(in SumType rhs) const {
 			return this.match!((ref value) {
 				return rhs.match!((ref rhsValue) {
 					static if (is(typeof(value) == typeof(rhsValue))) {
@@ -597,52 +576,6 @@ public:
 	auto b = MySum(Struct([Field()]));
 
 	assert(a == b);
-}
-
-// Compares types with const-only, mutable-only, and disabled opEquals
-// overloads without breaking value equality
-@safe unittest {
-	import std.traits;
-
-	struct MutableEquals
-	{
-		bool opEquals(MutableEquals rhs)
-		{
-			return true;
-		}
-	}
-
-	struct ConstEquals
-	{
-		bool opEquals(const ConstEquals rhs) const
-		{
-			return true;
-		}
-
-		@disable bool opEquals(ConstEquals rhs);
-	}
-
-	struct NoEquals
-	{
-		@disable bool opEquals(const NoEquals rhs) const;
-	}
-
-	alias SumA = SumType!(MutableEquals, int[]);
-	assert(__traits(compiles,
-		SumA(MutableEquals()) == SumA(MutableEquals())
-	));
-	assert(SumA([1, 2, 3]) == SumA([1, 2, 3]));
-
-	alias SumB = SumType!(ConstEquals, int[]);
-	assert(__traits(compiles,
-		SumB(ConstEquals()) == SumB(ConstEquals())
-	));
-	assert(SumB([1, 2, 3]) == SumB([1, 2, 3]));
-
-	alias SumC = SumType!NoEquals;
-	assert(!__traits(compiles,
-		SumC(NoEquals()) == SumC(NoEquals())
-	));
 }
 
 // toString
@@ -1201,4 +1134,52 @@ unittest {
 	assert(OverloadSet.fun(a) == "int");
 	assert(OverloadSet.fun(b) == "double");
 	assert(OverloadSet.fun(c) == "string");
+}
+
+
+// Github issue #16
+@safe unittest {
+
+	assert(
+		Node(Struct(
+				"Outer",
+				[
+					 Node(Field(Type(Int()), "integer")),
+					 Node(Struct("Inner", [Node(Field(Type(Int()), "x"))])),
+					 Node(Field(Type(UserDefinedType("Inner")), "inner")),
+				]
+			)
+		)
+		==
+		Node(Struct(
+				"Outer",
+				[
+					 Node(Field(Type(Int()), "integer")),
+					 Node(Struct("Inner", [Node(Field(Type(Int()), "x"))])),
+					 Node(Field(Type(UserDefinedType("Inner")), "inner")),
+				]
+			)
+		)
+	);
+}
+
+version(Testing_sumtype) {
+	alias Node = SumType!(Struct, Field);
+
+	struct Struct {
+		string spelling;
+		Node[] nodes;
+		bool opEquals(in Struct other) @trusted @nogc pure nothrow const {
+			return spelling == other.spelling && nodes == other.nodes;
+		}
+	}
+
+	struct Field {
+		Type type;
+		string spelling;
+	}
+
+	alias Type = SumType!(Int, UserDefinedType);
+	struct Int {}
+	struct UserDefinedType { string spelling; }
 }
