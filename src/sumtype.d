@@ -590,6 +590,18 @@ public:
 	assert(Sum(Double(33.3)).text == `const(Double)(33.3)`, Sum(Double(33.3)).text);
 }
 
+// Github issue #16
+@safe unittest {
+	alias Node = SumType!(This[], string);
+
+	// override inference of @system attribute for cyclic functions
+	assert((() @trusted =>
+		Node([Node([Node("x")])])
+		==
+		Node([Node([Node("x")])])
+	)());
+}
+
 /**
  * Calls a type-appropriate function with the value held in a [SumType].
  *
@@ -1134,52 +1146,4 @@ unittest {
 	assert(OverloadSet.fun(a) == "int");
 	assert(OverloadSet.fun(b) == "double");
 	assert(OverloadSet.fun(c) == "string");
-}
-
-
-// Github issue #16
-@safe unittest {
-
-	assert(
-		Node(Struct(
-				"Outer",
-				[
-					 Node(Field(Type(Int()), "integer")),
-					 Node(Struct("Inner", [Node(Field(Type(Int()), "x"))])),
-					 Node(Field(Type(UserDefinedType("Inner")), "inner")),
-				]
-			)
-		)
-		==
-		Node(Struct(
-				"Outer",
-				[
-					 Node(Field(Type(Int()), "integer")),
-					 Node(Struct("Inner", [Node(Field(Type(Int()), "x"))])),
-					 Node(Field(Type(UserDefinedType("Inner")), "inner")),
-				]
-			)
-		)
-	);
-}
-
-version(Testing_sumtype) {
-	alias Node = SumType!(Struct, Field);
-
-	struct Struct {
-		string spelling;
-		Node[] nodes;
-		bool opEquals(in Struct other) @trusted @nogc pure nothrow const {
-			return spelling == other.spelling && nodes == other.nodes;
-		}
-	}
-
-	struct Field {
-		Type type;
-		string spelling;
-	}
-
-	alias Type = SumType!(Int, UserDefinedType);
-	struct Int {}
-	struct UserDefinedType { string spelling; }
 }
