@@ -205,7 +205,7 @@ private enum allDistinct(Args...) = is(NoDuplicates!Args == Args);
  * [sumtype#arithmetic-expression-evaluator|"Arithmetic expression evaluator" example] for
  * usage.
  *
- * A `SumType` is initialized by default to hold the `.init` property of its
+ * A `SumType` is initialized by default to hold the `.init` value of its
  * first member type, just like a regular union. The version identifier
  * `SumTypeNoDefaultCtor` can be used to disable this behavior.
  *
@@ -389,12 +389,16 @@ public:
 @safe unittest {
 	alias MySum = SumType!(int, float);
 
-	MySum x = MySum(42);
-	MySum y = x;
-	MySum z = MySum(3.14);
+	MySum x = MySum(123);
+	MySum y = MySum(123);
+	MySum z = MySum(456);
+	MySum w = MySum(123.0);
+	MySum v = MySum(456.0);
 
 	assert(x == y);
 	assert(x != z);
+	assert(x != w);
+	assert(x != v);
 }
 
 // Imported types
