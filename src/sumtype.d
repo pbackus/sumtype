@@ -292,12 +292,12 @@ public:
 	import std.meta: allSatisfy;
 	import std.traits: isEqualityComparable;
 
-	static if( allSatisfy!(isEqualityComparable, Types)) {
-		bool opEquals(in SumType rhs) @safe const {
+	static if (allSatisfy!(isEqualityComparable, Types)) {
+		bool opEquals(in SumType rhs) const {
 			return this.match!((ref value) {
 				return rhs.match!((ref rhsValue) {
-					static if (is(typeof(value == rhsValue) == bool)) {
-						return () @trusted { return value == rhsValue; }();
+					static if (is(typeof(value) == typeof(rhsValue))) {
+						return value == rhsValue;
 					} else {
 						return false;
 					}
@@ -1165,6 +1165,9 @@ version(Testing_sumtype) {
 	struct Struct {
 		string spelling;
 		Node[] nodes;
+		bool opEquals(in Struct other) @trusted @nogc pure nothrow const {
+			return spelling == other.spelling && nodes == other.nodes;
+		}
 	}
 
 	struct Field {
