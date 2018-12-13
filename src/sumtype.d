@@ -209,6 +209,10 @@ private enum allDistinct(Args...) = is(NoDuplicates!Args == Args);
  * first member type, just like a regular union. The version identifier
  * `SumTypeNoDefaultCtor` can be used to disable this behavior.
  *
+ * Bugs:
+ *   Types with non-`const` overloads of `opEquals` cannot be stored in a
+ *   `SumType`.
+ *
  * See_Also: `std.variant.Algebraic`
  */
 struct SumType(TypeArgs...)
@@ -302,6 +306,12 @@ public:
 		 *
 		 * Two `SumType`s are equal if they contain values of the same type,
 		 * and those values are equal.
+		 *
+		 * Bugs:
+		 *   Comparison of `SumType`s that contain a `const(This)[]`, either
+		 *   directly or indirectly, will sometimes give the wrong result by
+		 *   comparing the arrays for reference equality (`is`) instead of
+		 *   value equality (`==`).
 		 */
 		bool opEquals(const SumType rhs) const {
 			return this.match!((ref value) {
@@ -606,6 +616,33 @@ public:
 		==
 		Node([Node([Node("x")])])
 	)());
+}
+
+version(none) {
+	// Known bug; needs fix for dlang issue 18458
+	@safe unittest {
+		alias Node = SumType!(const(This)[], string);
+
+		// override inference of @system attribute for cyclic functions
+		assert((() @trusted =>
+			Node([Node([Node("x")])])
+			==
+			Node([Node([Node("x")])])
+		)());
+	}
+}
+
+version(none) {
+	// Known bug; needs fix for dlang issue 19458
+	@safe unittest {
+		struct S
+		{
+			int i;
+			bool opEquals(S rhs) { return i == rhs.i; }
+		}
+
+		assert(__traits(compiles, SumType!S(S(123))));
+	}
 }
 
 /**
