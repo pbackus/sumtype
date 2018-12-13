@@ -293,7 +293,7 @@ public:
 	import std.traits: isEqualityComparable;
 
 	static if (allSatisfy!(isEqualityComparable, Types)) {
-		bool opEquals(in SumType rhs) const {
+		bool opEquals(const SumType rhs) const {
 			return this.match!((ref value) {
 				return rhs.match!((ref rhsValue) {
 					static if (is(typeof(value) == typeof(rhsValue))) {
@@ -306,7 +306,7 @@ public:
 		}
 	} else {
 		// Don't fall back to default (bitwise) equality
-		@disable bool opEquals(const SumType!(TypeArgs) rhs) const;
+		@disable bool opEquals(const SumType rhs) const;
 	}
 
 	import std.meta: anySatisfy;
