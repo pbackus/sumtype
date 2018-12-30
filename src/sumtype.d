@@ -736,6 +736,54 @@ class MatchException : Exception
 	}
 }
 
+/**
+ * Checks whether a handler can match a given type.
+ *
+ * See the documentation for [match] for a full explanation of how matches are
+ * chosen.
+ */
+template canMatch(alias handler, T)
+{
+	private bool canMatchImpl()
+	{
+		import std.traits: hasMember, isCallable, isSomeFunction, Parameters;
+
+		// immutable recursively overrides all other qualifiers, so the
+		// right-hand side is true if and only if the two types are the
+		// same up to qualifiers (i.e., they have the same structure).
+		enum sameUpToQuals(T, U) = is(immutable(T) == immutable(U));
+
+		bool result = false;
+
+		static if (is(typeof({ T dummy = T.init; handler(dummy); }))) {
+			// Regular handlers
+			static if (isCallable!handler) {
+				// Functions and delegates
+				static if (isSomeFunction!handler) {
+					static if (sameUpToQuals!(T, Parameters!handler[0])) {
+						result = true;
+					}
+				// Objects with overloaded opCall
+				} else static if (hasMember!(typeof(handler), "opCall")) {
+					static foreach (overload; __traits(getOverloads, typeof(handler), "opCall")) {
+						static if (sameUpToQuals!(T, Parameters!overload[0])) {
+							result = true;
+						}
+					}
+				}
+			// Generic handlers
+			} else {
+				result = true;
+			}
+		}
+
+		return result;
+	}
+
+	/// True if `handler` is a potential match for `T`, otherwise false.
+	enum bool canMatch = canMatchImpl;
+}
+
 import std.traits: isFunction;
 
 // An AliasSeq of a function's overloads
@@ -793,46 +841,16 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 		alias allHandlers = staticMap!(handleOverloads, handlers);
 
-		pure static size_t[Types.length] getHandlerIndices()
+		pure size_t[Types.length] getHandlerIndices()
 		{
-			import std.traits: hasMember, isCallable, isSomeFunction, Parameters;
-
-			// immutable recursively overrides all other qualifiers, so the
-			// right-hand side is true if and only if the two types are the
-			// same up to qualifiers (i.e., they have the same structure).
-			enum sameUpToQuals(T, U) = is(immutable(T) == immutable(U));
-
 			size_t[Types.length] indices;
 			indices[] = noMatch;
 
-			void setHandlerIndex(size_t tid, size_t hid)
-			{
-				if (indices[tid] == noMatch) {
-					indices[tid] = hid;
-				}
-			}
-
 			static foreach (tid, T; Types) {
 				static foreach (hid, handler; allHandlers) {
-					static if (is(typeof(handler(self.trustedGet!T)))) {
-						// Regular handlers
-						static if (isCallable!handler) {
-							// Functions and delegates
-							static if (isSomeFunction!handler) {
-								static if (sameUpToQuals!(T, Parameters!handler[0])) {
-									setHandlerIndex(tid, hid);
-								}
-							// Objects with overloaded opCall
-							} else static if (hasMember!(typeof(handler), "opCall")) {
-								static foreach (overload; __traits(getOverloads, typeof(handler), "opCall")) {
-									static if (sameUpToQuals!(T, Parameters!overload[0])) {
-										setHandlerIndex(tid, hid);
-									}
-								}
-							}
-						// Generic handlers
-						} else {
-							setHandlerIndex(tid, hid);
+					static if (canMatch!(handler, typeof(self.trustedGet!T()))) {
+						if (indices[tid] == noMatch) {
+							indices[tid] = hid;
 						}
 					}
 				}
