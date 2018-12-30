@@ -619,7 +619,7 @@ public:
 }
 
 version(none) {
-	// Known bug; needs fix for dlang issue 18458
+	// Known bug; needs fix for dlang issue 19458
 	@safe unittest {
 		alias Node = SumType!(const(This)[], string);
 
