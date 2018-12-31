@@ -192,8 +192,6 @@ public import std.variant: This;
 
 import std.meta: NoDuplicates;
 
-private enum allDistinct(Args...) = is(NoDuplicates!Args == Args);
-
 /**
  * A tagged union that can hold a single value from any of a specified set of
  * types.
@@ -209,6 +207,9 @@ private enum allDistinct(Args...) = is(NoDuplicates!Args == Args);
  * first member type, just like a regular union. The version identifier
  * `SumTypeNoDefaultCtor` can be used to disable this behavior.
  *
+ * To avoid ambiguity, duplicate types are not allowed (but see the
+ * [sumtype#basic-usage|"basic usage" example] for a workaround).
+ *
  * Bugs:
  *   Types with non-`const` overloads of `opEquals` cannot be stored in a
  *   `SumType`.
@@ -216,7 +217,7 @@ private enum allDistinct(Args...) = is(NoDuplicates!Args == Args);
  * See_Also: `std.variant.Algebraic`
  */
 struct SumType(TypeArgs...)
-	if (allDistinct!TypeArgs
+	if (is(NoDuplicates!TypeArgs == TypeArgs)
 	    && TypeArgs.length > 0
 	    && TypeArgs.length < size_t.max)
 {
