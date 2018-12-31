@@ -230,10 +230,10 @@ private:
 
 	import std.meta: AliasSeq, Filter;
 
-	enum bool isValidTagType(T) = Types.length <= T.max;
+	enum bool canHoldTag(T) = Types.length <= T.max;
 	alias unsignedInts = AliasSeq!(ubyte, ushort, uint, ulong);
 
-	alias Tag = Filter!(isValidTagType, unsignedInts)[0];
+	alias Tag = Filter!(canHoldTag, unsignedInts)[0];
 
 	union Storage
 	{
@@ -816,14 +816,14 @@ private template overloadHandler(alias fun)
 	enum overloadHandler = OverloadHandler.init;
 }
 
-// A handler that includes all overloads of fun, if applicable
-private template handleOverloads(alias fun)
+// A handler that includes all overloads of the original handler, if applicable
+private template overloadInclusiveHandler(alias handler)
 {
 	// Delegates and function pointers can't have overloads
-	static if (isFunction!fun) {
-		alias handleOverloads = overloadHandler!fun;
+	static if (isFunction!handler) {
+		alias overloadInclusiveHandler = overloadHandler!handler;
 	} else {
-		alias handleOverloads = fun;
+		alias overloadInclusiveHandler = handler;
 	}
 }
 
@@ -839,7 +839,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		alias Types = self.Types;
 		enum noMatch = size_t.max;
 
-		alias allHandlers = staticMap!(handleOverloads, handlers);
+		alias allHandlers = staticMap!(overloadInclusiveHandler, handlers);
 
 		pure size_t[Types.length] getHandlerIndices()
 		{
@@ -855,6 +855,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 					}
 				}
 			}
+
 			return indices;
 		}
 
@@ -876,6 +877,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 					}
 			}
 		}
+
 		assert(false); // unreached
 
 		import std.algorithm.searching: canFind;
