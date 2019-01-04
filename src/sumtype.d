@@ -211,7 +211,7 @@ import std.meta: NoDuplicates;
  * [sumtype#basic-usage|"basic usage" example] for a workaround).
  *
  * Bugs:
- *   Types with non-`const` overloads of `opEquals` cannot be stored in a
+ *   Types with `@disable`d `opEquals` overloads cannot be members of a
  *   `SumType`.
  *
  * See_Also: `std.variant.Algebraic`
@@ -298,36 +298,22 @@ public:
 		}
 	}
 
-	import std.meta: allSatisfy;
-	import std.traits: isEqualityComparable;
-
-	static if (allSatisfy!(isEqualityComparable, Types)) {
-		/**
-		 * Compares two `SumType`s for equality.
-		 *
-		 * Two `SumType`s are equal if they contain values of the same type,
-		 * and those values are equal.
-		 *
-		 * Bugs:
-		 *   Comparison of `SumType`s that contain a `const(This)[]`, either
-		 *   directly or indirectly, will sometimes give the wrong result by
-		 *   comparing the arrays for reference equality (`is`) instead of
-		 *   value equality (`==`).
-		 */
-		bool opEquals(const SumType rhs) const {
-			return this.match!((ref value) {
-				return rhs.match!((ref rhsValue) {
-					static if (is(typeof(value) == typeof(rhsValue))) {
-						return value == rhsValue;
-					} else {
-						return false;
-					}
-				});
+	/**
+	 * Compares two `SumType`s for equality.
+	 *
+	 * Two `SumType`s are equal if they contain values of the same type,
+	 * and those values are equal.
+	 */
+	bool opEquals(const SumType rhs) const {
+		return this.match!((ref value) {
+			return rhs.match!((ref rhsValue) {
+				static if (is(typeof(value) == typeof(rhsValue))) {
+					return value == rhsValue;
+				} else {
+					return false;
+				}
 			});
-		}
-	} else {
-		// Don't fall back to default (bitwise) equality
-		@disable bool opEquals(const SumType rhs) const;
+		});
 	}
 
 	import std.meta: anySatisfy;
@@ -619,17 +605,28 @@ public:
 	)());
 }
 
+// Github issue #16 with const
+@safe unittest {
+	alias Node = SumType!(const(This)[], string);
+
+	// override inference of @system attribute for cyclic functions
+	assert((() @trusted =>
+		Node([Node([Node("x")])])
+		==
+		Node([Node([Node("x")])])
+	)());
+}
+
 version(none) {
 	// Known bug; needs fix for dlang issue 19458
+	// Types with disabled opEquals
 	@safe unittest {
-		alias Node = SumType!(const(This)[], string);
+		struct S
+		{
+			@disable bool opEquals(const S rhs) const;
+		}
 
-		// override inference of @system attribute for cyclic functions
-		assert((() @trusted =>
-			Node([Node([Node("x")])])
-			==
-			Node([Node([Node("x")])])
-		)());
+		assert(__traits(compiles, SumType!S(S())));
 	}
 }
 
