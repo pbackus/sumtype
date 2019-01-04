@@ -301,8 +301,8 @@ public:
 	/**
 	 * Compares two `SumType`s for equality.
 	 *
-	 * Two `SumType`s are equal if they contain values of the same type,
-	 * and those values are equal.
+	 * Two `SumType`s are equal if they are the same kind of `SumType`, they
+	 * contain values of the same type, and those values are equal.
 	 */
 	bool opEquals(const SumType rhs) const {
 		return this.match!((ref value) {
