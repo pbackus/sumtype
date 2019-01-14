@@ -56,6 +56,20 @@ module sumtype;
 
     freeze(t1);
     assert(toFahrenheit(t1).degrees.approxEqual(32));
+
+    // Use a catch-all handler to give a default result.
+    pure @safe @nogc nothrow
+    bool isFahrenheit(Temperature t)
+    {
+        return t.match!(
+            (Fahrenheit f) => true,
+            _ => false
+        );
+    }
+
+    assert(isFahrenheit(t1));
+    assert(!isFahrenheit(t2));
+    assert(!isFahrenheit(t3));
 }
 
 /** $(H3 Structural matching)
