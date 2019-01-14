@@ -42,6 +42,56 @@ module sumtype;
     assert(toFahrenheit(t3).degrees.approxEqual(32));
 }
 
+/** $(H3 Mutation)
+ *
+ * To modify the value of an existing `SumType` in place, use `ref`:
+ */
+@safe unittest {
+    import std.math: approxEqual;
+
+    struct Fahrenheit { double degrees; }
+    struct Celsius { double degrees; }
+    struct Kelvin { double degrees; }
+
+    alias Temperature = SumType!(Fahrenheit, Celsius, Kelvin);
+
+    pure @safe @nogc nothrow
+    void freeze(ref Temperature t)
+    {
+        t.match!(
+            (ref Fahrenheit f) => f.degrees = 32,
+            (ref Celsius c) => c.degrees = 0,
+            (ref Kelvin k) => k.degrees = 273
+        );
+    }
+
+    pure @safe @nogc nothrow
+    bool isFreezing(Temperature t)
+    {
+        return t.match!(
+            (Fahrenheit f) => f.degrees.approxEqual(32),
+            (Celsius c) => c.degrees.approxEqual(0),
+            (Kelvin k) => k.degrees.approxEqual(273)
+        );
+    }
+
+    Temperature t1 = Fahrenheit(212);
+    Temperature t2 = Celsius(100);
+    Temperature t3 = Kelvin(373);
+
+    assert(!isFreezing(t1));
+    assert(!isFreezing(t2));
+    assert(!isFreezing(t3));
+
+    freeze(t1);
+    freeze(t2);
+    freeze(t3);
+
+    assert(isFreezing(t1));
+    assert(isFreezing(t2));
+    assert(isFreezing(t3));
+}
+
 /** $(H3 Structural matching)
  *
  * In the `length` and `horiz` functions below, the handlers for `match` do not
