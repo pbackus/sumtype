@@ -21,6 +21,12 @@ module sumtype;
 
     alias Temperature = SumType!(Fahrenheit, Celsius, Kelvin);
 
+    // Construct from any of the member types.
+    Temperature t1 = Fahrenheit(98.6);
+    Temperature t2 = Celsius(100);
+    Temperature t3 = Kelvin(273);
+
+    // Use pattern matching to access the value.
     pure @safe @nogc nothrow
     Fahrenheit toFahrenheit(Temperature t)
     {
@@ -33,28 +39,11 @@ module sumtype;
         );
     }
 
-    Temperature t1 = Fahrenheit(98.6);
-    Temperature t2 = Celsius(100);
-    Temperature t3 = Kelvin(273);
-
     assert(toFahrenheit(t1).degrees.approxEqual(98.6));
     assert(toFahrenheit(t2).degrees.approxEqual(212));
     assert(toFahrenheit(t3).degrees.approxEqual(32));
-}
 
-/** $(H3 Mutation)
- *
- * To modify the value of an existing `SumType` in place, use `ref`:
- */
-@safe unittest {
-    import std.math: approxEqual;
-
-    struct Fahrenheit { double degrees; }
-    struct Celsius { double degrees; }
-    struct Kelvin { double degrees; }
-
-    alias Temperature = SumType!(Fahrenheit, Celsius, Kelvin);
-
+    // Use ref to modify the value in place.
     pure @safe @nogc nothrow
     void freeze(ref Temperature t)
     {
@@ -65,31 +54,8 @@ module sumtype;
         );
     }
 
-    pure @safe @nogc nothrow
-    bool isFreezing(Temperature t)
-    {
-        return t.match!(
-            (Fahrenheit f) => f.degrees.approxEqual(32),
-            (Celsius c) => c.degrees.approxEqual(0),
-            (Kelvin k) => k.degrees.approxEqual(273)
-        );
-    }
-
-    Temperature t1 = Fahrenheit(212);
-    Temperature t2 = Celsius(100);
-    Temperature t3 = Kelvin(373);
-
-    assert(!isFreezing(t1));
-    assert(!isFreezing(t2));
-    assert(!isFreezing(t3));
-
     freeze(t1);
-    freeze(t2);
-    freeze(t3);
-
-    assert(isFreezing(t1));
-    assert(isFreezing(t2));
-    assert(isFreezing(t3));
+    assert(toFahrenheit(t1).degrees.approxEqual(32));
 }
 
 /** $(H3 Structural matching)
