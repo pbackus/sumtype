@@ -647,6 +647,19 @@ public:
 	)());
 }
 
+// Stale pointers
+@system unittest {
+	import std.array: staticArray;
+
+	alias MySum = SumType!(ubyte, void*[2]);
+
+	MySum x = [null, cast(void*) 0x12345678];
+	void** p = &x.trustedGet!(void*[2])[1];
+	x = ubyte(123);
+
+	assert(*p != cast(void*) 0x12345678);
+}
+
 version(none) {
 	// Known bug; needs fix for dlang issue 19458
 	// Types with disabled opEquals
