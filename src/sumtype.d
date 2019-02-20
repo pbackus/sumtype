@@ -817,7 +817,7 @@ template canMatch(alias handler, T)
 
 		// immutable recursively overrides all other qualifiers, so the
 		// right-hand side is true if and only if the two types are the
-		// same up to qualifiers (i.e., they have the same structure).
+		// same when qualifiers are ignored.
 		enum sameUpToQuals(T, U) = is(immutable(T) == immutable(U));
 
 		bool result = false;
