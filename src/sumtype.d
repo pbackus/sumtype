@@ -833,9 +833,12 @@ private template FunctionOverloads(alias fun)
 {
 	import std.meta: AliasSeq;
 
-	alias FunctionOverloads = AliasSeq!(__traits(getOverloads,
-		__traits(parent, fun), __traits(identifier, fun)
-	));
+	alias FunctionOverloads = AliasSeq!(
+		__traits(getOverloads,
+			__traits(parent, fun),
+			__traits(identifier, fun)
+		)
+	);
 }
 
 // A handler with an opCall overload for each overload of fun
