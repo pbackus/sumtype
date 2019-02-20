@@ -298,8 +298,8 @@ public:
 		/// Constructs a `SumType` holding a specific value.
 		this(inout(T) val) inout
 		{
-			tag = i;
 			storage = inout(Storage)(val);
+			tag = i;
 		}
 	}
 
@@ -322,8 +322,8 @@ public:
 					}
 				});
 
-				tag = i;
 				storage = Storage(rhs);
+				tag = i;
 			}
 		}
 	}
@@ -658,6 +658,32 @@ public:
 	x = ubyte(123);
 
 	assert(*p != cast(void*) 0x12345678);
+}
+
+// Exception-safe assignment
+@safe unittest {
+	struct A
+	{
+		int value = 123;
+	}
+
+	struct B
+	{
+		int value = 456;
+		this(this) { throw new Exception("oops"); }
+	}
+
+	alias MySum = SumType!(A, B);
+
+	MySum x;
+	try {
+		x = B();
+	} catch (Exception e) {}
+
+	assert(
+		(x.tag == 0 && x.trustedGet!A.value == 123) ||
+		(x.tag == 1 && x.trustedGet!B.value == 456)
+	);
 }
 
 version(none) {
