@@ -219,6 +219,7 @@ module sumtype;
     assert(pprint(*myExpr) == "(a + (2 * b))");
 }
 
+/// `This` placeholder, for use in self-referential types.
 public import std.variant: This;
 
 import std.meta: NoDuplicates;
