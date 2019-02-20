@@ -892,7 +892,7 @@ private template overloadHandler(alias fun)
 private template handlerWithOverloads(alias handler)
 {
 	// Delegates and function pointers can't have overloads
-	static if (isFunction!handler) {
+	static if (isFunction!handler && FunctionOverloads!handler.length > 1) {
 		alias handlerWithOverloads = overloadHandler!handler;
 	} else {
 		alias handlerWithOverloads = handler;
