@@ -858,13 +858,13 @@ private template overloadHandler(alias fun)
 }
 
 // A handler that includes all overloads of the original handler, if applicable
-private template overloadInclusiveHandler(alias handler)
+private template handlerWithOverloads(alias handler)
 {
 	// Delegates and function pointers can't have overloads
 	static if (isFunction!handler) {
-		alias overloadInclusiveHandler = overloadHandler!handler;
+		alias handlerWithOverloads = overloadHandler!handler;
 	} else {
-		alias overloadInclusiveHandler = handler;
+		alias handlerWithOverloads = handler;
 	}
 }
 
@@ -880,7 +880,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		alias Types = self.Types;
 		enum noMatch = size_t.max;
 
-		alias allHandlers = staticMap!(overloadInclusiveHandler, handlers);
+		alias allHandlers = staticMap!(handlerWithOverloads, handlers);
 
 		pure size_t[Types.length] getHandlerIndices()
 		{
