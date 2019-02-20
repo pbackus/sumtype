@@ -144,7 +144,8 @@ module sumtype;
         Tuple!(Op, "op", This*, "lhs", This*, "rhs")
     );
 
-    // Shorthand for the Tuple type above
+    // Shorthand for Tuple!(Op, "op", Expr*, "lhs", Expr*, "rhs"),
+    // the Tuple type above with Expr substituted for This.
     alias BinOp = Expr.Types[2];
 
     // Factory function for number expressions
