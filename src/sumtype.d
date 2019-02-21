@@ -817,6 +817,9 @@ template canMatch(alias handler, T)
 	{
 		import std.traits: hasMember, isCallable, isSomeFunction, Parameters;
 
+		// Include overloads even when called from outside of matchImpl
+		alias realHandler = handlerWithOverloads!handler;
+
 		// immutable recursively overrides all other qualifiers, so the
 		// right-hand side is true if and only if the two types are the
 		// same when qualifiers are ignored.
@@ -824,17 +827,17 @@ template canMatch(alias handler, T)
 
 		bool result = false;
 
-		static if (is(typeof({ T dummy = T.init; handler(dummy); }))) {
+		static if (is(typeof({ T dummy = T.init; realHandler(dummy); }))) {
 			// Regular handlers
-			static if (isCallable!handler) {
+			static if (isCallable!realHandler) {
 				// Functions and delegates
-				static if (isSomeFunction!handler) {
-					static if (sameUpToQuals!(T, Parameters!handler[0])) {
+				static if (isSomeFunction!realHandler) {
+					static if (sameUpToQuals!(T, Parameters!realHandler[0])) {
 						result = true;
 					}
 				// Objects with overloaded opCall
-				} else static if (hasMember!(typeof(handler), "opCall")) {
-					static foreach (overload; __traits(getOverloads, typeof(handler), "opCall")) {
+				} else static if (hasMember!(typeof(realHandler), "opCall")) {
+					static foreach (overload; __traits(getOverloads, typeof(realHandler), "opCall")) {
 						static if (sameUpToQuals!(T, Parameters!overload[0])) {
 							result = true;
 						}
@@ -851,6 +854,18 @@ template canMatch(alias handler, T)
 
 	/// True if `handler` is a potential match for `T`, otherwise false.
 	enum bool canMatch = canMatchImpl;
+}
+
+// Includes all overloads of the given handler
+@safe unittest {
+	static struct OverloadSet
+	{
+		static void fun(int n) {}
+		static void fun(double d) {}
+	}
+
+	assert(canMatch!(OverloadSet.fun, int));
+	assert(canMatch!(OverloadSet.fun, double));
 }
 
 import std.traits: isFunction;
