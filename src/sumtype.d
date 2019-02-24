@@ -274,9 +274,35 @@ private:
 
 		static foreach (i, T; Types) {
 			@trusted
-			this(inout(T) val) inout
+			this(T val)
 			{
-				values[i] = val;
+				import std.algorithm: move;
+				import std.traits: isMutable;
+
+				static if (isMutable!T) {
+					values[i] = move(val);
+				} else {
+					values[i] = val;
+				}
+			}
+
+			import std.traits: isCopyable;
+
+			static if (isCopyable!T) {
+				@trusted
+				this(const(T) val) const
+				{
+					values[i] = val;
+				}
+
+				@trusted
+				this(immutable(T) val) immutable
+				{
+					values[i] = val;
+				}
+			} else {
+				@disable this(const(T) val) const;
+				@disable this(immutable(T) val) immutable;
 			}
 		}
 	}
@@ -298,10 +324,36 @@ public:
 
 	static foreach (i, T; Types) {
 		/// Constructs a `SumType` holding a specific value.
-		this(inout(T) val) inout
+		this(T val)
 		{
-			storage = inout(Storage)(val);
+			import std.algorithm.mutation: move;
+			import std.traits: isMutable;
+
+			static if (isMutable!T) {
+				storage = Storage(move(val));
+			} else {
+				storage = Storage(val);
+			}
 			tag = i;
+		}
+
+		import std.traits: isCopyable;
+
+		static if (isCopyable!T) {
+			this(const(T) val) const
+			{
+				storage = const(Storage)(val);
+				tag = i;
+			}
+
+			this(immutable(T) val) immutable
+			{
+				storage = immutable(Storage)(val);
+				tag = i;
+			}
+		} else {
+			@disable this(const(T) val) const;
+			@disable this(immutable(T) val) immutable;
 		}
 	}
 
@@ -316,6 +368,7 @@ public:
 			/// Assigns a value to a `SumType`.
 			void opAssign(T rhs)
 			{
+				import std.algorithm.mutation: move;
 				import std.traits: hasElaborateDestructor;
 
 				this.match!((ref value) {
@@ -324,8 +377,28 @@ public:
 					}
 				});
 
-				storage = Storage(rhs);
+				storage = Storage(move(rhs));
 				tag = i;
+			}
+
+			import std.traits: isCopyable;
+
+			static if (isCopyable!T) {
+				void opAssign(ref T rhs)
+				{
+					import std.traits: hasElaborateDestructor;
+
+					this.match!((ref value) {
+						static if (hasElaborateDestructor!(typeof(value))) {
+							destroy(value);
+						}
+					});
+
+					storage = Storage(rhs);
+					tag = i;
+				}
+			} else {
+				@disable void opAssign(ref T rhs);
 			}
 		}
 	}
@@ -349,7 +422,7 @@ public:
 	}
 
 	import std.meta: anySatisfy;
-	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
+	import std.traits: hasElaborateDestructor;
 
 	// Workaround for dlang issue 19407
 	static if (__traits(compiles, anySatisfy!(hasElaborateDestructor, Types))) {
@@ -372,24 +445,34 @@ public:
 		}
 	}
 
-	static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
+	import std.traits: hasElaborateCopyConstructor, isCopyable;
+
+	// Workaround for dlang issue 18628
+	private enum hasPostblit(T) = hasElaborateCopyConstructor!T && isCopyable!T;
+
+	static if (anySatisfy!(hasPostblit, Types)) {
 		/// Calls the postblit of the `SumType`'s current value.
 		this(this)
 		{
 			this.match!((ref value) {
-				static if (hasElaborateCopyConstructor!(typeof(value))) {
+				static if (hasPostblit!(typeof(value))) {
 					value.__xpostblit;
 				}
 			});
 		}
 	}
 
-	/// Returns a string representation of a `SumType`'s value.
-	string toString() const {
-		import std.conv: text;
-		return this.match!((auto ref value) {
-			return value.text;
-		});
+	import std.meta: allSatisfy;
+	import std.traits: isCopyable;
+
+	static if (allSatisfy!(isCopyable, Types)) {
+		/// Returns a string representation of a `SumType`'s value.
+		string toString() const {
+			import std.conv: text;
+			return this.match!((auto ref value) {
+				return value.text;
+			});
+		}
 	}
 }
 
@@ -482,13 +565,15 @@ public:
 
 	struct Test
 	{
+		bool initialized = false;
+
 		this(this) { copies++; }
-		~this() { copies--; }
+		~this() { if (initialized) copies--; }
 	}
 
 	alias MySum = SumType!(int, Test);
 
-	Test t;
+	Test t = Test(true);
 
 	{
 		MySum x = t;
@@ -562,27 +647,6 @@ public:
 
 	assert(!__traits(compiles, MySum()));
 	assert(__traits(compiles, MySum(42)));
-}
-
-// Types with .init values that violate their invariants
-@system unittest {
-	import core.exception: AssertError;
-	import std.exception: assertNotThrown;
-
-	// FeepingCreature's diabolical test case
-	struct Evil
-	{
-		@disable this();
-		~this() pure @safe { }
-		this(int i) pure @safe { this.i = i; }
-		void opAssign(Evil) { assert(false); }
-		immutable int i;
-		invariant { assert(i != 0); }
-	}
-
-	SumType!(Evil, int) x = 123;
-
-	assertNotThrown!AssertError(x = Evil(456));
 }
 
 // const SumTypes
@@ -686,6 +750,16 @@ public:
 		(x.tag == 0 && x.trustedGet!A.value == 123) ||
 		(x.tag == 1 && x.trustedGet!B.value == 456)
 	);
+}
+
+// Types with @disable this(this)
+@safe unittest {
+	struct NoCopy
+	{
+		@disable this(this);
+	}
+
+	alias MySum = SumType!NoCopy;
 }
 
 version(none) {
