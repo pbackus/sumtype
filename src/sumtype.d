@@ -330,12 +330,14 @@ public:
 		import std.traits: isCopyable;
 
 		static if (isCopyable!T) {
+			/// ditto
 			this()(auto ref const(T) val) const
 			{
 				storage = const(Storage)(val);
 				tag = i;
 			}
 
+			/// ditto
 			this()(auto ref immutable(T) val) immutable
 			{
 				storage = immutable(Storage)(val);
@@ -418,18 +420,20 @@ public:
 	import std.meta: allSatisfy;
 	import std.traits: hasElaborateCopyConstructor, isCopyable;
 
-	static if (!allSatisfy!(isCopyable, Types)) {
-		@disable this(this);
-	} else static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
-		/// Calls the postblit of the `SumType`'s current value.
-		this(this)
-		{
-			this.match!((ref value) {
-				static if (hasElaborateCopyConstructor!(typeof(value))) {
-					value.__xpostblit;
-				}
-			});
+	static if (allSatisfy!(isCopyable, Types)) {
+		static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
+			/// Calls the postblit of the `SumType`'s current value.
+			this(this)
+			{
+				this.match!((ref value) {
+					static if (hasElaborateCopyConstructor!(typeof(value))) {
+						value.__xpostblit;
+					}
+				});
+			}
 		}
+	} else {
+		@disable this(this);
 	}
 
 	import std.meta: allSatisfy;
