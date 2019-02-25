@@ -448,17 +448,14 @@ public:
 	import std.meta: allSatisfy;
 	import std.traits: hasElaborateCopyConstructor, isCopyable;
 
-	// Workaround for dlang issue 18628
-	private enum hasPostblit(T) = hasElaborateCopyConstructor!T && isCopyable!T;
-
 	static if (!allSatisfy!(isCopyable, Types)) {
 		@disable this(this);
-	} else static if (anySatisfy!(hasPostblit, Types)) {
+	} else static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
 		/// Calls the postblit of the `SumType`'s current value.
 		this(this)
 		{
 			this.match!((ref value) {
-				static if (hasPostblit!(typeof(value))) {
+				static if (hasElaborateCopyConstructor!(typeof(value))) {
 					value.__xpostblit;
 				}
 			});
