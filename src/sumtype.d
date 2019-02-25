@@ -249,9 +249,7 @@ import std.meta: NoDuplicates;
  * See_Also: `std.variant.Algebraic`
  */
 struct SumType(TypeArgs...)
-	if (is(NoDuplicates!TypeArgs == TypeArgs)
-	    && TypeArgs.length > 0
-	    && TypeArgs.length < size_t.max)
+	if (is(NoDuplicates!TypeArgs == TypeArgs) && TypeArgs.length > 0)
 {
 	import std.meta: AliasSeq, Filter, anySatisfy, allSatisfy;
 	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor, isAssignable, isCopyable;
