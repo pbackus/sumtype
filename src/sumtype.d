@@ -274,12 +274,12 @@ private:
 
 		static foreach (i, T; Types) {
 			@trusted
-			this(T val)
+			this()(auto ref T val)
 			{
 				import std.algorithm: move;
 				import std.traits: isMutable;
 
-				static if (isMutable!T) {
+				static if (isMutable!T && !__traits(isRef, val)) {
 					values[i] = move(val);
 				} else {
 					values[i] = val;
@@ -290,13 +290,13 @@ private:
 
 			static if (isCopyable!T) {
 				@trusted
-				this(const(T) val) const
+				this()(auto ref const(T) val) const
 				{
 					values[i] = val;
 				}
 
 				@trusted
-				this(immutable(T) val) immutable
+				this()(auto ref immutable(T) val) immutable
 				{
 					values[i] = val;
 				}
@@ -324,29 +324,24 @@ public:
 
 	static foreach (i, T; Types) {
 		/// Constructs a `SumType` holding a specific value.
-		this(T val)
+		this()(auto ref T val)
 		{
-			import std.algorithm.mutation: move;
-			import std.traits: isMutable;
+			import std.functional: forward;
 
-			static if (isMutable!T) {
-				storage = Storage(move(val));
-			} else {
-				storage = Storage(val);
-			}
+			storage = Storage(forward!val);
 			tag = i;
 		}
 
 		import std.traits: isCopyable;
 
 		static if (isCopyable!T) {
-			this(const(T) val) const
+			this()(auto ref const(T) val) const
 			{
 				storage = const(Storage)(val);
 				tag = i;
 			}
 
-			this(immutable(T) val) immutable
+			this()(auto ref immutable(T) val) immutable
 			{
 				storage = immutable(Storage)(val);
 				tag = i;
@@ -377,11 +372,7 @@ public:
 					}
 				});
 
-				static if (!__traits(isRef, rhs)) {
-					storage = Storage(move(rhs));
-				} else {
-					storage = Storage(rhs);
-				}
+				storage = Storage(rhs);
 				tag = i;
 			}
 		}
