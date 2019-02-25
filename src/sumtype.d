@@ -363,7 +363,7 @@ public:
 			/// Assigns a value to a `SumType`.
 			void opAssign()(auto ref T rhs)
 			{
-				import std.algorithm.mutation: move;
+				import std.functional: forward;
 				import std.traits: hasElaborateDestructor;
 
 				this.match!((ref value) {
@@ -372,7 +372,7 @@ public:
 					}
 				});
 
-				storage = Storage(rhs);
+				storage = Storage(forward!rhs);
 				tag = i;
 			}
 		}
@@ -740,6 +740,7 @@ public:
 	MySum y;
 
 	assert(!__traits(compiles, y = x));
+	assert(__traits(compiles, y = NoCopy()));
 }
 
 version(none) {
