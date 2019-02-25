@@ -445,12 +445,15 @@ public:
 		}
 	}
 
+	import std.meta: allSatisfy;
 	import std.traits: hasElaborateCopyConstructor, isCopyable;
 
 	// Workaround for dlang issue 18628
 	private enum hasPostblit(T) = hasElaborateCopyConstructor!T && isCopyable!T;
 
-	static if (anySatisfy!(hasPostblit, Types)) {
+	static if (!allSatisfy!(isCopyable, Types)) {
+		@disable this(this);
+	} else static if (anySatisfy!(hasPostblit, Types)) {
 		/// Calls the postblit of the `SumType`'s current value.
 		this(this)
 		{
@@ -760,6 +763,11 @@ public:
 	}
 
 	alias MySum = SumType!NoCopy;
+
+	MySum x = NoCopy();
+	MySum y;
+
+	assert(!__traits(compiles, y = x));
 }
 
 version(none) {
