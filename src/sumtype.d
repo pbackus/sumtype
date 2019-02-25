@@ -366,7 +366,7 @@ public:
 	static foreach (i, T; Types) {
 		static if (isAssignable!T) {
 			/// Assigns a value to a `SumType`.
-			void opAssign(T rhs)
+			void opAssign()(auto ref T rhs)
 			{
 				import std.algorithm.mutation: move;
 				import std.traits: hasElaborateDestructor;
@@ -377,28 +377,12 @@ public:
 					}
 				});
 
-				storage = Storage(move(rhs));
-				tag = i;
-			}
-
-			import std.traits: isCopyable;
-
-			static if (isCopyable!T) {
-				void opAssign(ref T rhs)
-				{
-					import std.traits: hasElaborateDestructor;
-
-					this.match!((ref value) {
-						static if (hasElaborateDestructor!(typeof(value))) {
-							destroy(value);
-						}
-					});
-
+				static if (!__traits(isRef, rhs)) {
+					storage = Storage(move(rhs));
+				} else {
 					storage = Storage(rhs);
-					tag = i;
 				}
-			} else {
-				@disable void opAssign(ref T rhs);
+				tag = i;
 			}
 		}
 	}
