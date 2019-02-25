@@ -724,6 +724,8 @@ public:
 
 // Types with @disable this(this)
 @safe unittest {
+	import std.algorithm.mutation: move;
+
 	struct NoCopy
 	{
 		@disable this(this);
@@ -731,11 +733,18 @@ public:
 
 	alias MySum = SumType!NoCopy;
 
+	NoCopy lval = NoCopy();
+
 	MySum x = NoCopy();
 	MySum y;
 
-	assert(!__traits(compiles, y = x));
+	assert(__traits(compiles, SumType!NoCopy(NoCopy())));
+	assert(!__traits(compiles, SumType!NoCopy(lval)));
+
 	assert(__traits(compiles, y = NoCopy()));
+	assert(__traits(compiles, y = move(x)));
+	assert(!__traits(compiles, y = lval));
+	assert(!__traits(compiles, y = x));
 }
 
 version(none) {
