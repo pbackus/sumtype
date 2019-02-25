@@ -276,14 +276,9 @@ private:
 			@trusted
 			this()(auto ref T val)
 			{
-				import std.algorithm: move;
-				import std.traits: isMutable;
+				import std.functional: forward;
 
-				static if (isMutable!T && !__traits(isRef, val)) {
-					values[i] = move(val);
-				} else {
-					values[i] = val;
-				}
+				values[i] = forward!val;
 			}
 
 			import std.traits: isCopyable;
