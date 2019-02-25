@@ -253,15 +253,14 @@ struct SumType(TypeArgs...)
 	    && TypeArgs.length > 0
 	    && TypeArgs.length < size_t.max)
 {
-	import std.meta: AliasSeq;
+	import std.meta: AliasSeq, Filter, anySatisfy, allSatisfy;
+	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor, isAssignable, isCopyable;
 	import std.typecons: ReplaceType;
 
 	/// The types a `SumType` can hold.
 	alias Types = AliasSeq!(ReplaceType!(This, typeof(this), TypeArgs));
 
 private:
-
-	import std.meta: AliasSeq, Filter;
 
 	enum bool canHoldTag(T) = Types.length <= T.max;
 	alias unsignedInts = AliasSeq!(ubyte, ushort, uint, ulong);
@@ -280,8 +279,6 @@ private:
 
 				values[i] = forward!val;
 			}
-
-			import std.traits: isCopyable;
 
 			static if (isCopyable!T) {
 				@trusted
@@ -327,8 +324,6 @@ public:
 			tag = i;
 		}
 
-		import std.traits: isCopyable;
-
 		static if (isCopyable!T) {
 			/// ditto
 			this()(auto ref const(T) val) const
@@ -353,15 +348,12 @@ public:
 		@disable this();
 	}
 
-	import std.traits: isAssignable;
-
 	static foreach (i, T; Types) {
 		static if (isAssignable!T) {
 			/// Assigns a value to a `SumType`.
 			void opAssign()(auto ref T rhs)
 			{
 				import std.functional: forward;
-				import std.traits: hasElaborateDestructor;
 
 				this.match!((ref value) {
 					static if (hasElaborateDestructor!(typeof(value))) {
@@ -393,9 +385,6 @@ public:
 		});
 	}
 
-	import std.meta: anySatisfy;
-	import std.traits: hasElaborateDestructor;
-
 	// Workaround for dlang issue 19407
 	static if (__traits(compiles, anySatisfy!(hasElaborateDestructor, Types))) {
 		// If possible, include the destructor only when it's needed
@@ -417,9 +406,6 @@ public:
 		}
 	}
 
-	import std.meta: allSatisfy;
-	import std.traits: hasElaborateCopyConstructor, isCopyable;
-
 	static if (allSatisfy!(isCopyable, Types)) {
 		static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
 			/// Calls the postblit of the `SumType`'s current value.
@@ -435,9 +421,6 @@ public:
 	} else {
 		@disable this(this);
 	}
-
-	import std.meta: allSatisfy;
-	import std.traits: isCopyable;
 
 	static if (allSatisfy!(isCopyable, Types)) {
 		/// Returns a string representation of a `SumType`'s value.
