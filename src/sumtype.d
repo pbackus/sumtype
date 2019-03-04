@@ -72,7 +72,7 @@ module sumtype;
     assert(!isFahrenheit(t3));
 }
 
-/** $(H3 Structural matching)
+/** $(H3 Introspection-based matching)
  *
  * In the `length` and `horiz` functions below, the handlers for `match` do not
  * specify the types of their arguments. Instead, matching is done based on how
@@ -779,8 +779,8 @@ version(none) {
  *
  * Templated handlers are also accepted, and will match any type for which they
  * can be [implicitly instantiated](https://dlang.org/glossary.html#ifti). See
- * [sumtype#structural-matching|"Structural matching"] for an example of
- * templated handler usage.
+ * [sumtype#introspection-based-matching|"Introspection-based matching"] for an
+ * example of templated handler usage.
  *
  * Returns:
  *   The value returned from the handler that matches the currently-held type.
