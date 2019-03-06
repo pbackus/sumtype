@@ -721,7 +721,7 @@ public:
 	NoCopy lval = NoCopy();
 
 	MySum x = NoCopy();
-	MySum y;
+	MySum y = NoCopy();
 
 	assert(__traits(compiles, SumType!NoCopy(NoCopy())));
 	assert(!__traits(compiles, SumType!NoCopy(lval)));
