@@ -871,7 +871,7 @@ template canMatch(alias handler, T)
 
 		bool result = false;
 
-		static if (is(typeof({ T dummy = T.init; realHandler(dummy); }))) {
+		static if (is(typeof((T arg) { realHandler(arg); }(T.init)))) {
 			// Regular handlers
 			static if (isCallable!realHandler) {
 				// Functions and delegates
