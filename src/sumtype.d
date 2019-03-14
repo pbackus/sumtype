@@ -422,7 +422,7 @@ public:
 
 	static if (allSatisfy!(isCopyable, Types)) {
 		/// Returns a string representation of a `SumType`'s value.
-		string toString() const {
+		string toString(this T)() {
 			import std.conv: text;
 			return this.match!((auto ref value) {
 				return value.text;
@@ -640,8 +640,9 @@ public:
 	static struct Double { double d; }
 	alias Sum = SumType!(Int, Double);
 
-	assert(Sum(Int(42)).text == `const(Int)(42)`, Sum(Int(42)).text);
-	assert(Sum(Double(33.3)).text == `const(Double)(33.3)`, Sum(Double(33.3)).text);
+	assert(Sum(Int(42)).text == Int(42).text, Sum(Int(42)).text);
+	assert(Sum(Double(33.3)).text == Double(33.3).text, Sum(Double(33.3)).text);
+	assert((const(Sum)(Int(42))).text == (const(Int)(42)).text, (const(Sum)(Int(42))).text);
 }
 
 // Github issue #16
