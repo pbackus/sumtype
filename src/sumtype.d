@@ -275,7 +275,11 @@ private:
 			{
 				import std.functional: forward;
 
-				values[i] = forward!val;
+				static if (isCopyable!T) {
+					values[i] = val;
+				} else {
+					values[i] = forward!val;
+				}
 			}
 
 			static if (isCopyable!T) {
@@ -318,7 +322,12 @@ public:
 		{
 			import std.functional: forward;
 
-			storage = Storage(forward!val);
+			static if (isCopyable!T) {
+				storage = Storage(val);
+			} else {
+				storage = Storage(forward!val);
+			}
+
 			tag = i;
 		}
 
@@ -731,6 +740,16 @@ public:
 	assert(__traits(compiles, y = move(x)));
 	assert(!__traits(compiles, y = lval));
 	assert(!__traits(compiles, y = x));
+}
+
+// Github issue #22
+@safe unittest {
+	import std.typecons;
+	assert(__traits(compiles, {
+		static struct A {
+			SumType!(Nullable!int) a = Nullable!int.init;
+		}
+	}));
 }
 
 version(none) {
