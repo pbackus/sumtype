@@ -954,6 +954,8 @@ private struct OverloadDispatcher(alias fun)
 {
 	import std.traits: Parameters, ReturnType;
 
+	pragma(inline, true):
+
 	static foreach(overload; FunctionOverloads!fun) {
 		ReturnType!overload opCall(Parameters!overload args)
 		{
