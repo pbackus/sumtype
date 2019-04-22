@@ -948,23 +948,18 @@ private template FunctionOverloads(alias fun)
 	);
 }
 
-// A handler with an opCall overload for each overload of fun
-private template overloadHandler(alias fun)
+// A struct with an opCall overload for each overload of fun
+private struct OverloadDispatcher(alias fun)
 	if (isFunction!fun)
 {
-	struct OverloadHandler
-	{
-		import std.traits: Parameters, ReturnType;
+	import std.traits: Parameters, ReturnType;
 
-		static foreach(overload; FunctionOverloads!fun) {
-			ReturnType!overload opCall(Parameters!overload args)
-			{
-				return overload(args);
-			}
+	static foreach(overload; FunctionOverloads!fun) {
+		ReturnType!overload opCall(Parameters!overload args)
+		{
+			return overload(args);
 		}
 	}
-
-	enum overloadHandler = OverloadHandler.init;
 }
 
 // A handler that includes all overloads of the original handler, if applicable
@@ -972,7 +967,7 @@ private template handlerWithOverloads(alias handler)
 {
 	// Delegates and function pointers can't have overloads
 	static if (isFunction!handler && FunctionOverloads!handler.length > 1) {
-		alias handlerWithOverloads = overloadHandler!handler;
+		enum handlerWithOverloads = OverloadDispatcher!handler.init;
 	} else {
 		alias handlerWithOverloads = handler;
 	}
