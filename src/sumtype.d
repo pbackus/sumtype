@@ -252,7 +252,8 @@ struct SumType(TypeArgs...)
 	if (is(NoDuplicates!TypeArgs == TypeArgs) && TypeArgs.length > 0)
 {
 	import std.meta: AliasSeq, Filter, anySatisfy, allSatisfy;
-	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor, isAssignable, isCopyable;
+	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
+	import std.traits: isAssignable, isCopyable, isStaticArray;
 	import std.typecons: ReplaceType;
 
 	/// The types a `SumType` can hold.
@@ -413,13 +414,15 @@ public:
 		}
 	}
 
+	private enum hasPostblit(T) = hasElaborateCopyConstructor!T && !isStaticArray!T;
+
 	static if (allSatisfy!(isCopyable, Types)) {
-		static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
+		static if (anySatisfy!(hasPostblit, Types)) {
 			/// Calls the postblit of the `SumType`'s current value.
 			this(this)
 			{
 				this.match!((ref value) {
-					static if (hasElaborateCopyConstructor!(typeof(value))) {
+					static if (hasPostblit!(typeof(value))) {
 						value.__xpostblit;
 					}
 				});
@@ -750,6 +753,16 @@ public:
 			SumType!(Nullable!int) a = Nullable!int.init;
 		}
 	}));
+}
+
+// Static arrays of structs with postblits
+@safe unittest {
+	struct S
+	{
+		this(this) {}
+	}
+
+	assert(__traits(compiles, SumType!(S[1])()));
 }
 
 version(none) {
