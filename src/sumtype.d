@@ -414,16 +414,26 @@ public:
 		}
 	}
 
-	private enum hasPostblit(T) = hasElaborateCopyConstructor!T && !isStaticArray!T;
-
 	static if (allSatisfy!(isCopyable, Types)) {
-		static if (anySatisfy!(hasPostblit, Types)) {
+		static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
 			/// Calls the postblit of the `SumType`'s current value.
 			this(this)
 			{
-				this.match!((ref value) {
-					static if (hasPostblit!(typeof(value))) {
+				static void callPostblits(T)(ref T value)
+					if (hasElaborateCopyConstructor!T)
+				{
+					static if (isStaticArray!T) {
+						foreach (ref element; value) {
+							callPostblits(element);
+						}
+					} else {
 						value.__xpostblit;
+					}
+				}
+
+				this.match!((ref value) {
+					static if (hasElaborateCopyConstructor!(typeof(value))) {
+						callPostblits(value);
 					}
 				});
 			}
@@ -759,10 +769,19 @@ public:
 @safe unittest {
 	struct S
 	{
-		this(this) {}
+		int n;
+		this(this) { n++; }
 	}
 
 	assert(__traits(compiles, SumType!(S[1])()));
+
+	SumType!(S[1]) x = [S(0)];
+	SumType!(S[1]) y = x;
+
+	auto xval = x.storage.values[0][0].n;
+	auto yval = y.storage.values[0][0].n;
+
+	assert(xval != yval);
 }
 
 version(none) {
