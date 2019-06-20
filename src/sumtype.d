@@ -1333,20 +1333,15 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 // Unsafe handlers
 unittest {
-	SumType!(int, char*) x;
+	SumType!int x;
+	alias unsafeHandler = (int x) @system { return; };
 
 	assert(!__traits(compiles, () @safe {
-		x.match!(
-			(ref int n) => &n,
-			_ => null,
-		);
+		x.match!unsafeHandler;
 	}));
 
 	assert(__traits(compiles, () @system {
-		return x.match!(
-			(ref int n) => &n,
-			_ => null
-		);
+		return x.match!unsafeHandler;
 	}));
 }
 
