@@ -253,7 +253,6 @@ struct SumType(TypeArgs...)
 {
 	import std.meta: AliasSeq, Filter, anySatisfy, allSatisfy;
 	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor, isAssignable, isCopyable;
-	import std.typecons: ReplaceType;
 
 	/// The types a `SumType` can hold.
 	alias Types = AliasSeq!(ReplaceType!(This, typeof(this), TypeArgs));
@@ -1357,4 +1356,146 @@ unittest {
 	assert(OverloadSet.fun(a) == "int");
 	assert(OverloadSet.fun(b) == "double");
 	assert(OverloadSet.fun(c) == "string");
+}
+
+
+/**
+Replaces all occurrences of `From` into `To`, in one or more types `T`. For
+example, $(D ReplaceType!(int, uint, Tuple!(int, float)[string])) yields
+$(D Tuple!(uint, float)[string]). The types in which replacement is performed
+may be arbitrarily complex, including qualifiers, built-in type constructors
+(pointers, arrays, associative arrays, functions, and delegates), and template
+instantiations; replacement proceeds transitively through the type definition.
+However, member types in `struct`s or `class`es are not replaced because there
+are no ways to express the types resulting after replacement.
+
+This is an advanced type manipulation necessary e.g. for replacing the
+placeholder type `This` in $(REF Algebraic, std,variant).
+
+This template is a modified version of the one in
+https://github.com/dlang/phobos/blob/master/std/typecons.d (commit: d1c8fb0)
+It will not replace `From` to `To` inside all nested SumTypes.
+
+Returns: `ReplaceType` aliases itself to the type(s) that result after
+replacement.
+*/
+template ReplaceType(From, To, T...)
+{
+    import std.meta;
+
+    static if (T.length == 1)
+    {
+        static if (is(T[0] == From))
+            alias ReplaceType = To;
+        else static if (is(T[0] == const(U), U))
+            alias ReplaceType = const(ReplaceType!(From, To, U));
+        else static if (is(T[0] == immutable(U), U))
+            alias ReplaceType = immutable(ReplaceType!(From, To, U));
+        else static if (is(T[0] == shared(U), U))
+            alias ReplaceType = shared(ReplaceType!(From, To, U));
+        else static if (is(T[0] == U*, U))
+        {
+            static if (is(U == function))
+                alias ReplaceType = replaceTypeInFunctionType!(From, To, T[0]);
+            else
+                alias ReplaceType = ReplaceType!(From, To, U)*;
+        }
+        else static if (is(T[0] == delegate))
+        {
+            alias ReplaceType = replaceTypeInFunctionType!(From, To, T[0]);
+        }
+        else static if (is(T[0] == function))
+        {
+            static assert(0, "Function types not supported," ~
+                " use a function pointer type instead of " ~ T[0].stringof);
+        }
+        else static if (is(T[0] : U!V, alias U, V...))
+        {
+            template replaceTemplateArgs(T...)
+            {
+                static if (is(typeof(T[0])))    // template argument is value or symbol
+                    enum replaceTemplateArgs = T[0];
+                else static if (__traits(compiles, SumType!V) && is(U!V == SumType!V))
+                    alias replaceTemplateArgs = T[0]; // do not replace in SumType
+                else
+                    alias replaceTemplateArgs = ReplaceType!(From, To, T[0]);
+            }
+            alias ReplaceType = U!(staticMap!(replaceTemplateArgs, V));
+        }
+        else static if (is(T[0] == struct))
+            // don't match with alias this struct below (Issue 15168)
+            alias ReplaceType = T[0];
+        else static if (is(T[0] == U[], U))
+            alias ReplaceType = ReplaceType!(From, To, U)[];
+        else static if (is(T[0] == U[n], U, size_t n))
+            alias ReplaceType = ReplaceType!(From, To, U)[n];
+        else static if (is(T[0] == U[V], U, V))
+            alias ReplaceType =
+                ReplaceType!(From, To, U)[ReplaceType!(From, To, V)];
+        else
+            alias ReplaceType = T[0];
+    }
+    else static if (T.length > 1)
+    {
+        alias ReplaceType = AliasSeq!(ReplaceType!(From, To, T[0]),
+            ReplaceType!(From, To, T[1 .. $]));
+    }
+    else
+    {
+        alias ReplaceType = AliasSeq!();
+    }
+}
+
+// Copied from https://github.com/dlang/phobos/blob/master/std/typecons.d
+@safe unittest
+{
+    import std.typecons : Tuple;
+    static assert(is(ReplaceType!(int, string, int[]) == string[]));
+    static assert(is(ReplaceType!(int, string, int[int]) == string[string]));
+    static assert(is(ReplaceType!(int, string, const(int)[]) == const(string)[]));
+    static assert(is(ReplaceType!(int, string, Tuple!(int[], float))
+            == Tuple!(string[], float)));
+}
+
+// Replacement does not happen inside SumType
+@safe unittest
+{
+    static assert(is(ReplaceType!(This, int, This[SumType!(This*,string)[This]])
+                        == int[SumType!(This*, string)[int]]));
+}
+
+// Supports nested self-referential SumTypes
+@system unittest {
+    import std.typecons : Tuple;
+
+    struct Zero {}
+    struct Succ(T) { T of; }
+    alias Nat = SumType!(Zero, Succ!(This*));
+    alias Rational = SumType!(Nat*, Tuple!(This*, This*));
+    alias Fraction = Rational.Types[1];
+
+    Nat* zero() { return new Nat(Zero()); }
+    Nat* succ(Nat* of) { return new Nat(Succ!(Nat*)(of)); }
+
+    int natVal(Nat* nat) {
+        return (*nat).match!(
+                    (Zero z) => 0,
+                    (Succ!(Nat*) s) => 1 + natVal(s.of));
+    }
+
+    float rationalVal(Rational* rat) {
+        return (*rat).match!(
+                    (Nat* n) => 1.0 * natVal(n),
+                    (Fraction f) => rationalVal(f[0]) / rationalVal(f[1]));
+    }
+
+    assert(natVal(zero) == 0);
+    assert(natVal(succ(zero)) == 1);
+    assert(natVal(succ(succ(zero))) == 2);
+    assert(rationalVal(new Rational(Fraction(
+                        new Rational(succ(zero)),
+                        new Rational(succ(succ(zero)))))
+                      ) == 0.5);
+    assert(rationalVal(new Rational(zero)) == 0.0);
+    assert(rationalVal(new Rational(succ(succ(zero)))) == 2.0);
 }
