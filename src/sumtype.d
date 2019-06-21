@@ -255,7 +255,7 @@ struct SumType(TypeArgs...)
 	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor, isAssignable, isCopyable;
 
 	/// The types a `SumType` can hold.
-	alias Types = AliasSeq!(ReplaceType!(This, typeof(this), TypeArgs));
+	alias Types = AliasSeq!(ReplaceTypeUnless!(IsSumType, This, typeof(this), TypeArgs));
 
 private:
 
@@ -437,6 +437,19 @@ public:
 			});
 		}
 	}
+}
+
+template IsSumType(T)
+{
+    static if (is(T : U!V, alias U, V...))
+    {
+        static if (__traits(compiles, SumType!V))
+            enum IsSumType = is(U!V == SumType!V);
+        else
+            enum IsSumType = false;
+    }
+    else
+        enum IsSumType = false;
 }
 
 // Construction
@@ -1373,36 +1386,38 @@ This is an advanced type manipulation necessary e.g. for replacing the
 placeholder type `This` in $(REF Algebraic, std,variant).
 
 This template is a modified version of the one in
-https://github.com/dlang/phobos/blob/master/std/typecons.d (commit: d1c8fb0)
+https://github.com/dlang/phobos/blob/d1c8fb0b69dc12669554d5cb96d3045753549619/std/typecons.d
 It will not replace `From` to `To` inside all nested SumTypes.
 
 Returns: `ReplaceType` aliases itself to the type(s) that result after
 replacement.
 */
-template ReplaceType(From, To, T...)
+template ReplaceTypeUnless(alias Pred, From, To, T...)
 {
     import std.meta;
 
     static if (T.length == 1)
     {
-        static if (is(T[0] == From))
-            alias ReplaceType = To;
+        static if (allSatisfy!(Pred, T[0]))
+            alias ReplaceTypeUnless = T[0];
+        else static if (is(T[0] == From))
+            alias ReplaceTypeUnless = To;
         else static if (is(T[0] == const(U), U))
-            alias ReplaceType = const(ReplaceType!(From, To, U));
+            alias ReplaceTypeUnless = const(ReplaceTypeUnless!(Pred, From, To, U));
         else static if (is(T[0] == immutable(U), U))
-            alias ReplaceType = immutable(ReplaceType!(From, To, U));
+            alias ReplaceTypeUnless = immutable(ReplaceTypeUnless!(Pred, From, To, U));
         else static if (is(T[0] == shared(U), U))
-            alias ReplaceType = shared(ReplaceType!(From, To, U));
+            alias ReplaceTypeUnless = shared(ReplaceTypeUnless!(Pred, From, To, U));
         else static if (is(T[0] == U*, U))
         {
             static if (is(U == function))
-                alias ReplaceType = replaceTypeInFunctionType!(From, To, T[0]);
+                alias ReplaceTypeUnless = replaceTypeInFunctionTypeUnless!(Pred, From, To, T[0]);
             else
-                alias ReplaceType = ReplaceType!(From, To, U)*;
+                alias ReplaceTypeUnless = ReplaceTypeUnless!(Pred, From, To, U)*;
         }
         else static if (is(T[0] == delegate))
         {
-            alias ReplaceType = replaceTypeInFunctionType!(From, To, T[0]);
+            alias ReplaceTypeUnless = replaceTypeInFunctionTypeUnless!(Pred, From, To, T[0]);
         }
         else static if (is(T[0] == function))
         {
@@ -1415,87 +1430,249 @@ template ReplaceType(From, To, T...)
             {
                 static if (is(typeof(T[0])))    // template argument is value or symbol
                     enum replaceTemplateArgs = T[0];
-                else static if (__traits(compiles, SumType!V) && is(U!V == SumType!V))
-                    alias replaceTemplateArgs = T[0]; // do not replace in SumType
                 else
-                    alias replaceTemplateArgs = ReplaceType!(From, To, T[0]);
+                    alias replaceTemplateArgs = ReplaceTypeUnless!(Pred, From, To, T[0]);
             }
-            alias ReplaceType = U!(staticMap!(replaceTemplateArgs, V));
+            alias ReplaceTypeUnless = U!(staticMap!(replaceTemplateArgs, V));
         }
         else static if (is(T[0] == struct))
             // don't match with alias this struct below (Issue 15168)
-            alias ReplaceType = T[0];
+            alias ReplaceTypeUnless = T[0];
         else static if (is(T[0] == U[], U))
-            alias ReplaceType = ReplaceType!(From, To, U)[];
+            alias ReplaceTypeUnless = ReplaceTypeUnless!(Pred, From, To, U)[];
         else static if (is(T[0] == U[n], U, size_t n))
-            alias ReplaceType = ReplaceType!(From, To, U)[n];
+            alias ReplaceTypeUnless = ReplaceTypeUnless!(Pred, From, To, U)[n];
         else static if (is(T[0] == U[V], U, V))
-            alias ReplaceType =
-                ReplaceType!(From, To, U)[ReplaceType!(From, To, V)];
+            alias ReplaceTypeUnless =
+                ReplaceTypeUnless!(Pred, From, To, U)[ReplaceTypeUnless!(Pred, From, To, V)];
         else
-            alias ReplaceType = T[0];
+            alias ReplaceTypeUnless = T[0];
     }
     else static if (T.length > 1)
     {
-        alias ReplaceType = AliasSeq!(ReplaceType!(From, To, T[0]),
-            ReplaceType!(From, To, T[1 .. $]));
+        alias ReplaceTypeUnless = AliasSeq!(ReplaceTypeUnless!(Pred, From, To, T[0]),
+            ReplaceTypeUnless!(Pred, From, To, T[1 .. $]));
     }
     else
     {
-        alias ReplaceType = AliasSeq!();
+        alias ReplaceTypeUnless = AliasSeq!();
     }
 }
 
-// Copied from https://github.com/dlang/phobos/blob/master/std/typecons.d
-@safe unittest
+
+private template replaceTypeInFunctionTypeUnless(alias Pred, From, To, fun)
 {
-    import std.typecons : Tuple;
-    static assert(is(ReplaceType!(int, string, int[]) == string[]));
-    static assert(is(ReplaceType!(int, string, int[int]) == string[string]));
-    static assert(is(ReplaceType!(int, string, const(int)[]) == const(string)[]));
-    static assert(is(ReplaceType!(int, string, Tuple!(int[], float))
-            == Tuple!(string[], float)));
+    import std.traits;
+    import std.meta: AliasSeq;
+
+    alias RX = ReplaceTypeUnless!(Pred, From, To, ReturnType!fun);
+    alias PX = AliasSeq!(ReplaceTypeUnless!(Pred, From, To, Parameters!fun));
+    // Wrapping with AliasSeq is neccesary because ReplaceType doesn't return
+    // tuple if Parameters!fun.length == 1
+
+    string gen()
+    {
+        enum  linkage = functionLinkage!fun;
+        alias attributes = functionAttributes!fun;
+        enum  variadicStyle = variadicFunctionStyle!fun;
+        alias storageClasses = ParameterStorageClassTuple!fun;
+
+        string result;
+
+        result ~= "extern(" ~ linkage ~ ") ";
+        static if (attributes & FunctionAttribute.ref_)
+        {
+            result ~= "ref ";
+        }
+
+        result ~= "RX";
+        static if (is(fun == delegate))
+            result ~= " delegate";
+        else
+            result ~= " function";
+
+        result ~= "(";
+        static foreach (i; 0 .. PX.length)
+        {
+            if (i)
+                result ~= ", ";
+            if (storageClasses[i] & ParameterStorageClass.scope_)
+                result ~= "scope ";
+            if (storageClasses[i] & ParameterStorageClass.out_)
+                result ~= "out ";
+            if (storageClasses[i] & ParameterStorageClass.ref_)
+                result ~= "ref ";
+            if (storageClasses[i] & ParameterStorageClass.lazy_)
+                result ~= "lazy ";
+            if (storageClasses[i] & ParameterStorageClass.return_)
+                result ~= "return ";
+
+            result ~= "PX[" ~ i.stringof ~ "]";
+        }
+        static if (variadicStyle == Variadic.typesafe)
+            result ~= " ...";
+        else static if (variadicStyle != Variadic.no)
+            result ~= ", ...";
+        result ~= ")";
+
+        static if (attributes & FunctionAttribute.pure_)
+            result ~= " pure";
+        static if (attributes & FunctionAttribute.nothrow_)
+            result ~= " nothrow";
+        static if (attributes & FunctionAttribute.property)
+            result ~= " @property";
+        static if (attributes & FunctionAttribute.trusted)
+            result ~= " @trusted";
+        static if (attributes & FunctionAttribute.safe)
+            result ~= " @safe";
+        static if (attributes & FunctionAttribute.nogc)
+            result ~= " @nogc";
+        static if (attributes & FunctionAttribute.system)
+            result ~= " @system";
+        static if (attributes & FunctionAttribute.const_)
+            result ~= " const";
+        static if (attributes & FunctionAttribute.immutable_)
+            result ~= " immutable";
+        static if (attributes & FunctionAttribute.inout_)
+            result ~= " inout";
+        static if (attributes & FunctionAttribute.shared_)
+            result ~= " shared";
+        static if (attributes & FunctionAttribute.return_)
+            result ~= " return";
+
+        return result;
+    }
+
+    mixin("alias replaceTypeInFunctionTypeUnless = " ~ gen() ~ ";");
 }
 
-// Replacement does not happen inside SumType
+// Adapted from:
+// https://github.com/dlang/phobos/blob/d1c8fb0b69dc12669554d5cb96d3045753549619/std/typecons.d
+@safe unittest {
+    import std.typecons: Tuple;
+    template False(T) { enum False = false; }
+    static assert(
+        is(ReplaceTypeUnless!(False, int, string, int[]) == string[]) &&
+        is(ReplaceTypeUnless!(False, int, string, int[int]) == string[string]) &&
+        is(ReplaceTypeUnless!(False, int, string, const(int)[]) == const(string)[]) &&
+        is(ReplaceTypeUnless!(False, int, string, Tuple!(int[], float))
+            == Tuple!(string[], float))
+    );
+}
+
+// Adapted from:
+// https://github.com/dlang/phobos/blob/d1c8fb0b69dc12669554d5cb96d3045753549619/std/typecons.d
 @safe unittest
 {
-    static assert(is(ReplaceType!(This, int, This[SumType!(This*,string)[This]])
-                        == int[SumType!(This*, string)[int]]));
+    import std.typecons;
+
+    template False(T) { enum False = false; }
+    template Test(Ts...)
+    {
+        static if (Ts.length)
+        {
+            static assert(is(ReplaceTypeUnless!(False, Ts[0], Ts[1], Ts[2]) == Ts[3]),
+                "ReplaceTypeUnless!(False, "~Ts[0].stringof~", "~Ts[1].stringof~", "
+                    ~Ts[2].stringof~") == "
+                    ~ReplaceTypeUnless!(False, Ts[0], Ts[1], Ts[2]).stringof);
+            alias Test = Test!(Ts[4 .. $]);
+        }
+        else alias Test = void;
+    }
+
+    import core.stdc.stdio;
+    alias RefFun1 = ref int function(float, long);
+    alias RefFun2 = ref float function(float, long);
+    extern(C) int printf(const char*, ...) nothrow @nogc @system;
+    extern(C) float floatPrintf(const char*, ...) nothrow @nogc @system;
+    int func(float);
+
+    int x;
+    struct S1 { void foo() { x = 1; } }
+    struct S2 { void bar() { x = 2; } }
+
+    alias Pass = Test!(
+        int, float, typeof(&func), float delegate(float),
+        int, float, typeof(&printf), typeof(&floatPrintf),
+        int, float, int function(out long, ...),
+            float function(out long, ...),
+        int, float, int function(ref float, long),
+            float function(ref float, long),
+        int, float, int function(ref int, long),
+            float function(ref float, long),
+        int, float, int function(out int, long),
+            float function(out float, long),
+        int, float, int function(lazy int, long),
+            float function(lazy float, long),
+        int, float, int function(out long, ref const int),
+            float function(out long, ref const float),
+        int, int, int, int,
+        int, float, int, float,
+        int, float, const int, const float,
+        int, float, immutable int, immutable float,
+        int, float, shared int, shared float,
+        int, float, int*, float*,
+        int, float, const(int)*, const(float)*,
+        int, float, const(int*), const(float*),
+        const(int)*, float, const(int*), const(float),
+        int*, float, const(int)*, const(int)*,
+        int, float, int[], float[],
+        int, float, int[42], float[42],
+        int, float, const(int)[42], const(float)[42],
+        int, float, const(int[42]), const(float[42]),
+        int, float, int[int], float[float],
+        int, float, int[double], float[double],
+        int, float, double[int], double[float],
+        int, float, int function(float, long), float function(float, long),
+        int, float, int function(float), float function(float),
+        int, float, int function(float, int), float function(float, float),
+        int, float, int delegate(float, long), float delegate(float, long),
+        int, float, int delegate(float), float delegate(float),
+        int, float, int delegate(float, int), float delegate(float, float),
+        int, float, Unique!int, Unique!float,
+        int, float, Tuple!(float, int), Tuple!(float, float),
+        int, float, RefFun1, RefFun2,
+        S1, S2,
+            S1[1][][S1]* function(),
+            S2[1][][S2]* function(),
+        int, string,
+               int[3] function(   int[] arr,    int[2] ...) pure @trusted,
+            string[3] function(string[] arr, string[2] ...) pure @trusted,
+    );
+
+    // Dlang Bugzilla 15168
+    static struct T1 { string s; alias s this; }
+    static struct T2 { char[10] s; alias s this; }
+    static struct T3 { string[string] s; alias s this; }
+    alias Pass2 = Test!(
+        ubyte, ubyte, T1, T1,
+        ubyte, ubyte, T2, T2,
+        ubyte, ubyte, T3, T3,
+    );
+}
+
+@safe unittest // Dlang Bugzilla 17116
+{
+    template False(T) { enum False = false; }
+    alias ConstDg = void delegate(float) const;
+    alias B = void delegate(int) const;
+    alias A = ReplaceTypeUnless!(False, float, int, ConstDg);
+    static assert(is(B == A));
+}
+
+
+// Replacement does not happen inside SumType
+@safe unittest {
+    import std.typecons : Tuple;
+    alias A = Tuple!(This*,SumType!(This*))[SumType!(This*,string)[This]];
+    alias TR = ReplaceTypeUnless!(IsSumType, This, int, A);
+    static assert(is(TR == Tuple!(int*,SumType!(This*))[SumType!(This*, string)[int]]));
 }
 
 // Supports nested self-referential SumTypes
-@system unittest {
-    import std.typecons : Tuple;
-
-    struct Zero {}
-    struct Succ(T) { T of; }
-    alias Nat = SumType!(Zero, Succ!(This*));
-    alias Rational = SumType!(Nat*, Tuple!(This*, This*));
-    alias Fraction = Rational.Types[1];
-
-    Nat* zero() { return new Nat(Zero()); }
-    Nat* succ(Nat* of) { return new Nat(Succ!(Nat*)(of)); }
-
-    int natVal(Nat* nat) {
-        return (*nat).match!(
-                    (Zero z) => 0,
-                    (Succ!(Nat*) s) => 1 + natVal(s.of));
-    }
-
-    float rationalVal(Rational* rat) {
-        return (*rat).match!(
-                    (Nat* n) => 1.0 * natVal(n),
-                    (Fraction f) => rationalVal(f[0]) / rationalVal(f[1]));
-    }
-
-    assert(natVal(zero) == 0);
-    assert(natVal(succ(zero)) == 1);
-    assert(natVal(succ(succ(zero))) == 2);
-    assert(rationalVal(new Rational(Fraction(
-                        new Rational(succ(zero)),
-                        new Rational(succ(succ(zero)))))
-                      ) == 0.5);
-    assert(rationalVal(new Rational(zero)) == 0.0);
-    assert(rationalVal(new Rational(succ(succ(zero)))) == 2.0);
+@safe unittest {
+    import std.typecons : Tuple, Flag;
+    alias Nat = SumType!(Flag!"0", Tuple!(This*));
+    static assert(__traits(compiles, SumType!(Nat)));
+    static assert(__traits(compiles, SumType!(Nat*, Tuple!(This*, This*))));
 }
