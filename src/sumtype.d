@@ -359,7 +359,7 @@ public:
 	static foreach (i, T; Types) {
 		static if (isAssignable!T) {
 			/// Assigns a value to a `SumType`.
-			void opAssign()(scope auto ref T rhs)
+			void opAssign()(auto ref T rhs)
 			{
 				import std.functional: forward;
 
