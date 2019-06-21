@@ -252,7 +252,8 @@ struct SumType(TypeArgs...)
 	if (is(NoDuplicates!TypeArgs == TypeArgs) && TypeArgs.length > 0)
 {
 	import std.meta: AliasSeq, Filter, anySatisfy, allSatisfy;
-	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor, isAssignable, isCopyable;
+	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
+	import std.traits: isAssignable, isCopyable, isStaticArray;
 
 	/// The types a `SumType` can hold.
 	alias Types = AliasSeq!(ReplaceTypeUnless!(IsSumType, This, typeof(this), TypeArgs));
@@ -270,7 +271,7 @@ private:
 
 		static foreach (i, T; Types) {
 			@trusted
-			this()(auto ref T val)
+			this()(scope auto ref T val)
 			{
 				import std.functional: forward;
 
@@ -357,7 +358,7 @@ public:
 	static foreach (i, T; Types) {
 		static if (isAssignable!T) {
 			/// Assigns a value to a `SumType`.
-			void opAssign()(auto ref T rhs)
+			void opAssign()(scope auto ref T rhs)
 			{
 				import std.functional: forward;
 
@@ -417,9 +418,21 @@ public:
 			/// Calls the postblit of the `SumType`'s current value.
 			this(this)
 			{
+				static void callPostblits(T)(ref T value)
+					if (hasElaborateCopyConstructor!T)
+				{
+					static if (isStaticArray!T) {
+						foreach (ref element; value) {
+							callPostblits(element);
+						}
+					} else {
+						value.__xpostblit;
+					}
+				}
+
 				this.match!((ref value) {
 					static if (hasElaborateCopyConstructor!(typeof(value))) {
-						value.__xpostblit;
+						callPostblits(value);
 					}
 				});
 			}
@@ -762,6 +775,25 @@ template IsSumType(T)
 			SumType!(Nullable!int) a = Nullable!int.init;
 		}
 	}));
+}
+
+// Static arrays of structs with postblits
+@safe unittest {
+	struct S
+	{
+		int n;
+		this(this) { n++; }
+	}
+
+	assert(__traits(compiles, SumType!(S[1])()));
+
+	SumType!(S[1]) x = [S(0)];
+	SumType!(S[1]) y = x;
+
+	auto xval = x.storage.values[0][0].n;
+	auto yval = y.storage.values[0][0].n;
+
+	assert(xval != yval);
 }
 
 version(none) {
@@ -1313,20 +1345,15 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 // Unsafe handlers
 unittest {
-	SumType!(int, char*) x;
+	SumType!int x;
+	alias unsafeHandler = (int x) @system { return; };
 
 	assert(!__traits(compiles, () @safe {
-		x.match!(
-			(ref int n) => &n,
-			_ => null,
-		);
+		x.match!unsafeHandler;
 	}));
 
 	assert(__traits(compiles, () @system {
-		return x.match!(
-			(ref int n) => &n,
-			_ => null
-		);
+		return x.match!unsafeHandler;
 	}));
 }
 
