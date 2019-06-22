@@ -256,7 +256,7 @@ struct SumType(TypeArgs...)
 	import std.traits: isAssignable, isCopyable, isStaticArray;
 
 	/// The types a `SumType` can hold.
-	alias Types = AliasSeq!(ReplaceTypeUnless!(IsSumType, This, typeof(this), TypeArgs));
+	alias Types = AliasSeq!(ReplaceTypeUnless!(isSumType, This, typeof(this), TypeArgs));
 
 private:
 
@@ -452,18 +452,16 @@ public:
 	}
 }
 
-template IsSumType(T)
-{
-    static if (is(T : U!V, alias U, V...))
-    {
-        static if (__traits(compiles, SumType!V))
-            enum IsSumType = is(U!V == SumType!V);
-        else
-            enum IsSumType = false;
-    }
-    else
-        enum IsSumType = false;
-}
+/**
+ * Returns `true` if and if `T` is an instance of `SumType`.
+ *
+ * Params:
+ *     T = The type to check.
+ *
+ * Returns:
+ *     true if `T` is a `SumType` type, false otherwise.
+ */
+enum isSumType(T) = is(T == SumType!Args, Args...);
 
 // Construction
 @safe unittest {
@@ -1400,32 +1398,34 @@ unittest {
 
 
 /**
-Replaces all occurrences of `From` into `To`, in one or more types `T`. For
-example, $(D ReplaceType!(int, uint, Tuple!(int, float)[string])) yields
-$(D Tuple!(uint, float)[string]). The types in which replacement is performed
-may be arbitrarily complex, including qualifiers, built-in type constructors
-(pointers, arrays, associative arrays, functions, and delegates), and template
-instantiations; replacement proceeds transitively through the type definition.
-However, member types in `struct`s or `class`es are not replaced because there
-are no ways to express the types resulting after replacement.
-
-This is an advanced type manipulation necessary e.g. for replacing the
-placeholder type `This` in $(REF Algebraic, std,variant).
-
-This template is a modified version of the one in
-https://github.com/dlang/phobos/blob/d1c8fb0b69dc12669554d5cb96d3045753549619/std/typecons.d
-It will not replace `From` to `To` inside all nested SumTypes.
-
-Returns: `ReplaceType` aliases itself to the type(s) that result after
-replacement.
+ * Replaces all occurrences of `From` into `To`, in one or more types `T`
+ * whenever the predicate applied to `T` evaluates to false. For example, $(D
+ * ReplaceTypeUnless!(isBoolean, int, uint, Tuple!(int, float)[string])) yields
+ * $(D Tuple!(uint, float)[string]) while $(D ReplaceTypeUnless!(isTuple, int,
+ * string, Tuple!(int, bool)[int])) yields $(D Tuple!(int, bool)[string]). The
+ * types in which replacement is performed may be arbitrarily complex,
+ * including qualifiers, built-in type constructors (pointers, arrays,
+ * associative arrays, functions, and delegates), and template instantiations;
+ * replacement proceeds transitively through the type definition.  However,
+ * member types in `struct`s or `class`es are not replaced because there are no
+ * ways to express the types resulting after replacement.
+ *
+ * This is an advanced type manipulation necessary e.g. for replacing the
+ * placeholder type `This` in $(REF SumType).
+ *
+ * This template is a generalised version of the one in
+ * https://github.com/dlang/phobos/blob/d1c8fb0b69dc12669554d5cb96d3045753549619/std/typecons.d
+ *
+ * Returns: `ReplaceTypeUnless` aliases itself to the type(s) that result after
+ * replacement.
 */
-template ReplaceTypeUnless(alias Pred, From, To, T...)
+private template ReplaceTypeUnless(alias Pred, From, To, T...)
 {
     import std.meta;
 
     static if (T.length == 1)
     {
-        static if (allSatisfy!(Pred, T[0]))
+        static if (Pred!(T[0]))
             alias ReplaceTypeUnless = T[0];
         else static if (is(T[0] == From))
             alias ReplaceTypeUnless = To;
@@ -1577,7 +1577,7 @@ private template replaceTypeInFunctionTypeUnless(alias Pred, From, To, fun)
 // https://github.com/dlang/phobos/blob/d1c8fb0b69dc12669554d5cb96d3045753549619/std/typecons.d
 @safe unittest {
     import std.typecons: Tuple;
-    template False(T) { enum False = false; }
+    enum False(T) = false;
     static assert(
         is(ReplaceTypeUnless!(False, int, string, int[]) == string[]) &&
         is(ReplaceTypeUnless!(False, int, string, int[int]) == string[string]) &&
@@ -1593,7 +1593,7 @@ private template replaceTypeInFunctionTypeUnless(alias Pred, From, To, fun)
 {
     import std.typecons;
 
-    template False(T) { enum False = false; }
+    enum False(T) = false;
     template Test(Ts...)
     {
         static if (Ts.length)
@@ -1680,7 +1680,7 @@ private template replaceTypeInFunctionTypeUnless(alias Pred, From, To, fun)
 
 @safe unittest // Dlang Bugzilla 17116
 {
-    template False(T) { enum False = false; }
+    enum False(T) = false;
     alias ConstDg = void delegate(float) const;
     alias B = void delegate(int) const;
     alias A = ReplaceTypeUnless!(False, float, int, ConstDg);
@@ -1692,7 +1692,7 @@ private template replaceTypeInFunctionTypeUnless(alias Pred, From, To, fun)
 @safe unittest {
     import std.typecons : Tuple;
     alias A = Tuple!(This*,SumType!(This*))[SumType!(This*,string)[This]];
-    alias TR = ReplaceTypeUnless!(IsSumType, This, int, A);
+    alias TR = ReplaceTypeUnless!(isSumType, This, int, A);
     static assert(is(TR == Tuple!(int*,SumType!(This*))[SumType!(This*, string)[int]]));
 }
 
