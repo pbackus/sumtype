@@ -452,15 +452,7 @@ public:
 	}
 }
 
-/**
- * Returns `true` if and if `T` is an instance of `SumType`.
- *
- * Params:
- *     T = The type to check.
- *
- * Returns:
- *     true if `T` is a `SumType` type, false otherwise.
- */
+/// True if `T` is an instance of `SumType`, otherwise false.
 enum isSumType(T) = is(T == SumType!Args, Args...);
 
 // Construction
