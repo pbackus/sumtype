@@ -358,7 +358,7 @@ public:
 	static foreach (i, T; Types) {
 		static if (isAssignable!T) {
 			/// Assigns a value to a `SumType`.
-			void opAssign()(scope auto ref T rhs)
+			void opAssign()(auto ref T rhs)
 			{
 				import std.functional: forward;
 
@@ -1051,6 +1051,17 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 		enum handlerIndices = getHandlerIndices;
 
+		import std.algorithm.searching: canFind;
+
+		// Check for unreachable handlers
+		static foreach (hid, handler; allHandlers) {
+			static assert(handlerIndices[].canFind(hid),
+				"handler `" ~ __traits(identifier, handler) ~ "` " ~
+				"of type `" ~ typeof(handler).stringof ~ "` " ~
+				"never matches"
+			);
+		}
+
 		final switch (self.tag) {
 			static foreach (tid, T; Types) {
 				case tid:
@@ -1069,17 +1080,6 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		}
 
 		assert(false); // unreached
-
-		import std.algorithm.searching: canFind;
-
-		// Check for unreachable handlers
-		static foreach (hid, handler; allHandlers) {
-			static assert(handlerIndices[].canFind(hid),
-				"handler `" ~ __traits(identifier, handler) ~ "` " ~
-				"of type `" ~ typeof(handler).stringof ~ "` " ~
-				"never matches"
-			);
-		}
 	}
 }
 
@@ -1396,7 +1396,6 @@ unittest {
 	assert(OverloadSet.fun(c) == "string");
 }
 
-
 /**
  * Replaces all occurrences of `From` into `To`, in one or more types `T`
  * whenever the predicate applied to `T` evaluates to false. For example, $(D
@@ -1702,4 +1701,12 @@ private template replaceTypeInFunctionTypeUnless(alias Pred, From, To, fun)
 	alias Nat = SumType!(Flag!"0", Tuple!(This*));
 	static assert(__traits(compiles, SumType!(Nat)));
 	static assert(__traits(compiles, SumType!(Nat*, Tuple!(This*, This*))));
+}
+  
+// Github issue #24
+@safe unittest {
+	assert(__traits(compiles, () @nogc {
+		int acc = 0;
+		SumType!int(1).match!((int x) => acc += x);
+	}));
 }
