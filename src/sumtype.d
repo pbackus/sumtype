@@ -786,6 +786,22 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 	assert(xval != yval);
 }
 
+// Replacement does not happen inside SumType
+@safe unittest {
+	import std.typecons : Tuple;
+	alias A = Tuple!(This*,SumType!(This*))[SumType!(This*,string)[This]];
+	alias TR = ReplaceTypeUnless!(isSumType, This, int, A);
+	static assert(is(TR == Tuple!(int*,SumType!(This*))[SumType!(This*, string)[int]]));
+}
+
+// Supports nested self-referential SumTypes
+@safe unittest {
+	import std.typecons : Tuple, Flag;
+	alias Nat = SumType!(Flag!"0", Tuple!(This*));
+	static assert(__traits(compiles, SumType!(Nat)));
+	static assert(__traits(compiles, SumType!(Nat*, Tuple!(This*, This*))));
+}
+
 version(none) {
 	// Known bug; needs fix for dlang issue 19458
 	// Types with disabled opEquals
@@ -1388,6 +1404,14 @@ unittest {
 	assert(OverloadSet.fun(c) == "string");
 }
 
+// Github issue #24
+@safe unittest {
+	assert(__traits(compiles, () @nogc {
+		int acc = 0;
+		SumType!int(1).match!((int x) => acc += x);
+	}));
+}
+
 /**
  * Replaces all occurrences of `From` into `To`, in one or more types `T`
  * whenever the predicate applied to `T` evaluates to false. For example, $(D
@@ -1676,29 +1700,4 @@ private template replaceTypeInFunctionTypeUnless(alias Pred, From, To, fun)
 	alias B = void delegate(int) const;
 	alias A = ReplaceTypeUnless!(False, float, int, ConstDg);
 	static assert(is(B == A));
-}
-
-
-// Replacement does not happen inside SumType
-@safe unittest {
-	import std.typecons : Tuple;
-	alias A = Tuple!(This*,SumType!(This*))[SumType!(This*,string)[This]];
-	alias TR = ReplaceTypeUnless!(isSumType, This, int, A);
-	static assert(is(TR == Tuple!(int*,SumType!(This*))[SumType!(This*, string)[int]]));
-}
-
-// Supports nested self-referential SumTypes
-@safe unittest {
-	import std.typecons : Tuple, Flag;
-	alias Nat = SumType!(Flag!"0", Tuple!(This*));
-	static assert(__traits(compiles, SumType!(Nat)));
-	static assert(__traits(compiles, SumType!(Nat*, Tuple!(This*, This*))));
-}
-
-// Github issue #24
-@safe unittest {
-	assert(__traits(compiles, () @nogc {
-		int acc = 0;
-		SumType!int(1).match!((int x) => acc += x);
-	}));
 }
