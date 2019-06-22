@@ -1702,7 +1702,7 @@ private template replaceTypeInFunctionTypeUnless(alias Pred, From, To, fun)
 	static assert(__traits(compiles, SumType!(Nat)));
 	static assert(__traits(compiles, SumType!(Nat*, Tuple!(This*, This*))));
 }
-  
+
 // Github issue #24
 @safe unittest {
 	assert(__traits(compiles, () @nogc {
