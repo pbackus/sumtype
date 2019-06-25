@@ -11,6 +11,10 @@
 	"buildTypes": {
 		"unittest-opt": {
 			"buildOptions": ["unittests", "optimize", "inline"]
+		},
+		"unittest-dip1000": {
+			"buildOptions": ["unittests", "debugMode", "debugInfo"],
+			"dflags": ["-preview=dip1000"]
 		}
 	}
 }
