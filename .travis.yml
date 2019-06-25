@@ -10,6 +10,10 @@ d:
   - dmd
   - ldc
 
+script:
+  - dub test --compiler=${DC}
+  - dub test --compiler=${DC} --build=unittest-dip1000
+
 jobs:
   include:
     - stage: deploy
