@@ -1466,7 +1466,7 @@ private template ReplaceTypeUnless(alias Pred, From, To, T...)
 			static assert(0, "Function types not supported," ~
 				" use a function pointer type instead of " ~ T[0].stringof);
 		}
-		else static if (is(T[0] : U!V, alias U, V...))
+		else static if (is(T[0] == U!V, alias U, V...))
 		{
 			template replaceTemplateArgs(T...)
 			{
@@ -1700,4 +1700,13 @@ private template replaceTypeInFunctionTypeUnless(alias Pred, From, To, fun)
 	alias B = void delegate(int) const;
 	alias A = ReplaceTypeUnless!(False, float, int, ConstDg);
 	static assert(is(B == A));
+}
+
+// Github issue #27
+@safe unittest
+{
+	enum False(T) = false;
+	struct A(T) {}
+	struct B { A!int a; alias a this; }
+	static assert(is(ReplaceTypeUnless!(False, void, void, B) == B));
 }
