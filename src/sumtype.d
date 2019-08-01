@@ -223,6 +223,9 @@ module sumtype;
 public import std.variant: This;
 
 import std.meta: NoDuplicates;
+import std.traits: isSafe;
+
+private enum isSafeToCopy(T) = isSafe!((T original) { auto copy = original; });
 
 /**
  * A tagged union that can hold a single value from any of a specified set of
@@ -323,6 +326,11 @@ public:
 			import std.functional: forward;
 
 			static if (isCopyable!T) {
+				// Workaround for dlang issue 20068
+				static if (!isSafeToCopy!T) {
+					cast(void) () @system {}();
+				}
+
 				storage = Storage(val);
 			} else {
 				storage = Storage(forward!val);
@@ -335,6 +343,11 @@ public:
 			/// ditto
 			this()(auto ref const(T) val) const
 			{
+				// Workaround for dlang issue 20068
+				static if (!isSafeToCopy!T) {
+					cast(void) () @system {}();
+				}
+
 				storage = const(Storage)(val);
 				tag = i;
 			}
@@ -342,6 +355,11 @@ public:
 			/// ditto
 			this()(auto ref immutable(T) val) immutable
 			{
+				// Workaround for dlang issue 20068
+				static if (!isSafeToCopy!T) {
+					cast(void) () @system {}();
+				}
+
 				storage = immutable(Storage)(val);
 				tag = i;
 			}
@@ -367,6 +385,11 @@ public:
 						destroy(value);
 					}
 				});
+
+				// Workaround for dlang issue 20068
+				static if (isCopyable!T && !isSafeToCopy!T) {
+					cast(void) () @system {}();
+				}
 
 				storage = Storage(forward!rhs);
 				tag = i;
@@ -800,6 +823,20 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 	alias Nat = SumType!(Flag!"0", Tuple!(This*));
 	static assert(__traits(compiles, SumType!(Nat)));
 	static assert(__traits(compiles, SumType!(Nat*, Tuple!(This*, This*))));
+}
+
+// Doesn't call @system copy constructors in @safe code
+@safe unittest {
+	struct SystemCopy { @system this(this) {} }
+	SystemCopy original;
+
+	assert(!__traits(compiles, () @safe {
+		SumType!SystemCopy copy = original;
+	}));
+
+	assert(!__traits(compiles, () @safe {
+		SumType!SystemCopy copy; copy = original;
+	}));
 }
 
 version(none) {
