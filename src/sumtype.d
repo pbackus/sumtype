@@ -860,6 +860,7 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 	}));
 }
 
+// Doesn't overwrite pointers in @safe code
 @safe unittest {
 	SumType!(int*, int) x;
 
