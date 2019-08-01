@@ -661,7 +661,7 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 
 // Types with @disable this()
 @safe unittest {
-	struct NoInit
+	static struct NoInit
 	{
 		@disable this();
 	}
@@ -690,8 +690,8 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 
 // Compares reference types using value equality
 @safe unittest {
-	struct Field {}
-	struct Struct { Field[] fields; }
+	static struct Field {}
+	static struct Struct { Field[] fields; }
 	alias MySum = SumType!Struct;
 
 	auto a = MySum(Struct([Field()]));
@@ -813,7 +813,7 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 
 // Static arrays of structs with postblits
 @safe unittest {
-	struct S
+	static struct S
 	{
 		int n;
 		this(this) { n++; }
@@ -848,7 +848,7 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 
 // Doesn't call @system copy constructors in @safe code
 @safe unittest {
-	struct SystemCopy { @system this(this) {} }
+	static struct SystemCopy { @system this(this) {} }
 	SystemCopy original;
 
 	assert(!__traits(compiles, () @safe {
@@ -872,7 +872,7 @@ version(none) {
 	// Known bug; needs fix for dlang issue 19458
 	// Types with disabled opEquals
 	@safe unittest {
-		struct S
+		static struct S
 		{
 			@disable bool opEquals(const S rhs) const;
 		}
@@ -884,7 +884,7 @@ version(none) {
 version(none) {
 	// Known bug; needs fix for dlang issue 19458
 	@safe unittest {
-		struct S
+		static struct S
 		{
 			int i;
 			bool opEquals(S rhs) { return i == rhs.i; }
@@ -1277,8 +1277,8 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 // Structural matching
 @safe unittest {
-	struct S1 { int x; }
-	struct S2 { int y; }
+	static struct S1 { int x; }
+	static struct S2 { int y; }
 	alias MySum = SumType!(S1, S2);
 
 	MySum a = MySum(S1(0));
@@ -1290,7 +1290,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 // Separate opCall handlers
 @safe unittest {
-	struct IntHandler
+	static struct IntHandler
 	{
 		bool opCall(int arg)
 		{
@@ -1298,7 +1298,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		}
 	}
 
-	struct FloatHandler
+	static struct FloatHandler
 	{
 		bool opCall(float arg)
 		{
@@ -1319,7 +1319,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 // Compound opCall handler
 @safe unittest {
-	struct CompoundHandler
+	static struct CompoundHandler
 	{
 		bool opCall(int arg)
 		{
