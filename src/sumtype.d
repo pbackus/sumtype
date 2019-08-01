@@ -375,7 +375,19 @@ public:
 
 	static foreach (i, T; Types) {
 		static if (isAssignable!T) {
-			/// Assigns a value to a `SumType`.
+			/**
+			 * Assigns a value to a `SumType`.
+			 *
+			 * Assigning to a `SumType` is `@system` if any of the
+			 * `SumType`'s members contain pointers or references, since
+			 * those members may be reachable through external references,
+			 * and overwriting them could therefore lead to memory
+			 * corruption.
+			 *
+			 * An individual assignment can be `@trusted` if the caller can
+			 * guarantee that there are no outstanding references to $(I any)
+			 * of the `SumType`'s members when the assignment occurs.
+			 */
 			void opAssign()(auto ref T rhs)
 			{
 				import std.functional: forward;
