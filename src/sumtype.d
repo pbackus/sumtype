@@ -402,14 +402,14 @@ public:
 					}
 				}
 
-				enum containsAnyPointers =
+				enum mayContainPointers =
 					anySatisfy!(hasIndirections, Types)
 					|| anySatisfy!(isNestedStruct, Types);
 
 				// If it's possible that someone is holding a reference to a
 				// pointer we're about to overwrite, opAssign must be @system.
 				// See https://github.com/dlang/DIPs/blob/master/DIPs/other/DIP1000.md#owning-containers
-				static if (containsAnyPointers) {
+				static if (mayContainPointers) {
 					cast(void) () @system {}();
 				}
 
