@@ -379,6 +379,27 @@ public:
 			void opAssign()(auto ref T rhs)
 			{
 				import std.functional: forward;
+				import std.traits: hasIndirections, isNested;
+
+				template isNestedStruct(T)
+				{
+					static if (is(T == struct)) {
+						enum isNestedStruct = isNested!T;
+					} else {
+						enum isNestedStruct = false;
+					}
+				}
+
+				enum containsAnyPointers =
+					anySatisfy!(hasIndirections, Types)
+					|| anySatisfy!(isNestedStruct, Types);
+
+				// If it's possible that someone is holding a reference to a
+				// pointer we're about to overwrite, opAssign must be @system.
+				// See https://github.com/dlang/DIPs/blob/master/DIPs/other/DIP1000.md#owning-containers
+				static if (containsAnyPointers) {
+					cast(void) () @system {}();
+				}
 
 				this.match!((ref value) {
 					static if (hasElaborateDestructor!(typeof(value))) {
@@ -562,7 +583,7 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 }
 
 // Types with destructors and postblits
-@safe unittest {
+@system unittest {
 	int copies;
 
 	struct Test
@@ -605,7 +626,7 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 }
 
 // Doesn't destroy reference types
-@safe unittest {
+@system unittest {
 	bool destroyed;
 
 	class C
@@ -731,12 +752,12 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 
 // Exception-safe assignment
 @safe unittest {
-	struct A
+	static struct A
 	{
 		int value = 123;
 	}
 
-	struct B
+	static struct B
 	{
 		int value = 456;
 		this(this) { throw new Exception("oops"); }
@@ -759,7 +780,7 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 @safe unittest {
 	import std.algorithm.mutation: move;
 
-	struct NoCopy
+	static struct NoCopy
 	{
 		@disable this(this);
 	}
@@ -836,6 +857,14 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 
 	assert(!__traits(compiles, () @safe {
 		SumType!SystemCopy copy; copy = original;
+	}));
+}
+
+@safe unittest {
+	SumType!(int*, int) x;
+
+	assert(!__traits(compiles, () @safe {
+		x = 123;
 	}));
 }
 
