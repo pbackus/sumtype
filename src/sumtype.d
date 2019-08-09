@@ -1491,6 +1491,15 @@ unittest {
 	}));
 }
 
+// Types that `alias this` a SumType
+@safe unittest {
+	static struct A {}
+	static struct B {}
+	static struct D { SumType!(A, B) value; alias value this; }
+
+	assert(__traits(compiles, D().match!(_ => true)));
+}
+
 /**
  * Replaces all occurrences of `From` into `To`, in one or more types `T`
  * whenever the predicate applied to `T` evaluates to false. For example, $(D
