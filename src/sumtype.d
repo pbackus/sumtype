@@ -947,7 +947,7 @@ template match(handlers...)
 	 *   self = A [SumType] object
 	 */
 	auto match(Self)(auto ref Self self)
-		if (isSumType!Self)
+		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
 		return self.matchImpl!(Yes.exhaustive, handlers);
 	}
@@ -982,7 +982,7 @@ template tryMatch(handlers...)
 	 *   self = A [SumType] object
 	 */
 	auto tryMatch(Self)(auto ref Self self)
-		if (isSumType!Self)
+		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
 		return self.matchImpl!(No.exhaustive, handlers);
 	}
@@ -1109,7 +1109,7 @@ import std.typecons: Flag;
 private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 {
 	auto matchImpl(Self)(auto ref Self self)
-		if (isSumType!Self)
+		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
 		import std.meta: staticMap;
 
