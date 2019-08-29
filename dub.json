@@ -8,6 +8,10 @@
 	"copyright": "Copyright © 2018, Paul Backus",
 	"license": "MIT",
 
+	"toolchainRequirements": {
+		"frontend": ">=2.086.0"
+	},
+
 	"buildTypes": {
 		"unittest-opt": {
 			"buildOptions": ["unittests", "optimize", "inline"]

@@ -471,26 +471,49 @@ public:
 
 	static if (allSatisfy!(isCopyable, Types)) {
 		static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
-			/// Calls the postblit of the `SumType`'s current value.
-			this(this)
+			/// Constructs a `SumType` that's a copy of another `SumType`
+			this(ref SumType other)
 			{
-				static void callPostblits(T)(ref T value)
-					if (hasElaborateCopyConstructor!T)
-				{
-					static if (isStaticArray!T) {
-						foreach (ref element; value) {
-							callPostblits(element);
-						}
-					} else {
-						value.__xpostblit;
+				storage = other.match!((ref value) {
+					// Workaround for dlang issue 20068
+					static if (!isSafeToCopy!(typeof(value))) {
+						cast(void) () @system {}();
 					}
-				}
 
-				this.match!((ref value) {
-					static if (hasElaborateCopyConstructor!(typeof(value))) {
-						callPostblits(value);
-					}
+					return Storage(value);
 				});
+
+				tag = other.tag;
+			}
+
+			/// ditto
+			this(ref const(SumType) other) const
+			{
+				storage = other.match!((ref value) {
+					// Workaround for dlang issue 20068
+					static if (!isSafeToCopy!(typeof(value))) {
+						cast(void) () @system {}();
+					}
+
+					return const(Storage)(value);
+				});
+
+				tag = other.tag;
+			}
+
+			/// ditto
+			this(ref immutable(SumType) other) immutable
+			{
+				storage = other.match!((ref value) {
+					// Workaround for dlang issue 20068
+					static if (!isSafeToCopy!(typeof(value))) {
+						cast(void) () @system {}();
+					}
+
+					return immutable(Storage)(value);
+				});
+
+				tag = other.tag;
 			}
 		}
 	} else {
@@ -917,6 +940,26 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 	SumType!C y = new C();
 	y.match!((ref v) { v.i = -1; });
 	assertThrown!AssertError(assert(&y));
+}
+
+version(none) {
+	// Known bug; needs fix for dlang issue 19902
+	// Types with copy constructors
+	@safe unittest {
+		static struct S
+		{
+			int n;
+			this(ref return scope inout S other) inout { n++; }
+		}
+
+		SumType!S x = S();
+		SumType!S y = x;
+
+		auto xval = x.storage.values[0].n;
+		auto yval = y.storage.values[0].n;
+
+		assert(xval != yval);
+	}
 }
 
 version(none) {
