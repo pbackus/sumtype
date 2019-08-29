@@ -893,7 +893,7 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 	static assert(__traits(compiles, SumType!(Nat*, Tuple!(This*, This*))));
 }
 
-// Doesn't call @system copy constructors in @safe code
+// Doesn't call @system postblits in @safe code
 @safe unittest {
 	static struct SystemCopy { @system this(this) {} }
 	SystemCopy original;
