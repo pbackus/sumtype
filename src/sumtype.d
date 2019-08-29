@@ -1225,7 +1225,10 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		static foreach (hid, handler; allHandlers) {
 			static assert(handlerIndices[].canFind(hid),
 				"handler `" ~ __traits(identifier, handler) ~ "` " ~
-				"of type `" ~ typeof(handler).stringof ~ "` " ~
+				"of type `" ~ ( __traits(isTemplate, handler)
+					? "template"
+					: typeof(handler).stringof
+				) ~ "` " ~
 				"never matches"
 			);
 		}
