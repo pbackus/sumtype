@@ -276,7 +276,7 @@ private:
 			@trusted
 			this()(scope auto ref T val)
 			{
-				import std.functional: forward;
+				import core.lifetime: forward;
 
 				static if (isCopyable!T) {
 					values[i] = val;
@@ -323,7 +323,7 @@ public:
 		/// Constructs a `SumType` holding a specific value.
 		this()(auto ref T val)
 		{
-			import std.functional: forward;
+			import core.lifetime: forward;
 
 			static if (isCopyable!T) {
 				// Workaround for dlang issue 20068
@@ -390,7 +390,7 @@ public:
 			 */
 			void opAssign()(auto ref T rhs)
 			{
-				import std.functional: forward;
+				import core.lifetime: forward;
 				import std.traits: hasIndirections, hasNested;
 				import std.meta: Or = templateOr;
 
