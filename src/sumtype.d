@@ -1017,6 +1017,17 @@ version(none) {
 /// True if `T` is an instance of `SumType`, otherwise false.
 enum isSumType(T) = is(T == SumType!Args, Args...);
 
+unittest {
+	static struct Wrapper
+	{
+		SumType!int s;
+		alias s this;
+	}
+
+	assert(isSumType!(SumType!int));
+	assert(!isSumType!Wrapper);
+}
+
 /**
  * Calls a type-appropriate function with the value held in a [SumType].
  *
