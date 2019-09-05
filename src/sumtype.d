@@ -882,8 +882,8 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 	SumType!(S[1]) x = [S(0)];
 	SumType!(S[1]) y = x;
 
-	auto xval = x.storage.values[0][0].n;
-	auto yval = y.storage.values[0][0].n;
+	auto xval = x.trustedGet!(S[1])[0].n;
+	auto yval = y.trustedGet!(S[1])[0].n;
 
 	assert(xval != yval);
 }
@@ -984,8 +984,8 @@ version(none) {
 		SumType!S x = S();
 		SumType!S y = x;
 
-		auto xval = x.storage.values[0].n;
-		auto yval = y.storage.values[0].n;
+		auto xval = x.trustedGet!S.n;
+		auto yval = y.trustedGet!S.n;
 
 		assert(xval != yval);
 	}
