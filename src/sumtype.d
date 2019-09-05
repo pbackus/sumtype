@@ -391,20 +391,11 @@ public:
 			void opAssign()(auto ref T rhs)
 			{
 				import std.functional: forward;
-				import std.traits: hasIndirections, isNested;
-
-				template isNestedStruct(T)
-				{
-					static if (is(T == struct)) {
-						enum isNestedStruct = isNested!T;
-					} else {
-						enum isNestedStruct = false;
-					}
-				}
+				import std.traits: hasIndirections, hasNested;
+				import std.meta: Or = templateOr;
 
 				enum mayContainPointers =
-					anySatisfy!(hasIndirections, Types)
-					|| anySatisfy!(isNestedStruct, Types);
+					anySatisfy!(Or!(hasIndirections, hasNested), Types);
 
 				// If it's possible that someone is holding a reference to a
 				// pointer we're about to overwrite, opAssign must be @system.
