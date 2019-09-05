@@ -554,9 +554,6 @@ public:
 	}
 }
 
-/// True if `T` is an instance of `SumType`, otherwise false.
-enum isSumType(T) = is(T == SumType!Args, Args...);
-
 // Construction
 @safe unittest {
 	alias MySum = SumType!(int, float);
@@ -1016,6 +1013,9 @@ version(none) {
 		assert(__traits(compiles, SumType!S(S(123))));
 	}
 }
+
+/// True if `T` is an instance of `SumType`, otherwise false.
+enum isSumType(T) = is(T == SumType!Args, Args...);
 
 /**
  * Calls a type-appropriate function with the value held in a [SumType].
