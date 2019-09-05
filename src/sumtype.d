@@ -369,6 +369,57 @@ public:
 		}
 	}
 
+	static if (allSatisfy!(isCopyable, Types)) {
+		static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
+			/// Constructs a `SumType` that's a copy of another `SumType`
+			this(ref SumType other)
+			{
+				storage = other.match!((ref value) {
+					// Workaround for dlang issue 20068
+					static if (!isSafeToCopy!(typeof(value))) {
+						cast(void) () @system {}();
+					}
+
+					return Storage(value);
+				});
+
+				tag = other.tag;
+			}
+
+			/// ditto
+			this(ref const(SumType) other) const
+			{
+				storage = other.match!((ref value) {
+					// Workaround for dlang issue 20068
+					static if (!isSafeToCopy!(typeof(value))) {
+						cast(void) () @system {}();
+					}
+
+					return const(Storage)(value);
+				});
+
+				tag = other.tag;
+			}
+
+			/// ditto
+			this(ref immutable(SumType) other) immutable
+			{
+				storage = other.match!((ref value) {
+					// Workaround for dlang issue 20068
+					static if (!isSafeToCopy!(typeof(value))) {
+						cast(void) () @system {}();
+					}
+
+					return immutable(Storage)(value);
+				});
+
+				tag = other.tag;
+			}
+		}
+	} else {
+		@disable this(this);
+	}
+
 	version(SumTypeNoDefaultCtor) {
 		@disable this();
 	}
@@ -478,57 +529,6 @@ public:
 				}
 			});
 		}
-	}
-
-	static if (allSatisfy!(isCopyable, Types)) {
-		static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
-			/// Constructs a `SumType` that's a copy of another `SumType`
-			this(ref SumType other)
-			{
-				storage = other.match!((ref value) {
-					// Workaround for dlang issue 20068
-					static if (!isSafeToCopy!(typeof(value))) {
-						cast(void) () @system {}();
-					}
-
-					return Storage(value);
-				});
-
-				tag = other.tag;
-			}
-
-			/// ditto
-			this(ref const(SumType) other) const
-			{
-				storage = other.match!((ref value) {
-					// Workaround for dlang issue 20068
-					static if (!isSafeToCopy!(typeof(value))) {
-						cast(void) () @system {}();
-					}
-
-					return const(Storage)(value);
-				});
-
-				tag = other.tag;
-			}
-
-			/// ditto
-			this(ref immutable(SumType) other) immutable
-			{
-				storage = other.match!((ref value) {
-					// Workaround for dlang issue 20068
-					static if (!isSafeToCopy!(typeof(value))) {
-						cast(void) () @system {}();
-					}
-
-					return immutable(Storage)(value);
-				});
-
-				tag = other.tag;
-			}
-		}
-	} else {
-		@disable this(this);
 	}
 
 	invariant {
