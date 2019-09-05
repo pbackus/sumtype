@@ -421,6 +421,26 @@ public:
 		}
 	}
 
+	static if (allSatisfy!(isAssignable, Types)) {
+		static if (allSatisfy!(isCopyable, Types)) {
+			/// Copy assignment. `@disable`d if any of `Types` are non-copyable.
+			void opAssign(ref SumType rhs)
+			{
+				rhs.match!((ref value) { this = value; });
+			}
+		} else {
+			@disable void opAssign(ref SumType rhs);
+		}
+
+		/// Move assignment.
+		void opAssign(SumType rhs)
+		{
+			import core.lifetime: move;
+
+			move(rhs, this);
+		}
+	}
+
 	/**
 	 * Compares two `SumType`s for equality.
 	 *
@@ -931,6 +951,24 @@ enum isSumType(T) = is(T == SumType!Args, Args...);
 	SumType!C y = new C();
 	y.match!((ref v) { v.i = -1; });
 	assertThrown!AssertError(assert(&y));
+}
+
+// Calls value postblit on self-assignment
+@safe unittest {
+	static struct S
+	{
+		int n;
+		this(this) { n++; }
+	}
+
+	SumType!S x = S();
+	SumType!S y;
+	y = x;
+
+	auto xval = x.trustedGet!S.n;
+	auto yval = y.trustedGet!S.n;
+
+	assert(xval != yval);
 }
 
 version(none) {
