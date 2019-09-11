@@ -254,7 +254,7 @@ private enum isSafeToCopy(T) = isSafe!((T original) { auto copy = original; });
 struct SumType(TypeArgs...)
 	if (is(NoDuplicates!TypeArgs == TypeArgs) && TypeArgs.length > 0)
 {
-	import std.meta: AliasSeq, Filter, anySatisfy, allSatisfy;
+	import std.meta: AliasSeq, Filter, anySatisfy, allSatisfy, staticIndexOf;
 	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
 	import std.traits: isAssignable, isCopyable, isStaticArray;
 
@@ -270,37 +270,14 @@ private:
 
 	union Storage
 	{
-		Types values;
+		template memberName(T)
+			if (staticIndexOf!(T, Types) >= 0)
+		{
+			mixin("enum memberName = `values_", staticIndexOf!(T, Types), "`;");
+		}
 
 		static foreach (i, T; Types) {
-			@trusted
-			this()(scope auto ref T val)
-			{
-				import core.lifetime: forward;
-
-				static if (isCopyable!T) {
-					values[i] = val;
-				} else {
-					values[i] = forward!val;
-				}
-			}
-
-			static if (isCopyable!T) {
-				@trusted
-				this()(auto ref const(T) val) const
-				{
-					values[i] = val;
-				}
-
-				@trusted
-				this()(auto ref immutable(T) val) immutable
-				{
-					values[i] = val;
-				}
-			} else {
-				@disable this(const(T) val) const;
-				@disable this(immutable(T) val) immutable;
-			}
+			mixin("Types[i] ", memberName!T, ";");
 		}
 	}
 
@@ -310,11 +287,9 @@ private:
 	@trusted
 	ref inout(T) trustedGet(T)() inout
 	{
-		import std.meta: staticIndexOf;
-
 		enum tid = staticIndexOf!(T, Types);
 		assert(tag == tid);
-		return storage.values[tid];
+		return __traits(getMember, storage, Storage.memberName!T);
 	}
 
 public:
@@ -326,16 +301,12 @@ public:
 			import core.lifetime: forward;
 
 			static if (isCopyable!T) {
-				// Workaround for dlang issue 20068
-				static if (!isSafeToCopy!T) {
-					cast(void) () @system {}();
-				}
-
-				storage = Storage(val);
+				mixin("Storage newStorage = { ", Storage.memberName!T, ": val };");
 			} else {
-				storage = Storage(forward!val);
+				mixin("Storage newStorage = { ", Storage.memberName!T, " : forward!val };");
 			}
 
+			storage = newStorage;
 			tag = i;
 		}
 
@@ -343,24 +314,16 @@ public:
 			/// ditto
 			this()(auto ref const(T) val) const
 			{
-				// Workaround for dlang issue 20068
-				static if (!isSafeToCopy!T) {
-					cast(void) () @system {}();
-				}
-
-				storage = const(Storage)(val);
+				mixin("const(Storage) newStorage = { ", Storage.memberName!T, ": val };");
+				storage = newStorage;
 				tag = i;
 			}
 
 			/// ditto
 			this()(auto ref immutable(T) val) immutable
 			{
-				// Workaround for dlang issue 20068
-				static if (!isSafeToCopy!T) {
-					cast(void) () @system {}();
-				}
-
-				storage = immutable(Storage)(val);
+				mixin("immutable(Storage) newStorage = { ", Storage.memberName!T, ": val };");
+				storage = newStorage;
 				tag = i;
 			}
 		} else {
@@ -375,12 +338,10 @@ public:
 			this(ref SumType other)
 			{
 				storage = other.match!((ref value) {
-					// Workaround for dlang issue 20068
-					static if (!isSafeToCopy!(typeof(value))) {
-						cast(void) () @system {}();
-					}
+					alias T = typeof(value);
 
-					return Storage(value);
+					mixin("Storage newStorage = { ", Storage.memberName!T, ": value };");
+					return newStorage;
 				});
 
 				tag = other.tag;
@@ -389,13 +350,15 @@ public:
 			/// ditto
 			this(ref const(SumType) other) const
 			{
-				storage = other.match!((ref value) {
-					// Workaround for dlang issue 20068
-					static if (!isSafeToCopy!(typeof(value))) {
-						cast(void) () @system {}();
-					}
+				import std.meta: staticMap;
+				import std.traits: ConstOf;
 
-					return const(Storage)(value);
+				storage = other.match!((ref value) {
+					enum tid = staticIndexOf!(typeof(value), staticMap!(ConstOf, Types));
+					alias T = Types[tid];
+
+					mixin("const(Storage) newStorage = { ", Storage.memberName!T, ": value };");
+					return newStorage;
 				});
 
 				tag = other.tag;
@@ -404,13 +367,15 @@ public:
 			/// ditto
 			this(ref immutable(SumType) other) immutable
 			{
-				storage = other.match!((ref value) {
-					// Workaround for dlang issue 20068
-					static if (!isSafeToCopy!(typeof(value))) {
-						cast(void) () @system {}();
-					}
+				import std.meta: staticMap;
+				import std.traits: ImmutableOf;
 
-					return immutable(Storage)(value);
+				storage = other.match!((ref value) {
+					enum tid = staticIndexOf!(typeof(value), staticMap!(ImmutableOf, Types));
+					alias T = Types[tid];
+
+					mixin("immutable(Storage) newStorage = { ", Storage.memberName!T, ": value };");
+					return newStorage;
 				});
 
 				tag = other.tag;
@@ -461,12 +426,8 @@ public:
 					}
 				});
 
-				// Workaround for dlang issue 20068
-				static if (isCopyable!T && !isSafeToCopy!T) {
-					cast(void) () @system {}();
-				}
-
-				storage = Storage(forward!rhs);
+				mixin("Storage newStorage = { ", Storage.memberName!T, ": forward!rhs };");
+				storage = newStorage;
 				tag = i;
 			}
 		}
