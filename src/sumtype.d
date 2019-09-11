@@ -233,6 +233,9 @@ import std.meta: NoDuplicates;
  *
  * The value in a `SumType` can be operated on using [match|pattern matching].
  *
+ * To avoid ambiguity, duplicate types are not allowed (but see the
+ * [sumtype#basic-usage|"basic usage" example] for a workaround).
+ *
  * The special type `This` can be used as a placeholder to create
  * self-referential types, just like with `Algebraic`. See the
  * [sumtype#arithmetic-expression-evaluator|"Arithmetic expression evaluator" example] for
@@ -241,9 +244,6 @@ import std.meta: NoDuplicates;
  * A `SumType` is initialized by default to hold the `.init` value of its
  * first member type, just like a regular union. The version identifier
  * `SumTypeNoDefaultCtor` can be used to disable this behavior.
- *
- * To avoid ambiguity, duplicate types are not allowed (but see the
- * [sumtype#basic-usage|"basic usage" example] for a workaround).
  *
  * Bugs:
  *   Types with `@disable`d `opEquals` overloads cannot be members of a
@@ -383,6 +383,7 @@ public:
 			}
 		}
 	} else {
+		/// `@disable`d if any member type is non-copyable.
 		@disable this(this);
 	}
 
@@ -436,7 +437,13 @@ public:
 
 	static if (allSatisfy!(isAssignable, Types)) {
 		static if (allSatisfy!(isCopyable, Types)) {
-			/// Copy assignment. `@disable`d if any of `Types` are non-copyable.
+			/**
+			 * Copies the value from another `SumType` into this one.
+			 *
+			 * See the value-assignment overload for details on `@safe`ty.
+			 *
+			 * Copy assignment is `@disable`d if any of `Types` is non-copyable.
+			 */
 			void opAssign(ref SumType rhs)
 			{
 				rhs.match!((ref value) { this = value; });
@@ -445,7 +452,11 @@ public:
 			@disable void opAssign(ref SumType rhs);
 		}
 
-		/// Move assignment.
+		/**
+		 * Moves the value from another `SumType` into this one.
+		 *
+		 * See the value-assignment overload for details on `@safe`ty.
+		 */
 		void opAssign(SumType rhs)
 		{
 			import core.lifetime: move;
