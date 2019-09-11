@@ -792,8 +792,6 @@ version (D_BetterC) {} else
 // Stale pointers
 version (D_BetterC) {} else
 @system unittest {
-	import std.array: staticArray;
-
 	alias MySum = SumType!(ubyte, void*[2]);
 
 	MySum x = [null, cast(void*) 0x12345678];
