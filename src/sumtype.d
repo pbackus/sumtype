@@ -282,7 +282,7 @@ private:
 	Storage storage;
 
 	@trusted
-	ref inout(T) trustedGet(T)() inout
+	ref inout(T) get(T)() inout
 	{
 		enum tid = staticIndexOf!(T, Types);
 		assert(tag == tid);
@@ -757,7 +757,7 @@ public:
 	alias MySum = SumType!(ubyte, void*[2]);
 
 	MySum x = [null, cast(void*) 0x12345678];
-	void** p = &x.trustedGet!(void*[2])[1];
+	void** p = &x.get!(void*[2])[1];
 	x = ubyte(123);
 
 	assert(*p != cast(void*) 0x12345678);
@@ -784,8 +784,8 @@ public:
 	} catch (Exception e) {}
 
 	assert(
-		(x.tag == 0 && x.trustedGet!A.value == 123) ||
-		(x.tag == 1 && x.trustedGet!B.value == 456)
+		(x.tag == 0 && x.get!A.value == 123) ||
+		(x.tag == 1 && x.get!B.value == 456)
 	);
 }
 
@@ -837,8 +837,8 @@ public:
 	SumType!(S[1]) x = [S(0)];
 	SumType!(S[1]) y = x;
 
-	auto xval = x.trustedGet!(S[1])[0].n;
-	auto yval = y.trustedGet!(S[1])[0].n;
+	auto xval = x.get!(S[1])[0].n;
+	auto yval = y.get!(S[1])[0].n;
 
 	assert(xval != yval);
 }
@@ -920,8 +920,8 @@ public:
 	SumType!S y;
 	y = x;
 
-	auto xval = x.trustedGet!S.n;
-	auto yval = y.trustedGet!S.n;
+	auto xval = x.get!S.n;
+	auto yval = y.get!S.n;
 
 	assert(xval != yval);
 }
@@ -939,8 +939,8 @@ version(none) {
 		SumType!S x = S();
 		SumType!S y = x;
 
-		auto xval = x.trustedGet!S.n;
-		auto yval = y.trustedGet!S.n;
+		auto xval = x.get!S.n;
+		auto yval = y.get!S.n;
 
 		assert(xval != yval);
 	}
@@ -1204,7 +1204,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 			static foreach (tid, T; Types) {
 				static foreach (hid, handler; allHandlers) {
-					static if (canMatch!(handler, typeof(self.trustedGet!T()))) {
+					static if (canMatch!(handler, typeof(self.get!T()))) {
 						if (indices[tid] == noMatch) {
 							indices[tid] = hid;
 						}
@@ -1235,7 +1235,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			static foreach (tid, T; Types) {
 				case tid:
 					static if (handlerIndices[tid] != noMatch) {
-						return allHandlers[handlerIndices[tid]](self.trustedGet!T);
+						return allHandlers[handlerIndices[tid]](self.get!T);
 					} else {
 						static if(exhaustive) {
 							static assert(false,
@@ -1485,7 +1485,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		(ref double d) { d *= 2; }
 	);
 
-	assert(value.trustedGet!double.approxEqual(6.28));
+	assert(value.get!double.approxEqual(6.28));
 }
 
 // Unreachable handlers
