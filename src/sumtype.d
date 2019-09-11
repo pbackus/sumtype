@@ -975,6 +975,21 @@ version (D_BetterC) {} else
 	assert(xval != yval);
 }
 
+// Github issue #29
+@safe unittest {
+	assert(__traits(compiles, () @safe {
+		alias A = SumType!string;
+
+		@safe A createA(string arg) {
+    	return A(arg);
+		}
+
+		@safe void test() {
+    	A a = createA("");
+		}
+	}));
+}
+
 version(none) {
 	// Known bug; needs fix for dlang issue 19902
 	// Types with copy constructors
