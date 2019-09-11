@@ -355,7 +355,8 @@ public:
 				import std.traits: ConstOf;
 
 				storage = other.match!((ref value) {
-					enum tid = staticIndexOf!(typeof(value), staticMap!(ConstOf, Types));
+					alias OtherTypes = staticMap!(ConstOf, Types);
+					enum tid = staticIndexOf!(typeof(value), OtherTypes);
 					alias T = Types[tid];
 
 					mixin("const(Storage) newStorage = { ", Storage.memberName!T, ": value };");
@@ -372,7 +373,8 @@ public:
 				import std.traits: ImmutableOf;
 
 				storage = other.match!((ref value) {
-					enum tid = staticIndexOf!(typeof(value), staticMap!(ImmutableOf, Types));
+					alias OtherTypes = staticMap!(ImmutableOf, Types);
+					enum tid = staticIndexOf!(typeof(value), OtherTypes);
 					alias T = Types[tid];
 
 					mixin("immutable(Storage) newStorage = { ", Storage.memberName!T, ": value };");
