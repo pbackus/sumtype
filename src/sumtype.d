@@ -12,6 +12,7 @@ Authors: Paul Backus, Atila Neves
 module sumtype;
 
 /// $(H3 Basic usage)
+version (D_BetterC) {} else
 @safe unittest {
     import std.math: approxEqual;
 
@@ -80,6 +81,7 @@ module sumtype;
  * properties will be matched by the `rect` handlers, and any type with `r` and
  * `theta` properties will be matched by the `polar` handlers.
  */
+version (D_BetterC) {} else
 @safe unittest {
     import std.math: approxEqual, cos, PI, sqrt;
 
@@ -121,6 +123,7 @@ module sumtype;
  * [https://en.wikipedia.org/wiki/Abstract_syntax_tree|abstract syntax tree] for
  * representing simple arithmetic expressions.
  */
+version (D_BetterC) {} else
 @safe unittest {
     import std.functional: partial;
     import std.traits: EnumMembers;
@@ -588,6 +591,7 @@ public:
 }
 
 // Works alongside Algebraic
+version (D_BetterC) {} else
 @safe unittest {
 	import std.variant;
 
@@ -597,6 +601,7 @@ public:
 }
 
 // Types with destructors and postblits
+version (D_BetterC) {} else
 @system unittest {
 	int copies;
 
@@ -653,6 +658,7 @@ public:
 }
 
 // Doesn't destroy reference types
+version (D_BetterC) {} else
 @system unittest {
 	bool destroyed;
 
@@ -716,6 +722,7 @@ public:
 }
 
 // Compares reference types using value equality
+version (D_BetterC) {} else
 @safe unittest {
 	static struct Field {}
 	static struct Struct { Field[] fields; }
@@ -728,6 +735,7 @@ public:
 }
 
 // toString
+version (D_BetterC) {} else
 @safe unittest {
 	import std.conv: text;
 
@@ -741,6 +749,7 @@ public:
 }
 
 // Github issue #16
+version (D_BetterC) {} else
 @safe unittest {
 	alias Node = SumType!(This[], string);
 
@@ -753,6 +762,7 @@ public:
 }
 
 // Github issue #16 with const
+version (D_BetterC) {} else
 @safe unittest {
 	alias Node = SumType!(const(This)[], string);
 
@@ -765,6 +775,7 @@ public:
 }
 
 // Stale pointers
+version (D_BetterC) {} else
 @system unittest {
 	import std.array: staticArray;
 
@@ -778,6 +789,7 @@ public:
 }
 
 // Exception-safe assignment
+version (D_BetterC) {} else
 @safe unittest {
 	static struct A
 	{
@@ -829,6 +841,7 @@ public:
 }
 
 // Github issue #22
+version (D_BetterC) {} else
 @safe unittest {
 	import std.typecons;
 	assert(__traits(compiles, {
@@ -839,6 +852,7 @@ public:
 }
 
 // Static arrays of structs with postblits
+version (D_BetterC) {} else
 @safe unittest {
 	static struct S
 	{
@@ -858,6 +872,7 @@ public:
 }
 
 // Replacement does not happen inside SumType
+version (D_BetterC) {} else
 @safe unittest {
 	import std.typecons : Tuple;
 	alias A = Tuple!(This*,SumType!(This*))[SumType!(This*,string)[This]];
@@ -897,6 +912,7 @@ public:
 }
 
 // Types with invariants
+version (D_BetterC) {} else
 @system unittest {
 	import std.exception: assertThrown;
 	import core.exception: AssertError;
@@ -1064,6 +1080,7 @@ template match(handlers...)
  *
  * See_Also: `std.variant.tryVisit`
  */
+version (D_BetterC) {} else
 template tryMatch(handlers...)
 {
 	import std.typecons: No;
@@ -1082,6 +1099,7 @@ template tryMatch(handlers...)
 }
 
 /// Thrown by [tryMatch] when an unhandled type is encountered.
+version (D_BetterC) {} else
 class MatchException : Exception
 {
 	pure @safe @nogc nothrow
@@ -1214,7 +1232,15 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		pure size_t[Types.length] getHandlerIndices()
 		{
 			size_t[Types.length] indices;
-			indices[] = noMatch;
+
+			version (D_BetterC) {
+				// Workaround for dlang issue 19561
+				foreach (ref index; indices) {
+					index = noMatch;
+				}
+			} else {
+				indices[] = noMatch;
+			}
 
 			static foreach (tid, T; Types) {
 				static foreach (hid, handler; allHandlers) {
@@ -1299,6 +1325,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 }
 
 // Handlers with qualified parameters
+version (D_BetterC) {} else
 @safe unittest {
     alias MySum = SumType!(int[], float[]);
 
@@ -1310,6 +1337,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 }
 
 // Handlers for qualified types
+version (D_BetterC) {} else
 @safe unittest {
 	alias MySum = SumType!(immutable(int[]), immutable(float[]));
 
@@ -1330,6 +1358,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 }
 
 // Delegate handlers
+version (D_BetterC) {} else
 @safe unittest {
 	alias MySum = SumType!(int, float);
 
@@ -1342,6 +1371,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 }
 
 // Generic handler
+version (D_BetterC) {} else
 @safe unittest {
 	import std.math: approxEqual;
 
@@ -1355,6 +1385,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 }
 
 // Fallback to generic handler
+version (D_BetterC) {} else
 @safe unittest {
 	import std.conv: to;
 
@@ -1368,6 +1399,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 }
 
 // Multiple non-overlapping generic handlers
+version (D_BetterC) {} else
 @safe unittest {
 	import std.math: approxEqual;
 
@@ -1398,6 +1430,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 }
 
 // Separate opCall handlers
+version (D_BetterC) {} else
 @safe unittest {
 	static struct IntHandler
 	{
@@ -1427,6 +1460,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 }
 
 // Compound opCall handler
+version (D_BetterC) {} else
 @safe unittest {
 	static struct CompoundHandler
 	{
@@ -1461,6 +1495,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 }
 
 // Non-exhaustive matching
+version (D_BetterC) {} else
 @system unittest {
 	import std.exception: assertThrown, assertNotThrown;
 
@@ -1474,6 +1509,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 }
 
 // Non-exhaustive matching in @safe code
+version (D_BetterC) {} else
 @safe unittest {
 	SumType!(int, float) x;
 
@@ -1486,6 +1522,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 }
 
 // Handlers with ref parameters
+version (D_BetterC) {} else
 @safe unittest {
 	import std.math: approxEqual;
 	import std.meta: staticIndexOf;
@@ -1594,6 +1631,25 @@ unittest {
 	static struct D { SumType!(A, B) value; alias value this; }
 
 	assert(__traits(compiles, D().match!(_ => true)));
+}
+
+version(SumTypeTestBetterC) {
+	version(D_BetterC) {}
+	else static assert(false, "Must compile with -betterC to run betterC tests");
+
+	version(unittest) {}
+	else static assert(false, "Must compile with -unittest to run betterC tests");
+
+	extern(C) int main()
+	{
+		import core.stdc.stdio: puts;
+		static foreach (test; __traits(getUnitTests, mixin(__MODULE__))) {
+			test();
+		}
+
+		puts("All unit tests have been run successfully.");
+		return 0;
+	}
 }
 
 /**
@@ -1788,6 +1844,7 @@ private template replaceTypeInFunctionTypeUnless(alias Pred, From, To, fun)
 
 // Adapted from:
 // https://github.com/dlang/phobos/blob/d1c8fb0b69dc12669554d5cb96d3045753549619/std/typecons.d
+version (D_BetterC) {} else
 @safe unittest
 {
 	import std.typecons;
@@ -1877,6 +1934,7 @@ private template replaceTypeInFunctionTypeUnless(alias Pred, From, To, fun)
 	);
 }
 
+version (D_BetterC) {} else
 @safe unittest // Dlang Bugzilla 17116
 {
 	enum False(T) = false;
