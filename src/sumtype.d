@@ -273,8 +273,8 @@ private:
 			mixin("enum memberName = `values_", staticIndexOf!(T, Types), "`;");
 		}
 
-		static foreach (i, T; Types) {
-			mixin("Types[i] ", memberName!T, ";");
+		static foreach (tid, T; Types) {
+			mixin("Types[tid] ", memberName!T, ";");
 		}
 	}
 
@@ -291,7 +291,7 @@ private:
 
 public:
 
-	static foreach (i, T; Types) {
+	static foreach (tid, T; Types) {
 		/// Constructs a `SumType` holding a specific value.
 		this()(auto ref T val)
 		{
@@ -304,7 +304,7 @@ public:
 			}
 
 			storage = newStorage;
-			tag = i;
+			tag = tid;
 		}
 
 		static if (isCopyable!T) {
@@ -313,7 +313,7 @@ public:
 			{
 				mixin("const(Storage) newStorage = { ", Storage.memberName!T, ": val };");
 				storage = newStorage;
-				tag = i;
+				tag = tid;
 			}
 
 			/// ditto
@@ -321,7 +321,7 @@ public:
 			{
 				mixin("immutable(Storage) newStorage = { ", Storage.memberName!T, ": val };");
 				storage = newStorage;
-				tag = i;
+				tag = tid;
 			}
 		} else {
 			@disable this(const(T) val) const;
@@ -386,7 +386,7 @@ public:
 		@disable this();
 	}
 
-	static foreach (i, T; Types) {
+	static foreach (tid, T; Types) {
 		static if (isAssignable!T) {
 			/**
 			 * Assigns a value to a `SumType`.
@@ -425,7 +425,7 @@ public:
 
 				mixin("Storage newStorage = { ", Storage.memberName!T, ": forward!rhs };");
 				storage = newStorage;
-				tag = i;
+				tag = tid;
 			}
 		}
 	}
