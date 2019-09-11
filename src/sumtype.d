@@ -293,14 +293,14 @@ public:
 
 	static foreach (tid, T; Types) {
 		/// Constructs a `SumType` holding a specific value.
-		this()(auto ref T val)
+		this()(auto ref T value)
 		{
 			import core.lifetime: forward;
 
 			static if (isCopyable!T) {
-				mixin("Storage newStorage = { ", Storage.memberName!T, ": val };");
+				mixin("Storage newStorage = { ", Storage.memberName!T, ": value };");
 			} else {
-				mixin("Storage newStorage = { ", Storage.memberName!T, " : forward!val };");
+				mixin("Storage newStorage = { ", Storage.memberName!T, " : forward!value };");
 			}
 
 			storage = newStorage;
@@ -309,23 +309,23 @@ public:
 
 		static if (isCopyable!T) {
 			/// ditto
-			this()(auto ref const(T) val) const
+			this()(auto ref const(T) value) const
 			{
-				mixin("const(Storage) newStorage = { ", Storage.memberName!T, ": val };");
+				mixin("const(Storage) newStorage = { ", Storage.memberName!T, ": value };");
 				storage = newStorage;
 				tag = tid;
 			}
 
 			/// ditto
-			this()(auto ref immutable(T) val) immutable
+			this()(auto ref immutable(T) value) immutable
 			{
-				mixin("immutable(Storage) newStorage = { ", Storage.memberName!T, ": val };");
+				mixin("immutable(Storage) newStorage = { ", Storage.memberName!T, ": value };");
 				storage = newStorage;
 				tag = tid;
 			}
 		} else {
-			@disable this(const(T) val) const;
-			@disable this(immutable(T) val) immutable;
+			@disable this(const(T) value) const;
+			@disable this(immutable(T) value) immutable;
 		}
 	}
 
