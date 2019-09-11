@@ -223,9 +223,6 @@ module sumtype;
 public import std.variant: This;
 
 import std.meta: NoDuplicates;
-import std.traits: isSafe;
-
-private enum isSafeToCopy(T) = isSafe!((T original) { auto copy = original; });
 
 /**
  * A tagged union that can hold a single value from any of a specified set of
