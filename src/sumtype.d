@@ -981,11 +981,11 @@ version (D_BetterC) {} else
 		alias A = SumType!string;
 
 		@safe A createA(string arg) {
-    	return A(arg);
+		return A(arg);
 		}
 
 		@safe void test() {
-    	A a = createA("");
+		A a = createA("");
 		}
 	}));
 }
@@ -1367,13 +1367,13 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 // Handlers with qualified parameters
 version (D_BetterC) {} else
 @safe unittest {
-    alias MySum = SumType!(int[], float[]);
+	alias MySum = SumType!(int[], float[]);
 
-    MySum x = MySum([1, 2, 3]);
-    MySum y = MySum([1.0, 2.0, 3.0]);
+	MySum x = MySum([1, 2, 3]);
+	MySum y = MySum([1.0, 2.0, 3.0]);
 
-    assert(x.match!((const(int[]) v) => true, (const(float[]) v) => false));
-    assert(y.match!((const(int[]) v) => false, (const(float[]) v) => true));
+	assert(x.match!((const(int[]) v) => true, (const(float[]) v) => false));
+	assert(y.match!((const(int[]) v) => false, (const(float[]) v) => true));
 }
 
 // Handlers for qualified types
