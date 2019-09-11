@@ -616,21 +616,21 @@ version (D_BetterC) {} else
 }
 
 // Types with destructors and postblits
-version (D_BetterC) {} else
 @system unittest {
 	int copies;
 
-	struct Test
+	static struct Test
 	{
 		bool initialized = false;
+		int* copiesPtr;
 
-		this(this) { copies++; }
-		~this() { if (initialized) copies--; }
+		this(this) { (*copiesPtr)++; }
+		~this() { if (initialized) (*copiesPtr)--; }
 	}
 
 	alias MySum = SumType!(int, Test);
 
-	Test t = Test(true);
+	Test t = Test(true, &copies);
 
 	{
 		MySum x = t;
@@ -737,14 +737,18 @@ version (D_BetterC) {} else
 }
 
 // Compares reference types using value equality
-version (D_BetterC) {} else
 @safe unittest {
+	import std.array: staticArray;
+
 	static struct Field {}
 	static struct Struct { Field[] fields; }
 	alias MySum = SumType!Struct;
 
-	auto a = MySum(Struct([Field()]));
-	auto b = MySum(Struct([Field()]));
+	static arr1 = staticArray([Field()]);
+	static arr2 = staticArray([Field()]);
+
+	auto a = MySum(Struct(arr1[]));
+	auto b = MySum(Struct(arr2[]));
 
 	assert(a == b);
 }
@@ -1410,11 +1414,24 @@ version (D_BetterC) {} else
 	assert(!y.match!((int v) => v == answer, (float v) => v == answer));
 }
 
-// Generic handler
-version (D_BetterC) {} else
-@safe unittest {
-	import std.math: approxEqual;
+version(unittest) {
+	version(D_BetterC) {
+		// std.math.approxEqual depends on core.runtime.math, so use a
+		// libc-based version for testing with -betterC
+		@safe pure @nogc nothrow
+		private bool approxEqual(double lhs, double rhs)
+		{
+			import core.stdc.math: fabs;
 
+			return (lhs - rhs) < 1e-5;
+		}
+	} else {
+		import std.math: approxEqual;
+	}
+}
+
+// Generic handler
+@safe unittest {
 	alias MySum = SumType!(int, float);
 
 	MySum x = MySum(42);
@@ -1439,16 +1456,18 @@ version (D_BetterC) {} else
 }
 
 // Multiple non-overlapping generic handlers
-version (D_BetterC) {} else
 @safe unittest {
-	import std.math: approxEqual;
+	import std.array: staticArray;
 
 	alias MySum = SumType!(int, float, int[], char[]);
 
+	static ints = staticArray([1, 2, 3]);
+	static chars = staticArray(['a', 'b', 'c']);
+
 	MySum x = MySum(42);
 	MySum y = MySum(3.14);
-	MySum z = MySum([1, 2, 3]);
-	MySum w = MySum(['a', 'b', 'c']);
+	MySum z = MySum(ints[]);
+	MySum w = MySum(chars[]);
 
 	assert(x.match!(v => v*2, v => v.length) == 84);
 	assert(y.match!(v => v*2, v => v.length).approxEqual(6.28));
@@ -1470,7 +1489,6 @@ version (D_BetterC) {} else
 }
 
 // Separate opCall handlers
-version (D_BetterC) {} else
 @safe unittest {
 	static struct IntHandler
 	{
@@ -1492,15 +1510,12 @@ version (D_BetterC) {} else
 
 	MySum x = MySum(42);
 	MySum y = MySum(3.14);
-	IntHandler handleInt;
-	FloatHandler handleFloat;
 
-	assert(x.match!(handleInt, handleFloat));
-	assert(!y.match!(handleInt, handleFloat));
+	assert(x.match!(IntHandler.init, FloatHandler.init));
+	assert(!y.match!(IntHandler.init, FloatHandler.init));
 }
 
 // Compound opCall handler
-version (D_BetterC) {} else
 @safe unittest {
 	static struct CompoundHandler
 	{
@@ -1519,10 +1534,9 @@ version (D_BetterC) {} else
 
 	MySum x = MySum(42);
 	MySum y = MySum(3.14);
-	CompoundHandler handleBoth;
 
-	assert(x.match!handleBoth);
-	assert(!y.match!handleBoth);
+	assert(x.match!(CompoundHandler.init));
+	assert(!y.match!(CompoundHandler.init));
 }
 
 // Ordered matching
@@ -1562,9 +1576,7 @@ version (D_BetterC) {} else
 }
 
 // Handlers with ref parameters
-version (D_BetterC) {} else
 @safe unittest {
-	import std.math: approxEqual;
 	import std.meta: staticIndexOf;
 
 	alias Value = SumType!(long, double);
