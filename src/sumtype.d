@@ -283,6 +283,7 @@ private:
 
 	@trusted
 	ref inout(T) get(T)() inout
+		if (staticIndexOf!(T, Types) >= 0)
 	{
 		enum tid = staticIndexOf!(T, Types);
 		assert(tag == tid);
