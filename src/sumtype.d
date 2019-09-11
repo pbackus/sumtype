@@ -450,7 +450,7 @@ public:
 		{
 			import core.lifetime: move;
 
-			move(rhs, this);
+			rhs.match!((ref value) { this = move(value); });
 		}
 	}
 
@@ -904,10 +904,16 @@ version (D_BetterC) {} else
 
 // Doesn't overwrite pointers in @safe code
 @safe unittest {
-	SumType!(int*, int) x;
+	alias MySum = SumType!(int*, int);
+
+	MySum x;
 
 	assert(!__traits(compiles, () @safe {
 		x = 123;
+	}));
+
+	assert(!__traits(compiles, () @safe {
+		x = MySum(123);
 	}));
 }
 
