@@ -1077,6 +1077,8 @@ template match(handlers...)
  * If a type without a handler is encountered at runtime, a [MatchException]
  * is thrown.
  *
+ * Not available when compiled with `-betterC`.
+ *
  * Returns:
  *   The value returned from the handler that matches the currently-held type,
  *   if a handler was given for that type.
@@ -1104,7 +1106,11 @@ template tryMatch(handlers...)
 	}
 }
 
-/// Thrown by [tryMatch] when an unhandled type is encountered.
+/**
+ * Thrown by [tryMatch] when an unhandled type is encountered.
+ *
+ * Not available when compiled with `-betterC`.
+ */
 version (D_BetterC) {} else
 class MatchException : Exception
 {
