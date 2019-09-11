@@ -637,6 +637,19 @@ public:
 		x = t;
 		assert(copies == 1);
 	}
+
+	{
+		MySum x = t;
+		MySum y = x;
+		assert(copies == 2);
+	}
+
+	{
+		MySum x = t;
+		MySum y;
+		y = x;
+		assert(copies == 2);
+	}
 }
 
 // Doesn't destroy reference types
