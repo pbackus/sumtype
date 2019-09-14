@@ -1709,6 +1709,9 @@ version(SumTypeTestBetterC) {
 	}
 }
 
+static if (__traits(compiles, { import std.typecons: ReplaceTypeUnless; })) {
+	import std.typecons: ReplaceTypeUnless;
+} else {
 /**
  * Replaces all occurrences of `From` into `To`, in one or more types `T`
  * whenever the predicate applied to `T` evaluates to false. For example, $(D
@@ -2008,4 +2011,5 @@ version (D_BetterC) {} else
 	struct A(T) {}
 	struct B { A!int a; alias a this; }
 	static assert(is(ReplaceTypeUnless!(False, void, void, B) == B));
+}
 }
