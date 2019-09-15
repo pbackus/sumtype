@@ -1248,7 +1248,7 @@ private template overloadDispatcher(alias fun)
 		alias overloadSet = overload;
 	}
 
-	alias overloadDispatcher = (arg) => overloadSet(arg);
+	alias overloadDispatcher = (ref arg) => overloadSet(arg);
 }
 
 // A handler that includes all overloads of the original handler, if applicable
@@ -1669,6 +1669,26 @@ unittest {
 	assert(OverloadSet.fun(a) == "int");
 	assert(OverloadSet.fun(b) == "double");
 	assert(OverloadSet.fun(c) == "string");
+}
+
+// Overload sets with ref arguments
+@safe unittest {
+	static struct OverloadSet
+	{
+		static void fun(ref int i) { i = 42; }
+		static void fun(ref double d) { d = 3.14; }
+	}
+
+	alias MySum = SumType!(int, double);
+
+	MySum x = 0;
+	MySum y = 0.0;
+
+	x.match!(OverloadSet.fun);
+	y.match!(OverloadSet.fun);
+
+	assert(x.match!((value) => is(typeof(value) == int) && value == 42));
+	assert(y.match!((value) => is(typeof(value) == double) && value == 3.14));
 }
 
 // Github issue #24
