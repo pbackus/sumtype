@@ -1125,7 +1125,7 @@ template match(handlers...)
  *
  * See_Also: `std.variant.tryVisit`
  */
-version (D_BetterC) {} else
+version (D_Exceptions)
 template tryMatch(handlers...)
 {
 	import std.typecons: No;
@@ -1148,7 +1148,7 @@ template tryMatch(handlers...)
  *
  * Not available when compiled with `-betterC`.
  */
-version (D_BetterC) {} else
+version (D_Exceptions)
 class MatchException : Exception
 {
 	pure @safe @nogc nothrow
@@ -1555,7 +1555,7 @@ version (D_BetterC) {} else
 }
 
 // Non-exhaustive matching
-version (D_BetterC) {} else
+version (D_Exceptions)
 @system unittest {
 	import std.exception: assertThrown, assertNotThrown;
 
@@ -1569,7 +1569,7 @@ version (D_BetterC) {} else
 }
 
 // Non-exhaustive matching in @safe code
-version (D_BetterC) {} else
+version (D_Exceptions)
 @safe unittest {
 	SumType!(int, float) x;
 
