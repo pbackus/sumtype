@@ -1276,7 +1276,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		alias Types = self.Types;
 		enum noMatch = size_t.max;
 
-		alias allHandlers = staticMap!(handlerWithOverloads, handlers);
+		alias realHandlers = staticMap!(handlerWithOverloads, handlers);
 
 		pure size_t[Types.length] getHandlerIndices()
 		{
@@ -1292,7 +1292,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			}
 
 			static foreach (tid, T; Types) {
-				static foreach (hid, handler; allHandlers) {
+				static foreach (hid, handler; realHandlers) {
 					static if (canMatch!(handler, typeof(self.get!T()))) {
 						if (indices[tid] == noMatch) {
 							indices[tid] = hid;
@@ -1309,7 +1309,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		import std.algorithm.searching: canFind;
 
 		// Check for unreachable handlers
-		static foreach (hid, handler; allHandlers) {
+		static foreach (hid, handler; realHandlers) {
 			static assert(handlerIndices[].canFind(hid),
 				"handler `" ~ __traits(identifier, handler) ~ "` " ~
 				"of type `" ~ ( __traits(isTemplate, handler)
@@ -1324,7 +1324,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			static foreach (tid, T; Types) {
 				case tid:
 					static if (handlerIndices[tid] != noMatch) {
-						return allHandlers[handlerIndices[tid]](self.get!T);
+						return realHandlers[handlerIndices[tid]](self.get!T);
 					} else {
 						static if(exhaustive) {
 							static assert(false,
