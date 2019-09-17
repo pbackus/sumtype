@@ -1234,7 +1234,8 @@ private template FunctionOverloads(alias fun)
 	alias FunctionOverloads = AliasSeq!(
 		__traits(getOverloads,
 			__traits(parent, fun),
-			__traits(identifier, fun)
+			__traits(identifier, fun),
+			true // include template overloads
 		)
 	);
 }
@@ -1691,6 +1692,33 @@ unittest {
 
 	assert(x.match!((value) => is(typeof(value) == int) && value == 42));
 	assert(y.match!((value) => is(typeof(value) == double) && value == 3.14));
+}
+
+// Overload sets with templates
+@safe unittest {
+	import std.traits: isNumeric;
+
+	static struct OverloadSet
+	{
+		static string fun(string arg)
+		{
+			return "string";
+		}
+
+		static string fun(T)(T arg)
+			if (isNumeric!T)
+		{
+			return "numeric";
+		}
+	}
+
+	alias MySum = SumType!(int, string);
+
+	MySum x = 123;
+	MySum y = "hello";
+
+	assert(x.match!(OverloadSet.fun) == "numeric");
+	assert(y.match!(OverloadSet.fun) == "string");
 }
 
 // Github issue #24
