@@ -1178,6 +1178,8 @@ template canMatch(alias handler, T)
 		// same when qualifiers are ignored.
 		enum sameUpToQuals(T, U) = is(immutable(T) == immutable(U));
 
+		alias opCallOverloads(T) = __traits(getOverloads, T, "opCall");
+
 		bool result = false;
 
 		static if (is(typeof((T arg) { realHandler(arg); }(T.init)))) {
@@ -1190,7 +1192,7 @@ template canMatch(alias handler, T)
 					}
 				// Objects with overloaded opCall
 				} else static if (hasMember!(typeof(realHandler), "opCall")) {
-					static foreach (overload; __traits(getOverloads, typeof(realHandler), "opCall")) {
+					static foreach (overload; opCallOverloads!(typeof(realHandler))) {
 						static if (sameUpToQuals!(T, Parameters!overload[0])) {
 							result = true;
 						}
