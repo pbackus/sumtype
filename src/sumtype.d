@@ -281,8 +281,8 @@ private:
 			mixin("enum memberName = `values_", staticIndexOf!(T, Types), "`;");
 		}
 
-		static foreach (tid, T; Types) {
-			mixin("Types[tid] ", memberName!T, ";");
+		static foreach (T; Types) {
+			mixin("T ", memberName!T, ";");
 		}
 	}
 
