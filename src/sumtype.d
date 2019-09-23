@@ -4,11 +4,11 @@ A sum type for modern D.
 [SumType] is an alternative to `std.variant.Algebraic` that features:
 
 $(LIST
-    * [match|improved pattern-matching]
-    * full attribute correctness (`pure`, `@safe`, `@nogc`, and `nothrow` are
-      inferred whenever possible)
-    * a type-safe and memory-safe API compatible with DIP 1000 (`scope`)
-    * no dependency on runtime type information (`TypeInfo`)
+    * [match|Improved pattern-matching.]
+    * Full attribute correctness (`pure`, `@safe`, `@nogc`, and `nothrow` are
+      inferred whenever possible).
+    * A type-safe and memory-safe API compatible with DIP 1000 (`scope`).
+    * No dependency on runtime type information (`TypeInfo`).
 )
 
 License: MIT
