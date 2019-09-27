@@ -1363,7 +1363,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 	assert(!__traits(compiles, x.match!()));
 }
 
-// No implicit converstion
+// No implicit conversion
 @safe unittest {
 	alias MySum = SumType!(int, float);
 
