@@ -1183,8 +1183,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		alias Types = self.Types;
 		enum noMatch = size_t.max;
 
-		pure size_t[Types.length] getHandlerIndices()
-		{
+		enum handlerIndices = () {
 			size_t[Types.length] indices;
 
 			version (D_BetterC) {
@@ -1207,9 +1206,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			}
 
 			return indices;
-		}
-
-		enum handlerIndices = getHandlerIndices;
+		}();
 
 		import std.algorithm.searching: canFind;
 
