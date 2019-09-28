@@ -1183,32 +1183,32 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		alias Types = self.Types;
 		enum noMatch = size_t.max;
 
-		enum handlerIndices = () {
-			size_t[Types.length] indices;
+		enum matches = () {
+			size_t[Types.length] matches;
 
 			// Workaround for dlang issue 19561
-			foreach (ref index; indices) {
-				index = noMatch;
+			foreach (ref match; matches) {
+				match = noMatch;
 			}
 
 			static foreach (tid, T; Types) {
 				static foreach (hid, handler; handlers) {
 					static if (canMatch!(handler, typeof(self.get!T()))) {
-						if (indices[tid] == noMatch) {
-							indices[tid] = hid;
+						if (matches[tid] == noMatch) {
+							matches[tid] = hid;
 						}
 					}
 				}
 			}
 
-			return indices;
+			return matches;
 		}();
 
 		import std.algorithm.searching: canFind;
 
 		// Check for unreachable handlers
 		static foreach (hid, handler; handlers) {
-			static assert(handlerIndices[].canFind(hid),
+			static assert(matches[].canFind(hid),
 				"handler `" ~ __traits(identifier, handler) ~ "` " ~
 				"of type `" ~ ( __traits(isTemplate, handler)
 					? "template"
@@ -1221,8 +1221,8 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		final switch (self.tag) {
 			static foreach (tid, T; Types) {
 				case tid:
-					static if (handlerIndices[tid] != noMatch) {
-						return handlers[handlerIndices[tid]](self.get!T);
+					static if (matches[tid] != noMatch) {
+						return handlers[matches[tid]](self.get!T);
 					} else {
 						static if(exhaustive) {
 							static assert(false,
