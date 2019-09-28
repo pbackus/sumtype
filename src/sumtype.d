@@ -1186,13 +1186,9 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		enum handlerIndices = () {
 			size_t[Types.length] indices;
 
-			version (D_BetterC) {
-				// Workaround for dlang issue 19561
-				foreach (ref index; indices) {
-					index = noMatch;
-				}
-			} else {
-				indices[] = noMatch;
+			// Workaround for dlang issue 19561
+			foreach (ref index; indices) {
+				index = noMatch;
 			}
 
 			static foreach (tid, T; Types) {
