@@ -1066,11 +1066,6 @@ unittest {
  * checked, in order, to see whether they accept a single argument of that type.
  * The first one that does is chosen as the match for that type.
  *
- * Implicit conversions are not taken into account, except between
- * differently-qualified versions of the same type. For example, a handler that
- * accepts a `long` will not match the type `int`, but a handler that accepts a
- * `const(int)[]` will match the type `immutable(int)[]`.
- *
  * Every type must have a matching handler, and every handler must match at
  * least one type. This is enforced at compile time.
  *
@@ -1159,57 +1154,12 @@ class MatchException : Exception
 }
 
 /**
- * Checks whether a handler can match a given type.
+ * True if `handler` is a potential match for `T`, otherwise false.
  *
  * See the documentation for [match] for a full explanation of how matches are
  * chosen.
  */
-template canMatch(alias handler, T)
-{
-	private bool canMatchImpl()
-	{
-		import std.traits: hasMember, isCallable, isSomeFunction, Parameters;
-
-		// Include overloads even when called from outside of matchImpl
-		alias realHandler = handlerWithOverloads!handler;
-
-		// immutable recursively overrides all other qualifiers, so the
-		// right-hand side is true if and only if the two types are the
-		// same when qualifiers are ignored.
-		enum sameUpToQuals(T, U) = is(immutable(T) == immutable(U));
-
-		alias opCallOverloads(T) = __traits(getOverloads, T, "opCall");
-
-		bool result = false;
-
-		static if (is(typeof((T arg) { realHandler(arg); }(T.init)))) {
-			// Regular handlers
-			static if (isCallable!realHandler) {
-				// Functions and delegates
-				static if (isSomeFunction!realHandler) {
-					static if (sameUpToQuals!(T, Parameters!realHandler[0])) {
-						result = true;
-					}
-				// Objects with overloaded opCall
-				} else static if (hasMember!(typeof(realHandler), "opCall")) {
-					static foreach (overload; opCallOverloads!(typeof(realHandler))) {
-						static if (sameUpToQuals!(T, Parameters!overload[0])) {
-							result = true;
-						}
-					}
-				}
-			// Generic handlers
-			} else {
-				result = true;
-			}
-		}
-
-		return result;
-	}
-
-	/// True if `handler` is a potential match for `T`, otherwise false.
-	enum bool canMatch = canMatchImpl;
-}
+enum bool canMatch(alias handler, T) = is(typeof((T arg) { handler(arg); }));
 
 // Includes all overloads of the given handler
 @safe unittest {
@@ -1223,48 +1173,6 @@ template canMatch(alias handler, T)
 	assert(canMatch!(OverloadSet.fun, double));
 }
 
-import std.traits: isFunction;
-
-// An AliasSeq of a function's overloads
-private template FunctionOverloads(alias fun)
-	if (isFunction!fun)
-{
-	import std.meta: AliasSeq;
-
-	alias FunctionOverloads = AliasSeq!(
-		__traits(getOverloads,
-			__traits(parent, fun),
-			__traits(identifier, fun),
-			true // include template overloads
-		)
-	);
-}
-
-// A function that dispatches to the overloads of `fun`
-private template overloadDispatcher(alias fun)
-	if (isFunction!fun)
-{
-	import std.traits: Parameters, ReturnType;
-
-	// Merge overloads into a local overload set
-	static foreach(overload; FunctionOverloads!fun) {
-		alias overloadSet = overload;
-	}
-
-	alias overloadDispatcher = (ref arg) => overloadSet(arg);
-}
-
-// A handler that includes all overloads of the original handler, if applicable
-private template handlerWithOverloads(alias handler)
-{
-	// Delegates and function pointers can't have overloads
-	static if (isFunction!handler && FunctionOverloads!handler.length > 1) {
-		alias handlerWithOverloads = overloadDispatcher!handler;
-	} else {
-		alias handlerWithOverloads = handler;
-	}
-}
-
 import std.typecons: Flag;
 
 private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
@@ -1272,12 +1180,8 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 	auto matchImpl(Self)(auto ref Self self)
 		if (is(Self : SumType!TypeArgs, TypeArgs...))
 	{
-		import std.meta: staticMap;
-
 		alias Types = self.Types;
 		enum noMatch = size_t.max;
-
-		alias realHandlers = staticMap!(handlerWithOverloads, handlers);
 
 		pure size_t[Types.length] getHandlerIndices()
 		{
@@ -1293,7 +1197,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			}
 
 			static foreach (tid, T; Types) {
-				static foreach (hid, handler; realHandlers) {
+				static foreach (hid, handler; handlers) {
 					static if (canMatch!(handler, typeof(self.get!T()))) {
 						if (indices[tid] == noMatch) {
 							indices[tid] = hid;
@@ -1310,7 +1214,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		import std.algorithm.searching: canFind;
 
 		// Check for unreachable handlers
-		static foreach (hid, handler; realHandlers) {
+		static foreach (hid, handler; handlers) {
 			static assert(handlerIndices[].canFind(hid),
 				"handler `" ~ __traits(identifier, handler) ~ "` " ~
 				"of type `" ~ ( __traits(isTemplate, handler)
@@ -1325,7 +1229,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			static foreach (tid, T; Types) {
 				case tid:
 					static if (handlerIndices[tid] != noMatch) {
-						return realHandlers[handlerIndices[tid]](self.get!T);
+						return handlers[handlerIndices[tid]](self.get!T);
 					} else {
 						static if(exhaustive) {
 							static assert(false,
@@ -1361,17 +1265,6 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 	assert(!__traits(compiles, x.match!((int x) => true)));
 	assert(!__traits(compiles, x.match!()));
-}
-
-// No implicit conversion
-@safe unittest {
-	alias MySum = SumType!(int, float);
-
-	MySum x = MySum(42);
-
-	assert(!__traits(compiles,
-		x.match!((long v) => true, (float v) => false)
-	));
 }
 
 // Handlers with qualified parameters
