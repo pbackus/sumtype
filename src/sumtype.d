@@ -1218,11 +1218,16 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			);
 		}
 
+		// Workaround for dlang issue 19993
+		static foreach (size_t hid, handler; handlers) {
+			mixin("alias handler", hid, " = handler;");
+		}
+
 		final switch (self.tag) {
 			static foreach (tid, T; Types) {
 				case tid:
 					static if (matches[tid] != noMatch) {
-						return handlers[matches[tid]](self.get!T);
+						return mixin("handler", matches[tid])(self.get!T);
 					} else {
 						static if(exhaustive) {
 							static assert(false,
@@ -1612,6 +1617,18 @@ unittest {
 	assert(__traits(compiles, () @nogc {
 		int acc = 0;
 		SumType!int(1).match!((int x) => acc += x);
+	}));
+}
+
+// Github issue #31
+@safe unittest {
+	assert(__traits(compiles, () @nogc {
+		int acc = 0;
+
+		SumType!(int, string)(1).match!(
+			(int x) => acc += x,
+			(string _) => 0,
+		);
 	}));
 }
 
