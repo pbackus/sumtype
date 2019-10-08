@@ -475,7 +475,7 @@ public:
 	 * Two `SumType`s are equal if they are the same kind of `SumType`, they
 	 * contain values of the same type, and those values are equal.
 	 */
-	bool opEquals(const SumType rhs) const {
+	bool opEquals()(auto ref const(SumType) rhs) const {
 		return this.match!((ref value) {
 			return rhs.match!((ref rhsValue) {
 				static if (is(typeof(value) == typeof(rhsValue))) {
@@ -860,6 +860,8 @@ version (D_BetterC) {} else
 	assert(__traits(compiles, y = move(x)));
 	assert(!__traits(compiles, y = lval));
 	assert(!__traits(compiles, y = x));
+
+	assert(__traits(compiles, x == y));
 }
 
 // Github issue #22
