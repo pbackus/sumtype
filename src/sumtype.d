@@ -286,8 +286,8 @@ private:
 		}
 	}
 
-	Tag tag;
 	Storage storage;
+	Tag tag;
 
 	@trusted
 	ref inout(T) get(T)() inout
