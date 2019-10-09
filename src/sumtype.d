@@ -259,9 +259,11 @@ import std.meta: NoDuplicates;
 struct SumType(TypeArgs...)
 	if (is(NoDuplicates!TypeArgs == TypeArgs) && TypeArgs.length > 0)
 {
-	import std.meta: AliasSeq, Filter, anySatisfy, allSatisfy, staticIndexOf;
+	import std.meta: AliasSeq, Filter, staticIndexOf, staticMap;
+	import std.meta: anySatisfy, allSatisfy;
 	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
 	import std.traits: isAssignable, isCopyable, isStaticArray;
+	import std.traits: ConstOf, ImmutableOf;
 
 	/// The types a `SumType` can hold.
 	alias Types = AliasSeq!(ReplaceTypeUnless!(isSumType, This, typeof(this), TypeArgs));
@@ -356,9 +358,6 @@ public:
 			/// ditto
 			this(ref const(SumType) other) const
 			{
-				import std.meta: staticMap;
-				import std.traits: ConstOf;
-
 				storage = other.match!((ref value) {
 					alias OtherTypes = staticMap!(ConstOf, Types);
 					enum tid = staticIndexOf!(typeof(value), OtherTypes);
@@ -374,9 +373,6 @@ public:
 			/// ditto
 			this(ref immutable(SumType) other) immutable
 			{
-				import std.meta: staticMap;
-				import std.traits: ImmutableOf;
-
 				storage = other.match!((ref value) {
 					alias OtherTypes = staticMap!(ImmutableOf, Types);
 					enum tid = staticIndexOf!(typeof(value), OtherTypes);
