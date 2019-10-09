@@ -530,6 +530,25 @@ public:
 			});
 		}
 	}
+
+	// toHash is required by the language spec to be nothrow and @safe
+	private enum isHashable(T) = __traits(compiles,
+		() nothrow @safe { hashOf(T.init); }
+	);
+
+	static if (allSatisfy!(isHashable, staticMap!(ConstOf, Types))) {
+		// Workaround for dlang issue 20095
+		version (D_BetterC) {} else
+		/**
+		 * Returns the hash of the `SumType`'s current value.
+		 *
+		 * Not available when compiled with `-betterC`.
+		 */
+		size_t toHash() const
+		{
+			return this.match!hashOf;
+		}
+	}
 }
 
 // Construction
@@ -994,6 +1013,14 @@ version (D_BetterC) {} else
 		@safe void test() {
 		A a = createA("");
 		}
+	}));
+}
+
+// SumTypes as associative array keys
+version (D_BetterC) {} else
+@safe unittest {
+	assert(__traits(compiles, {
+		int[SumType!(int, string)] aa;
 	}));
 }
 
