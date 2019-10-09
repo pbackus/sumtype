@@ -516,19 +516,17 @@ public:
 		});
 	}
 
-	static if (allSatisfy!(isCopyable, Types)) {
-		version (D_BetterC) {} else
-		/**
-		 * Returns a string representation of the `SumType`'s current value.
-		 *
-		 * Not available when compiled with `-betterC`.
-		 */
-		string toString(this T)()
-		{
-			import std.conv: text;
+	version (D_BetterC) {} else
+	/**
+	 * Returns a string representation of the `SumType`'s current value.
+	 *
+	 * Not available when compiled with `-betterC`.
+	 */
+	string toString(this T)()
+	{
+		import std.conv: to;
 
-			return this.match!text;
-		}
+		return this.match!(to!string);
 	}
 
 	// toHash is required by the language spec to be nothrow and @safe
@@ -1022,6 +1020,19 @@ version (D_BetterC) {} else
 	assert(__traits(compiles, {
 		int[SumType!(int, string)] aa;
 	}));
+}
+
+// toString with non-copyable types
+version(D_BetterC) {} else
+@safe unittest {
+	struct NoCopy
+	{
+		@disable this(this);
+	}
+
+	SumType!NoCopy x;
+
+	assert(__traits(compiles, x.toString()));
 }
 
 version(none) {
