@@ -517,17 +517,17 @@ public:
 	}
 
 	static if (allSatisfy!(isCopyable, Types)) {
+		version (D_BetterC) {} else
 		/**
-		 * Returns a string representation of a `SumType`'s value.
+		 * Returns a string representation of the `SumType`'s current value.
 		 *
 		 * Not available when compiled with `-betterC`.
 		 */
-		version (D_BetterC) {} else
-		string toString(this T)() {
+		string toString(this T)()
+		{
 			import std.conv: text;
-			return this.match!((auto ref value) {
-				return value.text;
-			});
+
+			return this.match!text;
 		}
 	}
 
