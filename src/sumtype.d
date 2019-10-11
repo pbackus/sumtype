@@ -1195,7 +1195,7 @@ class MatchException : Exception
  * See the documentation for [match] for a full explanation of how matches are
  * chosen.
  */
-enum bool canMatch(alias handler, T) = is(typeof((T arg) { handler(arg); }));
+enum bool canMatch(alias handler, T) = is(typeof((T arg) => handler(arg)));
 
 // Includes all overloads of the given handler
 @safe unittest {
