@@ -1082,7 +1082,7 @@ version(none) {
 }
 
 /// True if `T` is an instance of `SumType`, otherwise false.
-enum isSumType(T) = is(T == SumType!Args, Args...);
+enum bool isSumType(T) = is(T == SumType!Args, Args...);
 
 unittest {
 	static struct Wrapper
