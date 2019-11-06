@@ -227,6 +227,14 @@ version (D_BetterC) {} else
     assert(pprint(*myExpr) == "(a + (2 * b))");
 }
 
+// Converts an unsigned integer to a compile-time string constant.
+private enum toCtString(ulong n) = n.stringof[0 .. $ - 2];
+
+@safe unittest {
+	assert(toCtString!0 == "0");
+	assert(toCtString!123456 == "123456");
+}
+
 /// `This` placeholder, for use in self-referential types.
 public import std.variant: This;
 
@@ -1245,7 +1253,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		// Check for unreachable handlers
 		static foreach (hid, handler; handlers) {
 			static assert(matches[].canFind(hid),
-				"handler `" ~ __traits(identifier, handler) ~ "` " ~
+				"handler #" ~ toCtString!hid ~ " " ~
 				"of type `" ~ ( __traits(isTemplate, handler)
 					? "template"
 					: typeof(handler).stringof
