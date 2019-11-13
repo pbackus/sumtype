@@ -1313,14 +1313,14 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 		// Workaround for dlang issue 19993
 		static foreach (size_t hid, handler; handlers) {
-			mixin("alias handler", hid, " = handler;");
+			mixin("alias handler", toCtString!hid, " = handler;");
 		}
 
 		final switch (self.tag) {
 			static foreach (tid, T; Types) {
 				case tid:
 					static if (matches[tid] != noMatch) {
-						return mixin("handler", matches[tid])(self.get!T);
+						return mixin("handler", toCtString!(matches[tid]))(self.get!T);
 					} else {
 						static if(exhaustive) {
 							static assert(false,
