@@ -288,7 +288,8 @@ private:
 		template memberName(T)
 			if (staticIndexOf!(T, Types) >= 0)
 		{
-			mixin("enum memberName = `values_", staticIndexOf!(T, Types), "`;");
+			enum tid = staticIndexOf!(T, Types);
+			mixin("enum memberName = `values_", toCtString!tid, "`;");
 		}
 
 		static foreach (T; Types) {
