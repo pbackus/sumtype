@@ -1109,7 +1109,10 @@ unittest {
  *
  * For each possible type the [SumType] can hold, the given handlers are
  * checked, in order, to see whether they accept a single argument of that type.
- * The first one that does is chosen as the match for that type.
+ * The first one that does is chosen as the match for that type. (Note that the
+ * first match may not always be the most exact match.
+ * See [#avoiding-unintentional-matches|"Avoiding unintentional matches"] for
+ * one common pitfall.)
  *
  * Every type must have a matching handler, and every handler must match at
  * least one type. This is enforced at compile time.
@@ -1143,6 +1146,51 @@ template match(handlers...)
 	{
 		return self.matchImpl!(Yes.exhaustive, handlers);
 	}
+}
+
+/** $(H3 Avoiding unintentional matches)
+ *
+ * Sometimes, implicit conversions may cause a handler to match more types than
+ * intended. The example below shows two solutions to this problem.
+ */
+@safe unittest {
+    alias Number = SumType!(double, int);
+
+    Number x;
+
+    // Problem: because int implicitly converts to double, the double
+    // handler is used for both types, and the int handler never matches.
+    assert(!__traits(compiles,
+        x.match!(
+            (double d) => "got double",
+            (int n) => "got int"
+        )
+    ));
+
+    // Solution 1: put the handler for the "more specialized" type (in this
+    // case, int) before the handler for the type it converts to.
+    assert(__traits(compiles,
+        x.match!(
+            (int n) => "got int",
+            (double d) => "got double"
+        )
+    ));
+
+    // Solution 2: use a template that only accepts the exact type it's
+    // supposed to match, instead of any type that implicitly converts to it.
+    alias exactly(T, alias fun) = function (arg) {
+        static assert(is(typeof(arg) == T));
+        return fun(arg);
+    };
+
+    // Now, even if we put the double handler first, it will only be used for
+    // doubles, not ints.
+    assert(__traits(compiles,
+        x.match!(
+            exactly!(double, d => "got double"),
+            exactly!(int, n => "got int")
+        )
+    ));
 }
 
 /**
