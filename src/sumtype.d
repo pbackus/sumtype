@@ -214,7 +214,7 @@ version (D_BetterC) {} else
             (string var) => var,
             (BinOp bop) => "(%s %s %s)".format(
                 pprint(*bop.lhs),
-                bop.op,
+                cast(string) bop.op,
                 pprint(*bop.rhs)
             )
         );
@@ -1794,6 +1794,9 @@ private template ReplaceTypeUnless(alias Pred, From, To, T...)
 			alias ReplaceTypeUnless = immutable(ReplaceTypeUnless!(Pred, From, To, U));
 		else static if (is(T[0] == shared(U), U))
 			alias ReplaceTypeUnless = shared(ReplaceTypeUnless!(Pred, From, To, U));
+		// Workaround for dlang issue 20410
+		else static if (is(T[0] == enum))
+			alias ReplaceTypeUnless = T;
 		else static if (is(T[0] == U*, U))
 		{
 			static if (is(U == function))
@@ -2055,5 +2058,13 @@ version (D_BetterC) {} else
 	struct A(T) {}
 	struct B { A!int a; alias a this; }
 	static assert(is(ReplaceTypeUnless!(False, void, void, B) == B));
+}
+
+// Dlang issue 20410
+@safe unittest
+{
+	enum False(T) = false;
+	enum Enum : string { foo = "Bar" }
+	assert(is(ReplaceTypeUnless!(False, char, int, Enum)[0] == Enum));
 }
 }
