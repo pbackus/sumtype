@@ -418,7 +418,7 @@ public:
 			 * guarantee that there are no outstanding references to $(I any)
 			 * of the `SumType`'s members when the assignment occurs.
 			 */
-			void opAssign()(auto ref T rhs)
+			ref SumType opAssign()(auto ref T rhs)
 			{
 				import core.lifetime: forward;
 				import std.traits: hasIndirections, hasNested;
@@ -440,6 +440,8 @@ public:
 				mixin("Storage newStorage = { ", Storage.memberName!T, ": forward!rhs };");
 				storage = newStorage;
 				tag = tid;
+
+				return this;
 			}
 		}
 	}
@@ -453,12 +455,13 @@ public:
 			 *
 			 * Copy assignment is `@disable`d if any of `Types` is non-copyable.
 			 */
-			void opAssign(ref SumType rhs)
+			ref SumType opAssign(ref SumType rhs)
 			{
 				rhs.match!((ref value) { this = value; });
+				return this;
 			}
 		} else {
-			@disable void opAssign(ref SumType rhs);
+			@disable ref SumType opAssign(ref SumType rhs);
 		}
 
 		/**
@@ -466,11 +469,12 @@ public:
 		 *
 		 * See the value-assignment overload for details on `@safe`ty.
 		 */
-		void opAssign(SumType rhs)
+		ref SumType opAssign(SumType rhs)
 		{
 			import core.lifetime: move;
 
 			rhs.match!((ref value) { this = move(value); });
+			return this;
 		}
 	}
 
@@ -1042,6 +1046,19 @@ version(D_BetterC) {} else
 	SumType!NoCopy x;
 
 	assert(__traits(compiles, x.toString()));
+}
+
+// Can use the result of assignment
+@safe unittest {
+	alias MySum = SumType!(int, float);
+
+	MySum a = MySum(123);
+	MySum b = MySum(3.14);
+
+	assert((a = b) == b);
+	assert((a = MySum(123)) == MySum(123));
+	assert((a = 3.14) == MySum(3.14));
+	assert(((a = b) = MySum(123)) == MySum(123));
 }
 
 version(none) {
