@@ -319,9 +319,13 @@ public:
 			import core.lifetime: forward;
 
 			static if (isCopyable!T) {
-				mixin("Storage newStorage = { ", Storage.memberName!T, ": value };");
+				mixin("Storage newStorage = { ",
+					Storage.memberName!T, ": value",
+				" };");
 			} else {
-				mixin("Storage newStorage = { ", Storage.memberName!T, " : forward!value };");
+				mixin("Storage newStorage = { ",
+					Storage.memberName!T, " : forward!value",
+				" };");
 			}
 
 			storage = newStorage;
@@ -332,7 +336,10 @@ public:
 			/// ditto
 			this()(auto ref const(T) value) const
 			{
-				mixin("const(Storage) newStorage = { ", Storage.memberName!T, ": value };");
+				mixin("const(Storage) newStorage = { ",
+					Storage.memberName!T, ": value",
+				" };");
+
 				storage = newStorage;
 				tag = tid;
 			}
@@ -340,7 +347,10 @@ public:
 			/// ditto
 			this()(auto ref immutable(T) value) immutable
 			{
-				mixin("immutable(Storage) newStorage = { ", Storage.memberName!T, ": value };");
+				mixin("immutable(Storage) newStorage = { ",
+					Storage.memberName!T, ": value",
+				" };");
+
 				storage = newStorage;
 				tag = tid;
 			}
@@ -358,7 +368,10 @@ public:
 				storage = other.match!((ref value) {
 					alias T = typeof(value);
 
-					mixin("Storage newStorage = { ", Storage.memberName!T, ": value };");
+					mixin("Storage newStorage = { ",
+						Storage.memberName!T, ": value",
+					" };");
+
 					return newStorage;
 				});
 
@@ -373,7 +386,10 @@ public:
 					enum tid = staticIndexOf!(typeof(value), OtherTypes);
 					alias T = Types[tid];
 
-					mixin("const(Storage) newStorage = { ", Storage.memberName!T, ": value };");
+					mixin("const(Storage) newStorage = { ",
+						Storage.memberName!T, ": value",
+					" };");
+
 					return newStorage;
 				});
 
@@ -388,7 +404,10 @@ public:
 					enum tid = staticIndexOf!(typeof(value), OtherTypes);
 					alias T = Types[tid];
 
-					mixin("immutable(Storage) newStorage = { ", Storage.memberName!T, ": value };");
+					mixin("immutable(Storage) newStorage = { ",
+						Storage.memberName!T, ": value",
+					" };");
+
 					return newStorage;
 				});
 
@@ -438,7 +457,10 @@ public:
 					}
 				});
 
-				mixin("Storage newStorage = { ", Storage.memberName!T, ": forward!rhs };");
+				mixin("Storage newStorage = { ",
+					Storage.memberName!T, ": forward!rhs",
+				" };");
+
 				storage = newStorage;
 				tag = tid;
 
