@@ -1342,7 +1342,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		// Check for unreachable handlers
 		static foreach (hid, handler; handlers) {
 			static assert(matches[].canFind(hid),
-				"handler #" ~ toCtString!hid ~ " " ~
+				"`handlers[" ~ toCtString!hid ~ "]` " ~
 				"of type `" ~ ( __traits(isTemplate, handler)
 					? "template"
 					: typeof(handler).stringof
