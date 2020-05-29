@@ -301,6 +301,18 @@ private:
 	Storage storage;
 	Tag tag;
 
+	/**
+	 * Accesses the value stored in a SumType.
+	 *
+	 * The memory-safety of this method depends on the following assumptions:
+	 *
+	 *   1. A SumType's tag is always accurate.
+	 *   2. A SumType cannot be assigned to in @safe code if that assignment
+	 *      could cause unsafe aliasing.
+	 *
+	 * The correctness of these assumptions depends on the implementation of
+	 * the constructors and opAssign.
+	 */
 	@trusted
 	ref inout(T) get(T)() inout
 		if (staticIndexOf!(T, Types) >= 0)
