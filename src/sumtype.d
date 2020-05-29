@@ -301,7 +301,7 @@ private:
 	Storage storage;
 	Tag tag;
 
-	@system
+	@trusted
 	ref inout(T) get(T)() inout
 		if (staticIndexOf!(T, Types) >= 0)
 	{
@@ -861,7 +861,7 @@ version (D_BetterC) {} else
 
 // Exception-safe assignment
 version (D_BetterC) {} else
-@system unittest {
+@safe unittest {
 	static struct A
 	{
 		int value = 123;
@@ -926,7 +926,7 @@ version (D_BetterC) {} else
 
 // Static arrays of structs with postblits
 version (D_BetterC) {} else
-@system unittest {
+@safe unittest {
 	static struct S
 	{
 		int n;
@@ -1018,7 +1018,7 @@ version (D_BetterC) {} else
 }
 
 // Calls value postblit on self-assignment
-@system unittest {
+@safe unittest {
 	static struct S
 	{
 		int n;
@@ -1358,23 +1358,9 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 		final switch (self.tag) {
 			static foreach (tid, T; Types) {
-				case tid: {
+				case tid:
 					static if (matches[tid] != noMatch) {
-						mixin("alias handler = handler", toCtString!(matches[tid]), ";");
-
-						/* The call to `get` can be @trusted here because
-						 *
-						 *   - @safe's prohibition against taking the address
-						 *     of a function parameter makes it impossible for
-						 *     a reference to the accessed SumType member to
-						 *     escape from the handler.
-						 *
-						 *   - SumType.opAssign's forced-@system attribute
-						 *     for SumTypes that contain pointers makes it
-						 *     impossible for unsafe aliasing to occur in
-						 *     the body of the handler.
-						 */
-						return handler(ref () @trusted { return self.get!T; }());
+						return mixin("handler", toCtString!(matches[tid]))(self.get!T);
 					} else {
 						static if(exhaustive) {
 							static assert(false,
@@ -1384,7 +1370,6 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 								"No matching handler for type `" ~ T.stringof ~ "`");
 						}
 					}
-				}
 			}
 		}
 
@@ -1621,7 +1606,7 @@ version (D_Exceptions)
 }
 
 // Handlers with ref parameters
-@system unittest {
+@safe unittest {
 	import std.meta: staticIndexOf;
 
 	alias Value = SumType!(long, double);
