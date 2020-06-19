@@ -313,41 +313,13 @@ private:
 public:
 
 	static foreach (tid, T; Types) {
-		/// Constructs a `SumType` holding a specific value.
-		this()(auto ref T value)
-		{
-			import core.lifetime: forward;
-
-			static if (isCopyable!T) {
-				mixin("Storage newStorage = { ",
-					Storage.memberName!T, ": value",
-				" };");
-			} else {
-				mixin("Storage newStorage = { ",
-					Storage.memberName!T, " : forward!value",
-				" };");
-			}
-
-			storage = newStorage;
-			tag = tid;
-		}
-
 		static if (isCopyable!T) {
-			/// ditto
-			this()(auto ref const(T) value) const
+			/// Constructs a `SumType` holding a specific value.
+			this()(auto ref inout(T) value) inout
 			{
-				mixin("const(Storage) newStorage = { ",
-					Storage.memberName!T, ": value",
-				" };");
+				import core.lifetime: forward;
 
-				storage = newStorage;
-				tag = tid;
-			}
-
-			/// ditto
-			this()(auto ref immutable(T) value) immutable
-			{
-				mixin("immutable(Storage) newStorage = { ",
+				mixin("inout(Storage) newStorage = { ",
 					Storage.memberName!T, ": value",
 				" };");
 
@@ -355,6 +327,24 @@ public:
 				tag = tid;
 			}
 		} else {
+			/// Constructs a `SumType` holding a specific value.
+			this()(auto ref T value)
+			{
+				import core.lifetime: forward;
+
+				static if (isCopyable!T) {
+					mixin("Storage newStorage = { ",
+						Storage.memberName!T, ": value",
+					" };");
+				} else {
+					mixin("Storage newStorage = { ",
+						Storage.memberName!T, " : forward!value",
+					" };");
+				}
+
+				storage = newStorage;
+				tag = tid;
+			}
 			@disable this(const(T) value) const;
 			@disable this(immutable(T) value) immutable;
 		}
@@ -1787,6 +1777,14 @@ unittest {
 	static struct D { SumType!(A, B) value; alias value this; }
 
 	assert(__traits(compiles, D().match!(_ => true)));
+}
+
+// explicit inout construction
+@safe unittest {
+	static struct A {}
+	static struct B {
+		inout(SumType!A) test() inout { return inout(SumType!A)(A.init); }
+	}
 }
 
 version(SumTypeTestBetterC) {
