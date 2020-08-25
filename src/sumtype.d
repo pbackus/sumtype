@@ -1,18 +1,20 @@
 /++
-A sum type for modern D.
-
-[SumType] is an alternative to `std.variant.Algebraic` that features:
+[SumType] is a generic discriminated union implementation that uses
+design-by-introspection to generate safe and efficient code. Its features
+include:
 
 $(LIST
-    * [match|Improved pattern-matching.]
+    * [match|Pattern matching.]
+    * Support for self-referential types.
     * Full attribute correctness (`pure`, `@safe`, `@nogc`, and `nothrow` are
       inferred whenever possible).
     * A type-safe and memory-safe API compatible with DIP 1000 (`scope`).
     * No dependency on runtime type information (`TypeInfo`).
+    * Compatibility with BetterC.
 )
 
 License: MIT
-Authors: Paul Backus, Atila Neves
+Authors: Paul Backus
 +/
 module sumtype;
 
