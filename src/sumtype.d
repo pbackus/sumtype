@@ -438,7 +438,7 @@ public:
 	}
 
 	static foreach (tid, T; Types) {
-		static if (isAssignable!T) {
+		static if (isAssignable!T || (!isCopyable!T && isRvalueAssignable!T)) {
 			/**
 			 * Assigns a value to a `SumType`.
 			 *
@@ -1805,4 +1805,13 @@ version(SumTypeTestBetterC) {
 		puts("All unit tests have been run successfully.");
 		return 0;
 	}
+}
+
+static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
+	import std.traits: isRvalueAssignable;
+} else private {
+	enum isRvalueAssignable(Lhs, Rhs = Lhs) = __traits(compiles, lvalueOf!Lhs = rvalueOf!Rhs);
+	struct __InoutWorkaroundStruct{}
+	@property T rvalueOf(T)(inout __InoutWorkaroundStruct = __InoutWorkaroundStruct.init);
+	@property ref T lvalueOf(T)(inout __InoutWorkaroundStruct = __InoutWorkaroundStruct.init);
 }
