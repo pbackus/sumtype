@@ -277,7 +277,7 @@ struct SumType(TypeArgs...)
 	import std.typecons: ReplaceTypeUnless;
 
 	/// The types a `SumType` can hold.
-	alias Types = AliasSeq!(ReplaceTypeUnless!(isSumType, This, typeof(this), TypeArgs));
+	alias Types = AliasSeq!(ReplaceTypeUnless!(isSumTypeInstance, This, typeof(this), TypeArgs));
 
 private:
 
@@ -963,7 +963,7 @@ version (D_BetterC) {} else
 @safe unittest {
 	import std.typecons : Tuple, ReplaceTypeUnless;
 	alias A = Tuple!(This*,SumType!(This*))[SumType!(This*,string)[This]];
-	alias TR = ReplaceTypeUnless!(isSumType, This, int, A);
+	alias TR = ReplaceTypeUnless!(isSumTypeInstance, This, int, A);
 	static assert(is(TR == Tuple!(int*,SumType!(This*))[SumType!(This*, string)[int]]));
 }
 
@@ -1144,8 +1144,8 @@ version(none) {
 	}
 }
 
-/// True if `T` is an instance of `SumType`, otherwise false.
-enum bool isSumType(T) = is(T == SumType!Args, Args...);
+/// True if `T` is an instance of the `SumType` template, otherwise false.
+private enum bool isSumTypeInstance(T) = is(T == SumType!Args, Args...);
 
 unittest {
 	static struct Wrapper
@@ -1154,8 +1154,28 @@ unittest {
 		alias s this;
 	}
 
+	assert(isSumTypeInstance!(SumType!int));
+	assert(!isSumTypeInstance!Wrapper);
+}
+
+/// True if `T` is a `SumType` or implicitly converts to one, otherwise false.
+enum bool isSumType(T) = is(T : SumType!Args, Args...);
+
+@safe unittest {
+	static struct Wrapper
+	{
+		SumType!int s;
+		alias s this;
+	}
+
+	static struct Container
+	{
+		SumType!int s;
+	}
+
 	assert(isSumType!(SumType!int));
-	assert(!isSumType!Wrapper);
+	assert(isSumType!Wrapper);
+	assert(!isSumType!Container);
 }
 
 /**
@@ -1196,7 +1216,7 @@ template match(handlers...)
 	 *   self = A [SumType] object
 	 */
 	auto match(Self)(auto ref Self self)
-		if (is(Self : SumType!TypeArgs, TypeArgs...))
+		if (isSumType!Self)
 	{
 		return self.matchImpl!(Yes.exhaustive, handlers);
 	}
@@ -1279,7 +1299,7 @@ template tryMatch(handlers...)
 	 *   self = A [SumType] object
 	 */
 	auto tryMatch(Self)(auto ref Self self)
-		if (is(Self : SumType!TypeArgs, TypeArgs...))
+		if (isSumType!Self)
 	{
 		return self.matchImpl!(No.exhaustive, handlers);
 	}
@@ -1325,7 +1345,7 @@ import std.typecons: Flag;
 private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 {
 	auto matchImpl(Self)(auto ref Self self)
-		if (is(Self : SumType!TypeArgs, TypeArgs...))
+		if (isSumType!Self)
 	{
 		alias Types = self.Types;
 		enum noMatch = size_t.max;
