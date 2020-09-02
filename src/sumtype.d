@@ -306,14 +306,15 @@ private:
 	/**
 	 * Accesses the value stored in a SumType.
 	 *
-	 * The memory-safety of this method depends on the following assumptions:
+	 * This method is memory-safe, provided that:
 	 *
 	 *   1. A SumType's tag is always accurate.
 	 *   2. A SumType cannot be assigned to in @safe code if that assignment
 	 *      could cause unsafe aliasing.
 	 *
-	 * The correctness of these assumptions depends on the implementation of
-	 * the constructors and opAssign.
+	 * All code that accesses a SumType's tag or storage directly, including
+	 * @safe code in this module, must be manually checked to ensure that it
+	 * does not violate either of the above requirements.
 	 */
 	@trusted
 	ref inout(T) get(T)() inout
