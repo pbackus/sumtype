@@ -269,7 +269,7 @@ import std.meta: NoDuplicates;
 struct SumType(Types...)
 	if (is(NoDuplicates!Types == Types) && Types.length > 0)
 {
-	import std.meta: AliasSeq, Filter, staticIndexOf, staticMap;
+	import std.meta: AliasSeq, Filter, IndexOf = staticIndexOf, Map = staticMap;
 	import std.meta: anySatisfy, allSatisfy;
 	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
 	import std.traits: isAssignable, isCopyable, isStaticArray;
@@ -291,9 +291,9 @@ private:
 	union Storage
 	{
 		template memberName(T)
-			if (staticIndexOf!(T, Types) >= 0)
+			if (IndexOf!(T, Types) >= 0)
 		{
-			enum tid = staticIndexOf!(T, Types);
+			enum tid = IndexOf!(T, Types);
 			mixin("enum memberName = `values_", toCtString!tid, "`;");
 		}
 
@@ -320,9 +320,9 @@ private:
 	 */
 	@trusted
 	ref inout(T) get(T)() inout
-		if (staticIndexOf!(T, Types) >= 0)
+		if (IndexOf!(T, Types) >= 0)
 	{
-		enum tid = staticIndexOf!(T, Types);
+		enum tid = IndexOf!(T, Types);
 		assert(tag == tid);
 		return __traits(getMember, storage, Storage.memberName!T);
 	}
@@ -399,8 +399,8 @@ public:
 			this(ref const(SumType) other) const
 			{
 				storage = other.match!((ref value) {
-					alias OtherTypes = staticMap!(ConstOf, Types);
-					enum tid = staticIndexOf!(typeof(value), OtherTypes);
+					alias OtherTypes = Map!(ConstOf, Types);
+					enum tid = IndexOf!(typeof(value), OtherTypes);
 					alias T = Types[tid];
 
 					mixin("const(Storage) newStorage = { ",
@@ -417,8 +417,8 @@ public:
 			this(ref immutable(SumType) other) immutable
 			{
 				storage = other.match!((ref value) {
-					alias OtherTypes = staticMap!(ImmutableOf, Types);
-					enum tid = staticIndexOf!(typeof(value), OtherTypes);
+					alias OtherTypes = Map!(ImmutableOf, Types);
+					enum tid = IndexOf!(typeof(value), OtherTypes);
 					alias T = Types[tid];
 
 					mixin("immutable(Storage) newStorage = { ",
@@ -587,7 +587,7 @@ public:
 		() nothrow @safe { hashOf(T.init); }
 	);
 
-	static if (allSatisfy!(isHashable, staticMap!(ConstOf, Types))) {
+	static if (allSatisfy!(isHashable, Map!(ConstOf, Types))) {
 		// Workaround for dlang issue 20095
 		version (D_BetterC) {} else
 		/**
