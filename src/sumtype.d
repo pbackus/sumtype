@@ -266,18 +266,20 @@ import std.meta: NoDuplicates;
  *
  * See_Also: `std.variant.Algebraic`
  */
-struct SumType(TypeArgs...)
-	if (is(NoDuplicates!TypeArgs == TypeArgs) && TypeArgs.length > 0)
+struct SumType(Types...)
+	if (is(NoDuplicates!Types == Types) && Types.length > 0)
 {
 	import std.meta: AliasSeq, Filter, staticIndexOf, staticMap;
 	import std.meta: anySatisfy, allSatisfy;
 	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
 	import std.traits: isAssignable, isCopyable, isStaticArray;
-	import std.traits: ConstOf, ImmutableOf;
+	import std.traits: ConstOf, ImmutableOf, TemplateArgsOf;
 	import std.typecons: ReplaceTypeUnless;
 
 	/// The types a `SumType` can hold.
-	alias Types = AliasSeq!(ReplaceTypeUnless!(isSumTypeInstance, This, typeof(this), TypeArgs));
+	alias Types = AliasSeq!(
+		ReplaceTypeUnless!(isSumTypeInstance, This, typeof(this), TemplateArgsOf!SumType)
+	);
 
 private:
 
