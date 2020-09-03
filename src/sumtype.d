@@ -261,8 +261,8 @@ import std.meta: NoDuplicates;
  * `SumTypeNoDefaultCtor` can be used to disable this behavior.
  *
  * Bugs:
- *   Types with `@disable`d `opEquals` overloads cannot be members of a
- *   `SumType`.
+ *   Types with non-`const` `opEquals` overloads (including `@disable`d
+ *   `opEquals`) cannot be members of a `SumType`.
  *
  * See_Also: `std.variant.Algebraic`
  */
