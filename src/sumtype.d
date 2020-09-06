@@ -342,17 +342,20 @@ public:
 		{
 			import core.lifetime: forward;
 
-			static if (isCopyable!T) {
-				mixin("Storage newStorage = { ",
-					Storage.memberName!T, ": value",
-				" };");
-			} else {
-				mixin("Storage newStorage = { ",
-					Storage.memberName!T, " : forward!value",
-				" };");
-			}
+			storage = () {
+				static if (isCopyable!T) {
+					mixin("Storage newStorage = { ",
+						Storage.memberName!T, ": value",
+					" };");
+				} else {
+					mixin("Storage newStorage = { ",
+						Storage.memberName!T, " : forward!value",
+					" };");
+				}
 
-			storage = newStorage;
+				return newStorage;
+			}();
+
 			tag = tid;
 		}
 
@@ -360,22 +363,28 @@ public:
 			/// ditto
 			this()(auto ref const(T) value) const
 			{
-				mixin("const(Storage) newStorage = { ",
-					Storage.memberName!T, ": value",
-				" };");
+				storage = () {
+					mixin("const(Storage) newStorage = { ",
+						Storage.memberName!T, ": value",
+					" };");
 
-				storage = newStorage;
+					return newStorage;
+				}();
+
 				tag = tid;
 			}
 
 			/// ditto
 			this()(auto ref immutable(T) value) immutable
 			{
-				mixin("immutable(Storage) newStorage = { ",
-					Storage.memberName!T, ": value",
-				" };");
+				storage = () {
+					mixin("immutable(Storage) newStorage = { ",
+						Storage.memberName!T, ": value",
+					" };");
 
-				storage = newStorage;
+					return newStorage;
+				}();
+
 				tag = tid;
 			}
 		} else {
@@ -384,8 +393,8 @@ public:
 		}
 	}
 
-	static if (allSatisfy!(isCopyable, Types)) {
-		static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
+	static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
+		static if (allSatisfy!(isCopyable, Types)) {
 			/// Constructs a `SumType` that's a copy of another `SumType`
 			this(ref SumType other)
 			{
@@ -401,7 +410,11 @@ public:
 
 				tag = other.tag;
 			}
+		} else {
+			@disable this(ref SumType other);
+		}
 
+		static if (allSatisfy!(isCopyable, Map!(ConstOf, Types))) {
 			/// ditto
 			this(ref const(SumType) other) const
 			{
@@ -419,7 +432,11 @@ public:
 
 				tag = other.tag;
 			}
+		} else {
+			@disable this(ref const(SumType) other) const;
+		}
 
+		static if (allSatisfy!(isCopyable, Map!(ImmutableOf, Types))) {
 			/// ditto
 			this(ref immutable(SumType) other) immutable
 			{
@@ -437,10 +454,9 @@ public:
 
 				tag = other.tag;
 			}
+		} else {
+			@disable this(ref immutable(SumType) other) immutable;
 		}
-	} else {
-		/// `@disable`d if any member type is non-copyable.
-		@disable this(this);
 	}
 
 	version(SumTypeNoDefaultCtor) {
@@ -833,6 +849,7 @@ version (D_BetterC) {} else
 
 	assert(!__traits(compiles, MySum()));
 	assert(__traits(compiles, MySum(42)));
+	auto x = MySum(42);
 }
 
 // const SumTypes
@@ -1167,24 +1184,25 @@ version(D_BetterC) {} else
 	assert(((a = b) = MySum(123)) == MySum(123));
 }
 
-version(none) {
-	// Known bug; needs fix for dlang issue 19902
-	// Types with copy constructors
-	@safe unittest {
-		static struct S
+// Types with copy constructors
+@safe unittest {
+	static struct S
+	{
+		int n;
+
+		this(ref return scope inout S other) inout
 		{
-			int n;
-			this(ref return scope inout S other) inout { n++; }
+			n = other.n + 1;
 		}
-
-		SumType!S x = S();
-		SumType!S y = x;
-
-		auto xval = x.get!S.n;
-		auto yval = y.get!S.n;
-
-		assert(xval != yval);
 	}
+
+	SumType!S x = S();
+	SumType!S y = x;
+
+	auto xval = x.get!S.n;
+	auto yval = y.get!S.n;
+
+	assert(xval != yval);
 }
 
 // Types with disabled opEquals
