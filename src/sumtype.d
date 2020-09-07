@@ -938,7 +938,7 @@ version (D_BetterC) {} else
 
 // Types with @disable this(this)
 @safe unittest {
-	import std.algorithm.mutation: move;
+	import core.lifetime: move;
 
 	static struct NoCopy
 	{
