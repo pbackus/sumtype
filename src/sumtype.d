@@ -275,6 +275,7 @@ struct SumType(Types...)
 	import std.traits: isAssignable, isCopyable, isStaticArray;
 	import std.traits: ConstOf, ImmutableOf, TemplateArgsOf;
 	import std.typecons: ReplaceTypeUnless;
+	import std.format: FormatSpec, singleSpec;
 
 	/// The types a `SumType` can hold.
 	alias Types = AliasSeq!(
@@ -582,6 +583,27 @@ public:
 		return this.match!(to!string);
 	}
 
+	version (D_BetterC) {} else
+	/**
+	 * Handles formatted writing of the `SumType`'s value.
+	 *
+	 * Not available when compiled with `-betterC`.
+	 *
+	 * Params:
+	 *   sink = Output range to write to.
+	 *   fmt = Format specifier to use.
+	 *
+	 * See_Also: `std.format.formatValue`
+	 */
+	void toString(Sink, Char)(ref Sink sink, const ref FormatSpec!Char fmt)
+	{
+		import std.format: formatValue;
+
+		this.match!((ref value) {
+			formatValue(sink, value, fmt);
+		});
+	}
+
 	// toHash is required by the language spec to be nothrow and @safe
 	private enum isHashable(T) = __traits(compiles,
 		() nothrow @safe { hashOf(T.init); }
@@ -836,6 +858,17 @@ version (D_BetterC) {} else
 	assert(Sum(Int(42)).text == Int(42).text, Sum(Int(42)).text);
 	assert(Sum(Double(33.3)).text == Double(33.3).text, Sum(Double(33.3)).text);
 	assert((const(Sum)(Int(42))).text == (const(Int)(42)).text, (const(Sum)(Int(42))).text);
+}
+
+// string formatting
+version(D_BetterC) {} else
+@safe unittest {
+	import std.format: format;
+
+	SumType!int x = 123;
+
+	assert(format!"%s"(x) == format!"%s"(123));
+	assert(format!"%x"(x) == format!"%x"(123));
 }
 
 // Github issue #16
