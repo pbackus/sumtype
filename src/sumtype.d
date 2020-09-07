@@ -230,7 +230,7 @@ version (D_BetterC) {} else
 }
 
 // Converts an unsigned integer to a compile-time string constant.
-private enum toCtString(ulong n) = n.stringof[0 .. $ - 2];
+private enum toCtString(ulong n) = n.stringof[0 .. $ - "LU".length];
 
 @safe unittest {
 	assert(toCtString!0 == "0");
