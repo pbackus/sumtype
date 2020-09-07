@@ -13,7 +13,7 @@ $(LIST
     * Compatibility with BetterC.
 )
 
-License: MIT
+License: Boost License 1.0
 Authors: Paul Backus
 +/
 module sumtype;
