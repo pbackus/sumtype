@@ -235,7 +235,7 @@ import std.meta: NoDuplicates;
 import std.meta: anySatisfy, allSatisfy;
 import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
 import std.traits: isAssignable, isCopyable, isStaticArray;
-import std.traits: ConstOf, ImmutableOf, TemplateArgsOf;
+import std.traits: ConstOf, ImmutableOf, InoutOf, TemplateArgsOf;
 import std.traits: CommonType;
 import std.typecons: ReplaceTypeUnless;
 import std.typecons: Flag;
@@ -394,36 +394,21 @@ public:
 	}
 
 	static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
-		static if (allSatisfy!(isCopyable, Types)) {
+		private enum hasPostblit(T) = __traits(hasPostblit, T);
+
+		static if (
+			allSatisfy!(isCopyable, Map!(InoutOf, Types))
+			&& !anySatisfy!(hasPostblit, Map!(InoutOf, Types))
+		) {
 			/// Constructs a `SumType` that's a copy of another `SumType`
-			this(ref SumType other)
+			this(ref inout(SumType) other) inout
 			{
 				storage = other.match!((ref value) {
-					alias T = typeof(value);
-
-					mixin("Storage newStorage = { ",
-						Storage.memberName!T, ": value",
-					" };");
-
-					return newStorage;
-				});
-
-				tag = other.tag;
-			}
-		} else {
-			@disable this(ref SumType other);
-		}
-
-		static if (allSatisfy!(isCopyable, Map!(ConstOf, Types))) {
-			/// ditto
-			this(ref const(SumType) other) const
-			{
-				storage = other.match!((ref value) {
-					alias OtherTypes = Map!(ConstOf, Types);
+					alias OtherTypes = Map!(InoutOf, Types);
 					enum tid = IndexOf!(typeof(value), OtherTypes);
 					alias T = Types[tid];
 
-					mixin("const(Storage) newStorage = { ",
+					mixin("inout(Storage) newStorage = { ",
 						Storage.memberName!T, ": value",
 					" };");
 
@@ -433,29 +418,69 @@ public:
 				tag = other.tag;
 			}
 		} else {
-			@disable this(ref const(SumType) other) const;
-		}
+			static if (allSatisfy!(isCopyable, Types)) {
+				/// ditto
+				this(ref SumType other)
+				{
+					storage = other.match!((ref value) {
+						alias T = typeof(value);
 
-		static if (allSatisfy!(isCopyable, Map!(ImmutableOf, Types))) {
-			/// ditto
-			this(ref immutable(SumType) other) immutable
-			{
-				storage = other.match!((ref value) {
-					alias OtherTypes = Map!(ImmutableOf, Types);
-					enum tid = IndexOf!(typeof(value), OtherTypes);
-					alias T = Types[tid];
+						mixin("Storage newStorage = { ",
+							Storage.memberName!T, ": value",
+						" };");
 
-					mixin("immutable(Storage) newStorage = { ",
-						Storage.memberName!T, ": value",
-					" };");
+						return newStorage;
+					});
 
-					return newStorage;
-				});
-
-				tag = other.tag;
+					tag = other.tag;
+				}
+			} else {
+				@disable this(ref SumType other);
 			}
-		} else {
-			@disable this(ref immutable(SumType) other) immutable;
+
+			static if (allSatisfy!(isCopyable, Map!(ConstOf, Types))) {
+				/// ditto
+				this(ref const(SumType) other) const
+				{
+					storage = other.match!((ref value) {
+						alias OtherTypes = Map!(ConstOf, Types);
+						enum tid = IndexOf!(typeof(value), OtherTypes);
+						alias T = Types[tid];
+
+						mixin("const(Storage) newStorage = { ",
+							Storage.memberName!T, ": value",
+						" };");
+
+						return newStorage;
+					});
+
+					tag = other.tag;
+				}
+			} else {
+				@disable this(ref const(SumType) other) const;
+			}
+
+			static if (allSatisfy!(isCopyable, Map!(ImmutableOf, Types))) {
+				/// ditto
+				this(ref immutable(SumType) other) immutable
+				{
+					storage = other.match!((ref value) {
+						alias OtherTypes = Map!(ImmutableOf, Types);
+						enum tid = IndexOf!(typeof(value), OtherTypes);
+						alias T = Types[tid];
+
+						mixin("immutable(Storage) newStorage = { ",
+							Storage.memberName!T, ": value",
+						" };");
+
+						return newStorage;
+					});
+
+					tag = other.tag;
+				}
+			} else {
+				@disable this(ref immutable(SumType) other) immutable;
+			}
 		}
 	}
 
@@ -1203,6 +1228,22 @@ version(D_BetterC) {} else
 	auto yval = y.get!S.n;
 
 	assert(xval != yval);
+}
+
+// Copyable by generated copy constructors
+@safe unittest {
+	static struct Inner
+	{
+		ref this(ref inout Inner other) {}
+	}
+
+	static struct Outer
+	{
+		SumType!Inner inner;
+	}
+
+	Outer x;
+	Outer y = x;
 }
 
 // Types with disabled opEquals
