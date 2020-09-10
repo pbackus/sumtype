@@ -1169,6 +1169,7 @@ version(none) {
 
 version(none) {
 	// Known bug; needs fix for dlang issue 19458
+	// Types with non-const opEquals
 	@safe unittest {
 		static struct S
 		{
