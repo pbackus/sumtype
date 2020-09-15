@@ -441,8 +441,12 @@ public:
 		@disable this();
 	}
 
+	// True if a variable of type T can appear on the lhs of an assignment
+	private enum isAssignableTo(T) =
+		isAssignable!T || (!isCopyable!T && isRvalueAssignable!T);
+
 	static foreach (tid, T; Types) {
-		static if (isAssignable!T || (!isCopyable!T && isRvalueAssignable!T)) {
+		static if (isAssignableTo!T) {
 			/**
 			 * Assigns a value to a `SumType`.
 			 *
@@ -487,7 +491,7 @@ public:
 		}
 	}
 
-	static if (allSatisfy!(isAssignable, Types)) {
+	static if (allSatisfy!(isAssignableTo, Types)) {
 		static if (allSatisfy!(isCopyable, Types)) {
 			/**
 			 * Copies the value from another `SumType` into this one.
