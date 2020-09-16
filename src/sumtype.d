@@ -247,6 +247,15 @@ private enum toCtString(ulong n) = n.stringof[0 .. $ - "LU".length];
 	assert(toCtString!123456 == "123456");
 }
 
+// True if a variable of type T can appear on the lhs of an assignment
+private enum isAssignableTo(T) =
+	isAssignable!T || (!isCopyable!T && isRvalueAssignable!T);
+
+// toHash is required by the language spec to be nothrow and @safe
+private enum isHashable(T) = __traits(compiles,
+	() nothrow @safe { hashOf(T.init); }
+);
+
 /// `This` placeholder, for use in self-referential types.
 public import std.variant: This;
 
@@ -441,10 +450,6 @@ public:
 		@disable this();
 	}
 
-	// True if a variable of type T can appear on the lhs of an assignment
-	private enum isAssignableTo(T) =
-		isAssignable!T || (!isCopyable!T && isRvalueAssignable!T);
-
 	static foreach (tid, T; Types) {
 		static if (isAssignableTo!T) {
 			/**
@@ -607,11 +612,6 @@ public:
 			formatValue(sink, value, fmt);
 		});
 	}
-
-	// toHash is required by the language spec to be nothrow and @safe
-	private enum isHashable(T) = __traits(compiles,
-		() nothrow @safe { hashOf(T.init); }
-	);
 
 	static if (allSatisfy!(isHashable, Map!(ConstOf, Types))) {
 		// Workaround for dlang issue 20095
