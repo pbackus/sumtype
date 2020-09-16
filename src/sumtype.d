@@ -18,6 +18,16 @@ Authors: Paul Backus
 +/
 module sumtype;
 
+import std.format: FormatSpec, singleSpec;
+import std.meta: AliasSeq, Filter, IndexOf = staticIndexOf, Map = staticMap;
+import std.meta: NoDuplicates;
+import std.meta: anySatisfy, allSatisfy;
+import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
+import std.traits: isAssignable, isCopyable, isStaticArray;
+import std.traits: ConstOf, ImmutableOf, TemplateArgsOf;
+import std.typecons: ReplaceTypeUnless;
+import std.typecons: Flag;
+
 /// $(H3 Basic usage)
 version (D_BetterC) {} else
 @safe unittest {
@@ -240,8 +250,6 @@ private enum toCtString(ulong n) = n.stringof[0 .. $ - "LU".length];
 /// `This` placeholder, for use in self-referential types.
 public import std.variant: This;
 
-import std.meta: NoDuplicates;
-
 /**
  * A tagged union that can hold a single value from any of a specified set of
  * types.
@@ -269,14 +277,6 @@ import std.meta: NoDuplicates;
 struct SumType(Types...)
 	if (is(NoDuplicates!Types == Types) && Types.length > 0)
 {
-	import std.meta: AliasSeq, Filter, IndexOf = staticIndexOf, Map = staticMap;
-	import std.meta: anySatisfy, allSatisfy;
-	import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
-	import std.traits: isAssignable, isCopyable, isStaticArray;
-	import std.traits: ConstOf, ImmutableOf, TemplateArgsOf;
-	import std.typecons: ReplaceTypeUnless;
-	import std.format: FormatSpec, singleSpec;
-
 	/// The types a `SumType` can hold.
 	alias Types = AliasSeq!(
 		ReplaceTypeUnless!(isSumTypeInstance, This, typeof(this), TemplateArgsOf!SumType)
@@ -1380,8 +1380,6 @@ enum bool canMatch(alias handler, T) = is(typeof((T arg) => handler(arg)));
 	assert(canMatch!(OverloadSet.fun, int));
 	assert(canMatch!(OverloadSet.fun, double));
 }
-
-import std.typecons: Flag;
 
 private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 {
