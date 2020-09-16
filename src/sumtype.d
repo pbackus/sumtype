@@ -2167,6 +2167,224 @@ unittest {
 	assert(fun(MySum(""), MySum("")) == 3);
 }
 
+/**
+ * A `SumType` wrapper that forwads methods and property access to its members.
+ *
+ * A `StructuralSumType` functions like a
+ * [https://en.wikipedia.org/wiki/Structural_type_system|structural] supertype
+ * or "base class" of its members' types: any method or property common to
+ * *all* member types (including operators) will also be available for the
+ * `StructuralSumType`.
+ *
+ * All normal `SumType` operations, including pattern matching, are also
+ * supported, by way of `alias this`.
+ */
+struct StructuralSumType(Types...)
+{
+	/**
+	 * Stores the value of a `StructuralSumType`.
+	 *
+	 * The purpose of the leading underscore is to minimize the odds of a name
+	 * collision with one of the members' common properties.
+	 */
+	SumType!Types data;
+
+	/// Converts implicitly to the wrapped `SumType`
+	alias data this;
+
+	/// Constructs a `StructuralSumType` from a `SumType`
+	this()(auto ref SumType!Types data)
+	{
+		import core.lifetime: forward;
+
+		static if (isCopyable!(SumType!Types)) {
+			this.data = data;
+		} else {
+			this.data = forward!data;
+		}
+	}
+
+	/// ditto
+	this()(auto ref const(SumType!Types) data) const
+	{
+		this.data = data;
+	}
+
+	/// ditto
+	this()(auto ref immutable(SumType!Types) data) immutable
+	{
+		this.data = data;
+	}
+
+	static foreach (T; Types) {
+		/// Constructs a `StructuralSumType` holding a specific value
+		this()(auto ref T value)
+		{
+			import core.lifetime: forward;
+
+			static if (isCopyable!T) {
+				data = SumType!Types(value);
+			} else {
+				data = SumType!Types(forward!value);
+			}
+		}
+
+		/// ditto
+		this()(auto ref const(T) value) const
+		{
+			data = const(SumType!Types)(value);
+		}
+
+		/// ditto
+		this()(auto ref immutable(T) value) immutable
+		{
+			data = immutable(SumType!Types)(value);
+		}
+	}
+
+	static foreach(T; Types) {
+		static if (isAssignableTo!T) {
+			/// Assigns a value to a `StructuralSumType`
+			ref StructuralSumType opAssign()(auto ref T rhs)
+			{
+				import core.lifetime: forward;
+
+				data = forward!rhs;
+				return this;
+			}
+		}
+	}
+
+	static if (isAssignableTo!(SumType!Types)) {
+		/// Replaces the wrapped `SumType`
+		ref StructuralSumType opAssign()(auto ref SumType!Types rhs)
+		{
+			import core.lifetime: forward;
+
+			data = forward!rhs;
+			return this;
+		}
+
+		static if (isCopyable!(SumType!Types)) {
+			/// Copies the value from another `StructuralSumType` into this one
+			ref StructuralSumType opAssign(ref StructuralSumType rhs)
+			{
+				this = rhs.data;
+				return this;
+			}
+		} else {
+			@disable ref StructuralSumType opAssign(ref StructuralSumType rhs);
+		}
+
+		/// Moves the value from another `StructuralSumType` into this one
+		ref StructuralSumType opAssign(StructuralSumType rhs)
+		{
+			import core.lifetime: move;
+
+			this = move(rhs.data);
+			return this;
+		}
+	}
+}
+
+// Construction from value
+@safe unittest {
+	alias MySum = StructuralSumType!(int, float);
+
+	assert(__traits(compiles, MySum(42)));
+	assert(__traits(compiles, MySum(3.14)));
+}
+
+// const and immutable
+@safe unittest {
+	alias MySum = StructuralSumType!(int[]);
+
+	const int[] ca;
+	immutable int[] ia;
+
+	assert(__traits(compiles, const(MySum)(ca)));
+	assert(__traits(compiles, immutable(MySum)(ia)));
+}
+
+// Construction from SumType
+@safe unittest {
+	alias Outer = StructuralSumType!int;
+	alias Inner = SumType!int;
+
+	assert(__traits(compiles, Outer(Inner(42))));
+	assert(__traits(compiles, const(Outer)(const(Inner)(42))));
+	assert(__traits(compiles, immutable(Outer)(immutable(Inner)(42))));
+}
+
+// Assignment
+@safe unittest {
+	alias MySum = StructuralSumType!(int, float);
+
+	MySum x = 42;
+
+	assert(__traits(compiles, x = 3.14));
+}
+
+// Self assignment
+@safe unittest {
+	alias MySum = StructuralSumType!int;
+
+	MySum x;
+	MySum y;
+
+	x = y;
+}
+
+// Assignment from SumType
+@safe unittest {
+	alias MySum = StructuralSumType!int;
+
+	MySum x = 123;
+	SumType!int y = 456;
+
+	assert(__traits(compiles, x = y));
+}
+
+// Types with @disable this(this)
+@safe unittest {
+	import core.lifetime: move;
+
+	static struct NoCopy
+	{
+		@disable this(this);
+	}
+
+	alias MySum = StructuralSumType!NoCopy;
+
+	NoCopy lval = NoCopy();
+
+	MySum x = NoCopy();
+	MySum y = NoCopy();
+
+	assert(__traits(compiles, SumType!NoCopy(NoCopy())));
+	assert(!__traits(compiles, SumType!NoCopy(lval)));
+
+	assert(__traits(compiles, y = NoCopy()));
+	assert(__traits(compiles, y = move(x)));
+	assert(!__traits(compiles, y = lval));
+	assert(!__traits(compiles, y = x));
+
+	assert(__traits(compiles, x == y));
+}
+
+// Can use the result of assignment
+@safe unittest {
+	alias MySum = StructuralSumType!(int, float);
+
+	MySum a = MySum(123);
+	MySum b = MySum(3.14);
+
+	assert((a = b) == b);
+	assert((a = MySum(123)) == MySum(123));
+	assert((a = 3.14) == MySum(3.14));
+	assert(((a = b) = MySum(123)) == MySum(123));
+}
+
 static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
 	import std.traits: isRvalueAssignable;
 } else private {
