@@ -2245,6 +2245,20 @@ struct StructuralSumType(Types...)
 	{
 		return _data.match!((ref value) => value == rhs);
 	}
+
+	/// Property access
+	auto opDispatch(string name)() inout
+	{
+		return _data.match!((ref value) => __traits(getMember, value, name));
+	}
+
+	/// ditto
+	auto opDispatch(string name, Arg)(auto ref Arg arg)
+	{
+		return _data.match!(
+			(ref value) => __traits(getMember, value, name) = arg
+		);
+	}
 }
 
 // Construction from value
@@ -2374,6 +2388,90 @@ version (D_Exceptions)
 
 	assertNotThrown!MatchException(x.tryMatch!((int n) => true));
 	assertThrown!MatchException(y.tryMatch!((int n) => true));
+}
+
+// Common property access
+@safe unittest {
+	static struct A
+	{
+		int member;
+	}
+
+	static struct B
+	{
+		int member;
+	}
+
+	alias MySum = StructuralSumType!(A, B);
+
+	MySum x = A(123);
+	MySum y = B(456);
+
+	assert(x.member == 123);
+	assert(y.member == 456);
+}
+
+// Qualified common property access
+@safe unittest {
+	static struct A
+	{
+		int[] member;
+	}
+
+	static struct B
+	{
+		int[] member;
+	}
+
+	alias MySum = StructuralSumType!(A, B);
+
+	immutable int[1] a1 = [123];
+	immutable int[1] a2 = [456];
+
+	immutable MySum x = immutable(A)(a1);
+	immutable MySum y = immutable(B)(a2);
+
+	assert(x.member[0] == 123);
+	assert(y.member[0] == 456);
+}
+
+// Properties with a common type
+@safe unittest {
+	static struct A
+	{
+		int member;
+	}
+
+	static struct B
+	{
+		double member;
+	}
+
+	alias MySum = StructuralSumType!(A, B);
+
+	MySum x;
+
+	assert(__traits(compiles, x.member));
+}
+
+// Property assignment
+@safe unittest {
+	static struct A
+	{
+		int member;
+	}
+
+	static struct B
+	{
+		int member;
+	}
+
+	alias MySum = StructuralSumType!(A, B);
+
+	MySum x = A(123);
+	x.member = 456;
+
+	assert(x.member == 456);
 }
 
 static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
