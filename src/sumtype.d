@@ -2294,6 +2294,22 @@ struct StructuralSumType(Types...)
 		return _data.match!((ref value) => mixin("lhs", op, "value"));
 	}
 
+	/// Comparison operators
+	auto opCmp(this This, Rhs)(auto ref Rhs rhs)
+	{
+		return _data.match!((ref value) {
+			static if (__traits(compiles, value.opCmp(rhs))) {
+				return value.opCmp(rhs);
+			} else static if (__traits(compiles, rhs.opCmp(value))) {
+				return -rhs.opCmp(value);
+			} else {
+				/* Built-in comparison operators always give a total
+				 * ordering, so there's no need to handle NaN here.
+				 */
+				return value < rhs ? -1 : value > rhs ? 1 : 0;
+			}
+		});
+	}
 }
 
 // Construction from value
@@ -2590,6 +2606,52 @@ version (D_Exceptions)
 
 	assert(x + y == 579);
 	assert(z - y == 333);
+}
+
+// Comparison
+@safe unittest {
+	alias MySum = StructuralSumType!int;
+
+	MySum x = 123;
+	MySum y = 456;
+
+	assert(x < 200);
+	assert(y >= 200);
+	assert(x < y);
+	assert(y >= x);
+}
+
+// Partial ordering
+@safe unittest {
+	struct S
+	{
+		int n;
+
+		double opCmp(S rhs)
+		{
+			// make numbers with different parity incomparable
+			if ((n & 1) == (rhs.n & 1)) {
+				return n < rhs.n ? -1 : n > rhs.n ? +1 : 0;
+			} else {
+				return double.nan;
+			}
+		}
+
+		double opEquals(S rhs)
+		{
+			return opCmp(rhs);
+		}
+	}
+
+	alias MySum = StructuralSumType!S;
+
+	MySum x = S(1);
+	MySum y = S(2);
+	MySum z = S(3);
+
+	assert(x < z);
+	assert(!(y < z));
+	assert(!(y >= z));
 }
 
 static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
