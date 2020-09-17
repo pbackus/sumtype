@@ -1323,6 +1323,12 @@ template match(handlers...)
 	{
 		return matchImpl!(Yes.exhaustive, handlers)(args);
 	}
+
+	/// Workaround for issue 14286
+	auto match(Self : StructuralSumType!Types, Types...)(auto ref Self self)
+	{
+		return self._data.match;
+	}
 }
 
 /** $(H3 Avoiding unintentional matches)
@@ -1460,6 +1466,12 @@ template tryMatch(handlers...)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
 		return matchImpl!(No.exhaustive, handlers)(args);
+	}
+
+	/// Workaround for issue 14286
+	auto tryMatch(Self : StructuralSumType!Types, Types...)(auto ref Self self)
+	{
+		return self._data.tryMatch;
 	}
 }
 
@@ -2337,6 +2349,31 @@ struct StructuralSumType(Types...)
 	assert((a = MySum(123)) == MySum(123));
 	assert((a = 3.14) == MySum(3.14));
 	assert(((a = b) = MySum(123)) == MySum(123));
+}
+
+// Matching
+@safe unittest {
+	alias MySum = StructuralSumType!(int, float);
+
+	MySum x = MySum(42);
+	MySum y = MySum(3.14);
+
+	assert(x.match!((int v) => true, (float v) => false));
+	assert(y.match!((int v) => false, (float v) => true));
+}
+
+// Non-exhaustive matching
+version (D_Exceptions)
+@system unittest {
+	import std.exception: assertThrown, assertNotThrown;
+
+	alias MySum = StructuralSumType!(int, float);
+
+	MySum x = MySum(42);
+	MySum y = MySum(3.14);
+
+	assertNotThrown!MatchException(x.tryMatch!((int n) => true));
+	assertThrown!MatchException(y.tryMatch!((int n) => true));
 }
 
 static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
