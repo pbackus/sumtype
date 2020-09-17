@@ -2275,6 +2275,25 @@ struct StructuralSumType(Types...)
 			}
 		});
 	}
+
+	/// Unary operators
+	auto ref opUnary(string op)() inout
+	{
+		return _data.match!((ref value) => mixin(op, "value"));
+	}
+
+	/// Binary operators
+	auto ref opBinary(string op, Rhs)(auto ref Rhs rhs) inout
+	{
+		return _data.match!((ref value) => mixin("value", op, "rhs"));
+	}
+
+	/// ditto
+	auto ref opBinaryRight(string op, Lhs)(auto ref Lhs lhs) inout
+	{
+		return _data.match!((ref value) => mixin("lhs", op, "value"));
+	}
+
 }
 
 // Construction from value
@@ -2546,6 +2565,31 @@ version (D_Exceptions)
 
 	StructuralSumType!S x;
 	assert(__traits(compiles, x.fun(NoCopy())));
+}
+
+// Unary operators
+@safe unittest {
+	alias MySum = StructuralSumType!int;
+
+	MySum x = 123;
+	const MySum y = 456;
+	immutable MySum z = 789;
+
+	assert(-x == -123);
+	assert(-y == -456);
+	assert(-z == -789);
+}
+
+// Binary operators
+@safe unittest {
+	alias MySum = StructuralSumType!int;
+
+	MySum x = 123;
+	const MySum y = 456;
+	immutable MySum z = 789;
+
+	assert(x + y == 579);
+	assert(z - y == 333);
 }
 
 static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
