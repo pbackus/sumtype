@@ -2247,17 +2247,31 @@ struct StructuralSumType(Types...)
 	}
 
 	/// Property access
-	auto opDispatch(string name)() inout
+	auto ref opDispatch(string name, Args...)(auto ref Args args)
 	{
-		return _data.match!((ref value) => __traits(getMember, value, name));
+		return _data.match!((ref value) {
+			static if (args.length == 0) {
+				return __traits(getMember, value, name);
+			} else static if (args.length == 1) {
+				return __traits(getMember, value, name) = args[0];
+			} else {
+				return __traits(getMember, value, name) = args;
+			}
+		});
 	}
 
 	/// ditto
-	auto opDispatch(string name, Arg)(auto ref Arg arg)
+	auto ref opDispatch(string name, Args...)(auto ref Args args) inout
 	{
-		return _data.match!(
-			(ref value) => __traits(getMember, value, name) = arg
-		);
+		return _data.match!((ref value) {
+			static if (args.length == 0) {
+				return __traits(getMember, value, name);
+			} else static if (args.length == 1) {
+				return __traits(getMember, value, name) = args[0];
+			} else {
+				return __traits(getMember, value, name) = args;
+			}
+		});
 	}
 }
 
@@ -2472,6 +2486,48 @@ version (D_Exceptions)
 	x.member = 456;
 
 	assert(x.member == 456);
+}
+
+// Member functions
+@safe unittest {
+	static struct A
+	{
+		int fun(int n, int m) { return n + m; }
+	}
+
+	static struct B
+	{
+		int fun(int n, int m) { return n * m; }
+	}
+
+	alias MySum = StructuralSumType!(A, B);
+
+	MySum x = A();
+	MySum y = B();
+
+	assert(x.fun(2, 3) == 5);
+	assert(y.fun(2, 3) == 6);
+}
+
+// Member functions + qualifiers
+@safe unittest {
+	static struct A
+	{
+		int fun(int n, int m) const { return n + m; }
+	}
+
+	static struct B
+	{
+		int fun(int n, int m) const { return n * m; }
+	}
+
+	alias MySum = StructuralSumType!(A, B);
+
+	const MySum x = A();
+	immutable MySum y = B();
+
+	assert(x.fun(2, 3) == 5);
+	assert(y.fun(2, 3) == 6);
 }
 
 static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
