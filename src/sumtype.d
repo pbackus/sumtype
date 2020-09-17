@@ -2249,13 +2249,15 @@ struct StructuralSumType(Types...)
 	/// Property access
 	auto ref opDispatch(string name, Args...)(auto ref Args args)
 	{
+		import core.lifetime: forward;
+
 		return _data.match!((ref value) {
 			static if (args.length == 0) {
 				return __traits(getMember, value, name);
 			} else static if (args.length == 1) {
-				return __traits(getMember, value, name) = args[0];
+				return __traits(getMember, value, name) = forward!(args[0]);
 			} else {
-				return __traits(getMember, value, name) = args;
+				return __traits(getMember, value, name) = forward!args;
 			}
 		});
 	}
@@ -2528,6 +2530,22 @@ version (D_Exceptions)
 
 	assert(x.fun(2, 3) == 5);
 	assert(y.fun(2, 3) == 6);
+}
+
+// Member functions with non-copyable arguments
+@safe unittest {
+	static struct NoCopy
+	{
+		@disable this(this);
+	}
+
+	static struct S
+	{
+		void fun(NoCopy nc) {}
+	}
+
+	StructuralSumType!S x;
+	assert(__traits(compiles, x.fun(NoCopy())));
 }
 
 static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
