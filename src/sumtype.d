@@ -277,10 +277,6 @@ public import std.variant: This;
  * first member type, just like a regular union. The version identifier
  * `SumTypeNoDefaultCtor` can be used to disable this behavior.
  *
- * Bugs:
- *   Types with non-`const` `opEquals` overloads (including `@disable`d
- *   `opEquals`) cannot be members of a `SumType`.
- *
  * See_Also: `std.variant.Algebraic`
  */
 struct SumType(Types...)
@@ -534,7 +530,9 @@ public:
 	 * Two `SumType`s are equal if they are the same kind of `SumType`, they
 	 * contain values of the same type, and those values are equal.
 	 */
-	bool opEquals()(auto ref const(SumType) rhs) const {
+	bool opEquals(this This, Rhs)(auto ref Rhs rhs)
+		if (isSumType!Rhs && is(This.Types == Rhs.Types))
+	{
 		return this.match!((ref value) {
 			return rhs.match!((ref rhsValue) {
 				static if (is(typeof(value) == typeof(rhsValue))) {
@@ -1158,31 +1156,33 @@ version(none) {
 	}
 }
 
-version(none) {
-	// Known bug; needs fix for dlang issue 19458
-	// Types with disabled opEquals
-	@safe unittest {
-		static struct S
-		{
-			@disable bool opEquals(const S rhs) const;
-		}
-
-		assert(__traits(compiles, SumType!S(S())));
+// Types with disabled opEquals
+@safe unittest {
+	static struct S
+	{
+		@disable bool opEquals(const S rhs) const;
 	}
+
+	assert(__traits(compiles, SumType!S(S())));
 }
 
-version(none) {
-	// Known bug; needs fix for dlang issue 19458
-	// Types with non-const opEquals
-	@safe unittest {
-		static struct S
-		{
-			int i;
-			bool opEquals(S rhs) { return i == rhs.i; }
-		}
-
-		assert(__traits(compiles, SumType!S(S(123))));
+// Types with non-const opEquals
+@safe unittest {
+	static struct S
+	{
+		int i;
+		bool opEquals(S rhs) { return i == rhs.i; }
 	}
+
+	assert(__traits(compiles, SumType!S(S(123))));
+}
+
+// Incomparability of different SumTypes
+@safe unittest {
+	SumType!(int, string) x = 123;
+	SumType!(string, int) y = 123;
+
+	assert(!__traits(compiles, x != y));
 }
 
 /// True if `T` is an instance of the `SumType` template, otherwise false.
