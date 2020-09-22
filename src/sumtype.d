@@ -1436,15 +1436,17 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		}
 
 		// Workaround for dlang issue 19993
+		enum handlerName(size_t hid) = "handler" ~ toCtString!hid;
+
 		static foreach (size_t hid, handler; handlers) {
-			mixin("alias handler", toCtString!hid, " = handler;");
+			mixin("alias ", handlerName!hid, " = handler;");
 		}
 
 		final switch (self.tag) {
 			static foreach (tid, T; Types) {
 				case tid:
 					static if (matches[tid] != noMatch) {
-						return mixin("handler", toCtString!(matches[tid]))(self.get!T);
+						return mixin(handlerName!(matches[tid]))(self.get!T);
 					} else {
 						static if(exhaustive) {
 							static assert(false,
