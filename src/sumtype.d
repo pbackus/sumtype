@@ -1267,10 +1267,10 @@ template match(handlers...)
 	 * Params:
 	 *   self = A [SumType] object
 	 */
-	auto match(Self)(auto ref Self self)
-		if (isSumType!Self)
+	auto match(SumTypes...)(auto ref SumTypes args)
+		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
-		return self.matchImpl!(Yes.exhaustive, handlers);
+		return matchImpl!(Yes.exhaustive, handlers)(args);
 	}
 }
 
@@ -1350,10 +1350,10 @@ template tryMatch(handlers...)
 	 * Params:
 	 *   self = A [SumType] object
 	 */
-	auto tryMatch(Self)(auto ref Self self)
-		if (isSumType!Self)
+	auto tryMatch(SumTypes...)(auto ref SumTypes args)
+		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
-		return self.matchImpl!(No.exhaustive, handlers);
+		return matchImpl!(No.exhaustive, handlers)(args);
 	}
 }
 
@@ -1373,12 +1373,16 @@ class MatchException : Exception
 }
 
 /**
- * True if `handler` is a potential match for `T`, otherwise false.
+ * True if `handler` is a potential match for `Ts`, otherwise false.
  *
  * See the documentation for [match] for a full explanation of how matches are
  * chosen.
  */
-enum bool canMatch(alias handler, T) = is(typeof((T arg) => handler(arg)));
+template canMatch(alias handler, Ts...)
+	if (Ts.length > 0)
+{
+	enum canMatch = is(typeof((Ts args) => handler(args)));
+}
 
 // Includes all overloads of the given handler
 @safe unittest {
@@ -1392,27 +1396,119 @@ enum bool canMatch(alias handler, T) = is(typeof((T arg) => handler(arg)));
 	assert(canMatch!(OverloadSet.fun, double));
 }
 
+// Like aliasSeqOf!(iota(n)), but works in BetterC
+private template Iota(size_t n)
+{
+	static if (n == 0) {
+		alias Iota = AliasSeq!();
+	} else {
+		alias Iota = AliasSeq!(Iota!(n - 1), n - 1);
+	}
+}
+
+@safe unittest {
+	assert(Iota!0 == AliasSeq!());
+	assert(Iota!1 == AliasSeq!(0));
+	assert(Iota!3 == AliasSeq!(0, 1, 2));
+}
+
 private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 {
-	auto matchImpl(Self)(auto ref Self self)
-		if (isSumType!Self)
+	auto matchImpl(SumTypes...)(auto ref SumTypes args)
+		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
-		alias Types = self.Types;
+		static size_t stride(size_t i)()
+		{
+			size_t result = 1;
+
+			static foreach (S; SumTypes[0 .. i]) {
+				result *= S.Types.length;
+			}
+
+			return result;
+		}
+
+		static struct TagTuple
+		{
+			size_t[SumTypes.length] tags;
+			alias tags this;
+
+			this(ref const(SumTypes) args)
+			{
+
+				static foreach (i; 0 .. tags.length) {
+					tags[i] = args[i].tag;
+				}
+			}
+
+			static TagTuple fromCaseId(size_t caseId)
+			{
+				TagTuple result;
+
+				static foreach_reverse (i; 0 .. result.length) {
+					result[i] = caseId / stride!i;
+					caseId %= stride!i;
+				}
+
+				return result;
+			}
+
+			size_t toCaseId()
+			{
+				size_t result;
+
+				static foreach (i; 0 .. tags.length) {
+					result += tags[i] * stride!i;
+				}
+
+				return result;
+			}
+		}
+
+		template getValues(size_t caseId)
+		{
+			enum tags = TagTuple.fromCaseId(caseId);
+
+			auto ref getValue(size_t i)()
+			{
+				enum tid = tags[i];
+				alias T = SumTypes[i].Types[tid];
+				return args[i].get!T;
+			}
+
+			alias getValues = Map!(getValue, Iota!(tags.length));
+		}
+
+		template getTypes(size_t caseId)
+		{
+			enum tags = TagTuple.fromCaseId(caseId);
+
+			template getType(size_t i)
+			{
+				enum tid = tags[i];
+				alias T = SumTypes[i].Types[tid];
+				alias getType = typeof(args[i].get!T());
+			}
+
+			alias getTypes = Map!(getType, Iota!(tags.length));
+		}
+
+		enum numCases = stride!(SumTypes.length);
 		enum noMatch = size_t.max;
 
 		enum matches = () {
-			size_t[Types.length] matches;
+			size_t[numCases] matches;
 
 			// Workaround for dlang issue 19561
 			foreach (ref match; matches) {
 				match = noMatch;
 			}
 
-			static foreach (tid, T; Types) {
+			static foreach (caseId; 0 .. numCases) {
 				static foreach (hid, handler; handlers) {
-					static if (canMatch!(handler, typeof(self.get!T()))) {
-						if (matches[tid] == noMatch) {
-							matches[tid] = hid;
+					static if (canMatch!(handler, getTypes!caseId)) {
+						if (matches[caseId] == noMatch) {
+							matches[caseId] = hid;
 						}
 					}
 				}
@@ -1442,18 +1538,20 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			mixin("alias ", handlerName!hid, " = handler;");
 		}
 
-		final switch (self.tag) {
-			static foreach (tid, T; Types) {
-				case tid:
-					static if (matches[tid] != noMatch) {
-						return mixin(handlerName!(matches[tid]))(self.get!T);
+		immutable argsId = TagTuple(args).toCaseId;
+
+		final switch (argsId) {
+			static foreach (caseId; 0 .. numCases) {
+				case caseId:
+					static if (matches[caseId] != noMatch) {
+						return mixin(handlerName!(matches[caseId]))(getValues!caseId);
 					} else {
 						static if(exhaustive) {
 							static assert(false,
-								"No matching handler for type `" ~ T.stringof ~ "`");
+								"No matching handler for types `" ~ getTypes!caseId.stringof ~ "`");
 						} else {
 							throw new MatchException(
-								"No matching handler for type `" ~ T.stringof ~ "`");
+								"No matching handler for types `" ~ getTypes!caseId.stringof ~ "`");
 						}
 					}
 			}
@@ -1858,6 +1956,28 @@ unittest {
 	static struct D { SumType!(A, B) value; alias value this; }
 
 	assert(__traits(compiles, D().match!(_ => true)));
+}
+
+// Multiple dispatch
+@safe unittest {
+	alias MySum = SumType!(int, string);
+
+	static int fun(MySum x, MySum y)
+	{
+		import std.meta: Args = AliasSeq;
+
+		return Args!(x, y).match!(
+			(int    xv, int    yv) => 0,
+			(string xv, int    yv) => 1,
+			(int    xv, string yv) => 2,
+			(string xv, string yv) => 3
+		);
+	}
+
+	assert(fun(MySum(0),  MySum(0))  == 0);
+	assert(fun(MySum(""), MySum(0))  == 1);
+	assert(fun(MySum(0),  MySum("")) == 2);
+	assert(fun(MySum(""), MySum("")) == 3);
 }
 
 static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
