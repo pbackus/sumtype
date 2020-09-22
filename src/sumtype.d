@@ -2234,7 +2234,7 @@ struct StructuralSumType(Types...)
 	}
 
 	/// Property access
-	auto ref opDispatch(string name, Args...)(auto ref Args args)
+	auto ref opDispatch(string name, this This, Args...)(auto ref Args args)
 	{
 		import core.lifetime: forward;
 
@@ -2249,34 +2249,20 @@ struct StructuralSumType(Types...)
 		});
 	}
 
-	/// ditto
-	auto ref opDispatch(string name, Args...)(auto ref Args args) inout
-	{
-		return asSumType.match!((ref value) {
-			static if (args.length == 0) {
-				return __traits(getMember, value, name);
-			} else static if (args.length == 1) {
-				return __traits(getMember, value, name) = args[0];
-			} else {
-				return __traits(getMember, value, name) = args;
-			}
-		});
-	}
-
 	/// Unary operators
-	auto ref opUnary(string op)() inout
+	auto ref opUnary(string op, this This)()
 	{
 		return asSumType.match!((ref value) => mixin(op, "value"));
 	}
 
 	/// Binary operators
-	auto ref opBinary(string op, Rhs)(auto ref Rhs rhs) inout
+	auto ref opBinary(string op, this This, Rhs)(auto ref Rhs rhs)
 	{
 		return asSumType.match!((ref value) => mixin("value", op, "rhs"));
 	}
 
 	/// ditto
-	auto ref opBinaryRight(string op, Lhs)(auto ref Lhs lhs) inout
+	auto ref opBinaryRight(string op, this This, Lhs)(auto ref Lhs lhs)
 	{
 		return asSumType.match!((ref value) => mixin("lhs", op, "value"));
 	}
@@ -2562,6 +2548,18 @@ version (D_Exceptions)
 	assert(y.fun(2, 3) == 6);
 }
 
+// Qualified member function overloads
+@safe unittest {
+	static struct S
+	{
+		string fun() inout { return "inout"; }
+		string fun() immutable { return "immutable"; }
+	}
+
+	immutable(StructuralSumType!S) x;
+	assert(x.fun() == "immutable");
+}
+
 // Member functions with non-copyable arguments
 @safe unittest {
 	static struct NoCopy
@@ -2601,6 +2599,33 @@ version (D_Exceptions)
 
 	assert(x + y == 579);
 	assert(z - y == 333);
+}
+
+// Qualified operator overloads
+@safe unittest {
+	static struct TestUnary
+	{
+		string opUnary(string op : "-")() inout { return "inout"; }
+		string opUnary(string op : "-")() immutable { return "immutable"; }
+	}
+
+	static struct TestBinary
+	{
+		string opBinary(string op : "+")(inout(TestBinary) rhs) inout
+		{
+			return "inout";
+		}
+		string opBinary(string op : "+")(immutable(TestBinary) rhs) immutable
+		{
+			return "immutable";
+		}
+	}
+
+	immutable(StructuralSumType!TestUnary) tu;
+	immutable(StructuralSumType!TestBinary) tb;
+
+	assert(-tu == "immutable");
+	assert(tb + tb == "immutable");
 }
 
 // Comparison
