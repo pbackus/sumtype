@@ -2310,6 +2310,14 @@ struct StructuralSumType(Types...)
 			}
 		});
 	}
+
+	/// Function call operator
+	auto ref opCall(this This, Args...)(auto ref Args args)
+	{
+		import core.lifetime: forward;
+
+		return _data.match!((ref value) => value(forward!args));
+	}
 }
 
 // Construction from value
@@ -2652,6 +2660,26 @@ version (D_Exceptions)
 	assert(x < z);
 	assert(!(y < z));
 	assert(!(y >= z));
+}
+
+// Workaround for dlang issue 21269
+version (D_BetterC) {} else
+// Call operator
+@safe unittest {
+	StructuralSumType!(int function(int) @safe) x = (int n) @safe => n + 1;
+
+	assert(x(123) == 124);
+}
+
+// Call operator that returns by ref
+version(none)
+@safe unittest {
+	int m;
+	auto fun = ref (int _) @safe => m;
+	StructuralSumType!(typeof(fun)) x = fun;
+	x(0) = 123;
+
+	assert(m == 123);
 }
 
 static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
