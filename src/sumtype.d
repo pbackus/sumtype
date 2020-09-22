@@ -1323,12 +1323,6 @@ template match(handlers...)
 	{
 		return matchImpl!(Yes.exhaustive, handlers)(args);
 	}
-
-	/// Workaround for issue 14286
-	auto match(Self : StructuralSumType!Types, Types...)(auto ref Self self)
-	{
-		return self._data.match;
-	}
 }
 
 /** $(H3 Avoiding unintentional matches)
@@ -1466,12 +1460,6 @@ template tryMatch(handlers...)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
 		return matchImpl!(No.exhaustive, handlers)(args);
-	}
-
-	/// Workaround for issue 14286
-	auto tryMatch(Self : StructuralSumType!Types, Types...)(auto ref Self self)
-	{
-		return self._data.tryMatch;
 	}
 }
 
@@ -2180,7 +2168,7 @@ unittest {
 }
 
 /**
- * A `SumType` variant that forwads methods and property access to its members.
+ * A `SumType` wrapper that forwads methods and properties to its members.
  *
  * A `StructuralSumType` functions like a
  * [https://en.wikipedia.org/wiki/Structural_type_system|structural] supertype
@@ -2194,12 +2182,11 @@ unittest {
 struct StructuralSumType(Types...)
 {
 	/**
-	 * Stores the value of a `StructuralSumType`.
+	 * Access the stored value as a [SumType] object.
 	 *
-	 * The purpose of the leading underscore is to minimize the odds of a name
-	 * collision with one of the members' common properties.
+	 * This can be used 
 	 */
-	private SumType!Types _data;
+	SumType!Types asSumType;
 
 	static foreach (T; Types) {
 		/// Constructs a `StructuralSumType` holding a specific value
@@ -2208,22 +2195,22 @@ struct StructuralSumType(Types...)
 			import core.lifetime: forward;
 
 			static if (isCopyable!T) {
-				_data = SumType!Types(value);
+				asSumType = SumType!Types(value);
 			} else {
-				_data = SumType!Types(forward!value);
+				asSumType = SumType!Types(forward!value);
 			}
 		}
 
 		/// ditto
 		this()(auto ref const(T) value) const
 		{
-			_data = const(SumType!Types)(value);
+			asSumType = const(SumType!Types)(value);
 		}
 
 		/// ditto
 		this()(auto ref immutable(T) value) immutable
 		{
-			_data = immutable(SumType!Types)(value);
+			asSumType = immutable(SumType!Types)(value);
 		}
 	}
 
@@ -2234,7 +2221,7 @@ struct StructuralSumType(Types...)
 			{
 				import core.lifetime: forward;
 
-				_data = forward!rhs;
+				asSumType = forward!rhs;
 				return this;
 			}
 		}
@@ -2243,7 +2230,7 @@ struct StructuralSumType(Types...)
 	/// Compares a `StructuralSumType`'s value with another value
 	bool opEquals(Rhs)(auto ref Rhs rhs) const
 	{
-		return _data.match!((ref value) => value == rhs);
+		return asSumType.match!((ref value) => value == rhs);
 	}
 
 	/// Property access
@@ -2251,7 +2238,7 @@ struct StructuralSumType(Types...)
 	{
 		import core.lifetime: forward;
 
-		return _data.match!((ref value) {
+		return asSumType.match!((ref value) {
 			static if (args.length == 0) {
 				return __traits(getMember, value, name);
 			} else static if (args.length == 1) {
@@ -2265,7 +2252,7 @@ struct StructuralSumType(Types...)
 	/// ditto
 	auto ref opDispatch(string name, Args...)(auto ref Args args) inout
 	{
-		return _data.match!((ref value) {
+		return asSumType.match!((ref value) {
 			static if (args.length == 0) {
 				return __traits(getMember, value, name);
 			} else static if (args.length == 1) {
@@ -2279,25 +2266,25 @@ struct StructuralSumType(Types...)
 	/// Unary operators
 	auto ref opUnary(string op)() inout
 	{
-		return _data.match!((ref value) => mixin(op, "value"));
+		return asSumType.match!((ref value) => mixin(op, "value"));
 	}
 
 	/// Binary operators
 	auto ref opBinary(string op, Rhs)(auto ref Rhs rhs) inout
 	{
-		return _data.match!((ref value) => mixin("value", op, "rhs"));
+		return asSumType.match!((ref value) => mixin("value", op, "rhs"));
 	}
 
 	/// ditto
 	auto ref opBinaryRight(string op, Lhs)(auto ref Lhs lhs) inout
 	{
-		return _data.match!((ref value) => mixin("lhs", op, "value"));
+		return asSumType.match!((ref value) => mixin("lhs", op, "value"));
 	}
 
 	/// Comparison operators
 	auto opCmp(this This, Rhs)(auto ref Rhs rhs)
 	{
-		return _data.match!((ref value) {
+		return asSumType.match!((ref value) {
 			static if (__traits(compiles, value.opCmp(rhs))) {
 				return value.opCmp(rhs);
 			} else static if (__traits(compiles, rhs.opCmp(value))) {
@@ -2316,7 +2303,7 @@ struct StructuralSumType(Types...)
 	{
 		import core.lifetime: forward;
 
-		return _data.match!((ref value) => value(forward!args));
+		return asSumType.match!((ref value) => value(forward!args));
 	}
 }
 
@@ -2431,8 +2418,8 @@ struct StructuralSumType(Types...)
 	MySum x = MySum(42);
 	MySum y = MySum(3.14);
 
-	assert(x.match!((int v) => true, (float v) => false));
-	assert(y.match!((int v) => false, (float v) => true));
+	assert(x.asSumType.match!((int v) => true, (float v) => false));
+	assert(y.asSumType.match!((int v) => false, (float v) => true));
 }
 
 // Non-exhaustive matching
@@ -2445,8 +2432,8 @@ version (D_Exceptions)
 	MySum x = MySum(42);
 	MySum y = MySum(3.14);
 
-	assertNotThrown!MatchException(x.tryMatch!((int n) => true));
-	assertThrown!MatchException(y.tryMatch!((int n) => true));
+	assertNotThrown!MatchException(x.asSumType.tryMatch!((int n) => true));
+	assertThrown!MatchException(y.asSumType.tryMatch!((int n) => true));
 }
 
 // Common property access
