@@ -602,7 +602,7 @@ public:
 	 *
 	 * See_Also: `std.format.formatValue`
 	 */
-	void toString(Sink, Char)(ref Sink sink, const ref FormatSpec!Char fmt)
+	void toString(this This, Sink, Char)(ref Sink sink, const ref FormatSpec!Char fmt)
 	{
 		import std.format: formatValue;
 
@@ -871,6 +871,17 @@ version(D_BetterC) {} else
 
 	assert(format!"%s"(x) == format!"%s"(123));
 	assert(format!"%x"(x) == format!"%x"(123));
+}
+
+// string formatting of qualified SumTypes
+version(D_BetterC) {} else
+@safe unittest {
+	import std.format: format;
+
+	int[] a = [1, 2, 3];
+	const(SumType!(int[])) x = a;
+
+	assert(format!"%(%d, %)"(x) == format!"%(%s, %)"(a));
 }
 
 // Github issue #16
