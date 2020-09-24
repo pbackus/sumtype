@@ -1318,7 +1318,7 @@ template match(handlers...)
 	 * Params:
 	 *   args = One or more [SumType] objects.
 	 */
-	auto match(SumTypes...)(auto ref SumTypes args)
+	auto ref match(SumTypes...)(auto ref SumTypes args)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
 		return matchImpl!(Yes.exhaustive, handlers)(args);
@@ -1456,7 +1456,7 @@ template tryMatch(handlers...)
 	 * Params:
 	 *   args = One or more [SumType] objects.
 	 */
-	auto tryMatch(SumTypes...)(auto ref SumTypes args)
+	auto ref tryMatch(SumTypes...)(auto ref SumTypes args)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
 		return matchImpl!(No.exhaustive, handlers)(args);
@@ -1520,7 +1520,7 @@ private template Iota(size_t n)
 
 private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 {
-	auto matchImpl(SumTypes...)(auto ref SumTypes args)
+	auto ref matchImpl(SumTypes...)(auto ref SumTypes args)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
 		/* The stride that the dim-th argument's tag is multiplied by when
@@ -2265,7 +2265,7 @@ struct StructuralSumType(Types...)
 	/// Assignment with an operator
 	auto ref opOpAssign(string op, this This, Rhs)(Rhs rhs)
 	{
-		return asSumType.match!((ref value) => mixin("value", op, "=", "rhs"));
+		return asSumType.match!(ref (ref value) => mixin("value", op, "=", "rhs"));
 	}
 
 	/// Comparison operators
@@ -2703,6 +2703,7 @@ version(none)
 
 	assert((x += 1) == 1);
 	assert((x += 2) == 3);
+	assert(((x += 1) += 1) == 5);
 }
 
 static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
