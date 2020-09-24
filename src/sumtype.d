@@ -1252,6 +1252,11 @@ enum bool isSumType(T) = is(T : SumType!Args, Args...);
  * [sumtype#introspection-based-matching|"Introspection-based matching"] for an
  * example of templated handler usage.
  *
+ * If multiple [SumType]s are passed to match, their values are passed to the
+ * handlers as separate arguments, and matching is done for each possible
+ * combination of argument types. See [#multiple-dispatch|"Multiple dispatch"] for
+ * an example.
+ *
  * Returns:
  *   The value returned from the handler that matches the currently-held type.
  *
@@ -1265,7 +1270,7 @@ template match(handlers...)
 	 * The actual `match` function.
 	 *
 	 * Params:
-	 *   self = A [SumType] object
+	 *   args = One or more [SumType] objects.
 	 */
 	auto match(SumTypes...)(auto ref SumTypes args)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
@@ -1319,14 +1324,69 @@ template match(handlers...)
     ));
 }
 
+/** $(H3 Multiple dispatch)
+ *
+ * Pattern matching can be performed on multiple `SumType`s at once by passing
+ * handlers with multiple arguments. This usually leads to more concise code
+ * than using nested calls to `match`, as show below.
+ */
+@safe unittest {
+    struct Point2D { double x, y; }
+    struct Point3D { double x, y, z; }
+
+    alias Point = SumType!(Point2D, Point3D);
+
+    version(none) {
+        // This function works, but the code is ugly and repetitive.
+        // It uses three separate calls to match!
+        @safe pure nothrow @nogc
+        bool sameDimensions(Point p1, Point p2)
+        {
+            return p1.match!(
+                (Point2D _) => p2.match!(
+                    (Point2D _) => true,
+                    _ => false
+                ),
+                (Point3D _) => p2.match!(
+                    (Point3D _) => true,
+                    _ => false
+                )
+            );
+        }
+    }
+
+    // This version is much nicer.
+    @safe pure nothrow @nogc
+    bool sameDimensions(Point p1, Point p2)
+    {
+        alias doMatch = match!(
+            (Point2D _1, Point2D _2) => true,
+            (Point3D _1, Point3D _2) => true,
+            (_1, _2) => false
+        );
+
+        return doMatch(p1, p2);
+    }
+
+    Point a = Point2D(1, 2);
+    Point b = Point2D(3, 4);
+    Point c = Point3D(5, 6, 7);
+    Point d = Point3D(8, 9, 0);
+
+    assert( sameDimensions(a, b));
+    assert( sameDimensions(c, d));
+    assert(!sameDimensions(a, c));
+    assert(!sameDimensions(d, b));
+}
+
 /**
  * Attempts to call a type-appropriate function with the value held in a
  * [SumType], and throws on failure.
  *
  * Matches are chosen using the same rules as [match], but are not required to
- * be exhaustive—in other words, a type is allowed to have no matching handler.
- * If a type without a handler is encountered at runtime, a [MatchException]
- * is thrown.
+ * be exhaustive—in other words, a type (or combination of types) is allowed to
+ * have no matching handler. If a type without a handler is encountered at
+ * runtime, a [MatchException] is thrown.
  *
  * Not available when compiled with `-betterC`.
  *
@@ -1348,7 +1408,7 @@ template tryMatch(handlers...)
 	 * The actual `tryMatch` function.
 	 *
 	 * Params:
-	 *   self = A [SumType] object
+	 *   args = One or more [SumType] objects.
 	 */
 	auto tryMatch(SumTypes...)(auto ref SumTypes args)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
