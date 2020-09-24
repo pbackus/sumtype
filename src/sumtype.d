@@ -1417,6 +1417,13 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 	auto matchImpl(SumTypes...)(auto ref SumTypes args)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
+		/* The stride that the i-th argument's tag is multiplied by when
+		 * converting TagTuples to and from case indices ("caseIds").
+		 *
+		 * Named by analogy to the stride that the i-th index into a
+		 * multidimensional static array is multiplied by to calculate the
+		 * offset of a specific element.
+		 */
 		static size_t stride(size_t i)()
 		{
 			size_t result = 1;
@@ -1428,14 +1435,46 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			return result;
 		}
 
+		/* A TagTuple represents a single possible set of tags that `args`
+		 * could have at runtime.
+		 *
+		 * Because D does not allow a struct to be the controlling expression
+		 * of a switch statement, we cannot dispatch on the TagTuple directly.
+		 * Instead, we must map each TagTuple to a unique integer and generate
+		 * a case label for each of those integers. This mapping is implemented
+		 * in `fromCaseId` and `toCaseId`.
+		 *
+		 * The mapping is done by pretending we are indexing into an
+		 * `args.length`-dimensional static array of type
+		 *
+		 *   ubyte[SumTypes[0].Types.length]...[SumTypes[$-1].Types.length]
+		 *
+		 * ...where each element corresponds to the TagTuple whose tags can be
+		 * used (in reverse order) as indices to retrieve it. The caseId for
+		 * that TagTuple is the (hypothetical) offset, in bytes, of its
+		 * corresponding element.
+		 *
+		 * For example, when `args` consists of two SumTypes with two member
+		 * types each, the TagTuples corresponding to each case label are:
+		 *
+		 *   case 0:  TagTuple([0, 0])
+		 *   case 1:  TagTuple([1, 0])
+		 *   case 2:  TagTuple([0, 1])
+		 *   case 3:  TagTuple([1, 1])
+		 */
 		static struct TagTuple
 		{
 			size_t[SumTypes.length] tags;
 			alias tags this;
 
+			invariant {
+				static foreach (i; 0 .. tags.length) {
+					assert(tags[i] < SumTypes[i].Types.length);
+				}
+			}
+
 			this(ref const(SumTypes) args)
 			{
-
 				static foreach (i; 0 .. tags.length) {
 					tags[i] = args[i].tag;
 				}
@@ -1445,6 +1484,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			{
 				TagTuple result;
 
+				// Most-significant to least-significant
 				static foreach_reverse (i; 0 .. result.length) {
 					result[i] = caseId / stride!i;
 					caseId %= stride!i;
@@ -1465,6 +1505,13 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			}
 		}
 
+		/* An AliasSeq of zero-argument functions that return, by ref, the
+		 * member values of `args` needed for the case labeled with `caseId`.
+		 *
+		 * When used in an expression context (like, say, a function call), it
+		 * will instead be interpreted as a sequence of zero-argument function
+		 * *calls*, with optional parentheses omitted.
+		 */
 		template getValues(size_t caseId)
 		{
 			enum tags = TagTuple.fromCaseId(caseId);
@@ -1479,6 +1526,16 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			alias getValues = Map!(getValue, Iota!(tags.length));
 		}
 
+		/* An AliasSeq of the types of the member values returned by the
+		 * functions in `getValues!caseId`.
+		 *
+		 * Note that these are the actual (that is, qualified) types of the
+		 * member values, which may not be the same as the types listed in
+		 * the arguments' `.Types` properties.
+		 *
+		 * typeof(getValues!caseId) won't work because it gives the types
+		 * of the functions, not the return values (even with @property).
+		 */
 		template getTypes(size_t caseId)
 		{
 			enum tags = TagTuple.fromCaseId(caseId);
@@ -1493,9 +1550,25 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			alias getTypes = Map!(getType, Iota!(tags.length));
 		}
 
+		/* The total number of cases is
+		 *
+		 *   Π SumTypes[i].Types.length for i ∈ [0 .. SumTypes.length)
+		 *
+		 * Or, equivalently,
+		 *
+		 *   ubyte[SumTypes[0].Types.length]...[SumTypes[$-1].Types.length].sizeof
+		 *
+		 * Conveniently, this is equal to stride!(SumTypes.length), so we can
+		 * use that function to compute it.
+		 */
 		enum numCases = stride!(SumTypes.length);
+
+		/* Guaranteed to never be a valid handler index, since
+		 * handlers.length <= size_t.max.
+		 */
 		enum noMatch = size_t.max;
 
+		// An array that maps caseIds to handler indices ("hids").
 		enum matches = () {
 			size_t[numCases] matches;
 
