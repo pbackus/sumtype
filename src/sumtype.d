@@ -2262,6 +2262,12 @@ struct StructuralSumType(Types...)
 		return asSumType.match!((ref value) => mixin("lhs", op, "value"));
 	}
 
+	/// Assignment with an operator
+	auto ref opOpAssign(string op, this This, Rhs)(Rhs rhs)
+	{
+		return asSumType.match!((ref value) => mixin("value", op, "=", "rhs"));
+	}
+
 	/// Comparison operators
 	auto opCmp(this This, Rhs)(auto ref Rhs rhs)
 	{
@@ -2687,6 +2693,16 @@ version(none)
 	x(0) = 123;
 
 	assert(m == 123);
+}
+
+// Assignment + operator
+@safe unittest {
+	alias MySum = StructuralSumType!int;
+
+	MySum x = 0;
+
+	assert((x += 1) == 1);
+	assert((x += 2) == 3);
 }
 
 static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
