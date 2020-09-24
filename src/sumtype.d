@@ -533,14 +533,12 @@ public:
 	bool opEquals(this This, Rhs)(auto ref Rhs rhs)
 		if (isSumType!Rhs && is(This.Types == Rhs.Types))
 	{
-		return this.match!((ref value) {
-			return rhs.match!((ref rhsValue) {
-				static if (is(typeof(value) == typeof(rhsValue))) {
-					return value == rhsValue;
-				} else {
-					return false;
-				}
-			});
+		return AliasSeq!(this, rhs).match!((ref value, ref rhsValue) {
+			static if (is(typeof(value) == typeof(rhsValue))) {
+				return value == rhsValue;
+			} else {
+				return false;
+			}
 		});
 	}
 
