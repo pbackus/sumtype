@@ -1614,7 +1614,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 		/* The total number of cases is
 		 *
-		 *   Π SumTypes[i].Types.length for i ∈ [0 .. SumTypes.length)
+		 *   Π SumTypes[i].Types.length for 0 ≤ i < SumTypes.length
 		 *
 		 * Or, equivalently,
 		 *
