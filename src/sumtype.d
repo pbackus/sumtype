@@ -2168,24 +2168,15 @@ unittest {
 }
 
 /**
- * A `SumType` wrapper that forwads methods and properties to its members.
+ * A [SumType] wrapper that provides direct access to methods and properties
+ * common to all of its members.
  *
- * A `StructuralSumType` functions like a
- * [https://en.wikipedia.org/wiki/Structural_type_system|structural] supertype
- * of its members' types: any method or property common to
- * *all* member types (including operators) will also be available for the
- * `StructuralSumType`.
- *
- * All normal `SumType` operations, including pattern matching, are also
- * supported.
+ * Attempting to access a property or call a method that is not available for
+ * all members will result in a compile-time error.
  */
 struct StructuralSumType(Types...)
 {
-	/**
-	 * Access the stored value as a [SumType] object.
-	 *
-	 * This can be used 
-	 */
+	/// Provides access to the stored value as a [SumType] object.
 	SumType!Types asSumType;
 
 	static foreach (T; Types) {
@@ -2242,6 +2233,10 @@ struct StructuralSumType(Types...)
 			static if (args.length == 0) {
 				return __traits(getMember, value, name);
 			} else static if (args.length == 1) {
+				/* If this is a "real" assignment, and not a property setter or
+				 * single-argument method call, it won't work if the right-hand
+				 * side is an AliasSeq.
+				 */
 				return __traits(getMember, value, name) = forward!(args[0]);
 			} else {
 				return __traits(getMember, value, name) = forward!args;
