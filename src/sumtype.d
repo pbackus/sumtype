@@ -2218,12 +2218,6 @@ struct StructuralSumType(Types...)
 		}
 	}
 
-	/// Compares a `StructuralSumType`'s value with another value
-	bool opEquals(Rhs)(auto ref Rhs rhs) const
-	{
-		return asSumType.match!((ref value) => value == rhs);
-	}
-
 	/// Property access
 	auto ref opDispatch(string name, this This, Args...)(auto ref Args args)
 	{
@@ -2268,7 +2262,13 @@ struct StructuralSumType(Types...)
 		return asSumType.match!(ref (ref value) => mixin("value", op, "=", "rhs"));
 	}
 
-	/// Comparison operators
+	/// Compares a `StructuralSumType`'s value with another value
+	bool opEquals(Rhs)(auto ref Rhs rhs) const
+	{
+		return asSumType.match!((ref value) => value == rhs);
+	}
+
+	/// ditto
 	auto opCmp(this This, Rhs)(auto ref Rhs rhs)
 	{
 		return asSumType.match!((ref value) {
@@ -2291,6 +2291,20 @@ struct StructuralSumType(Types...)
 		import core.lifetime: forward;
 
 		return asSumType.match!((ref value) => value(forward!args));
+	}
+
+	// Index operator
+	auto ref opIndex(this This, Args...)(auto ref Args args)
+	{
+		import core.lifetime: forward;
+
+		return asSumType.match!(ref (ref value) => value[forward!args]);
+	}
+
+	// Slice operator
+	auto ref opIndex(this This)()
+	{
+		return asSumType.match!((ref value) => value[]);
 	}
 }
 
@@ -2725,6 +2739,31 @@ version(none)
 	assert((x += 1) == 1);
 	assert((x += 2) == 3);
 	assert(((x += 1) += 1) == 5);
+}
+
+// Indexing
+@safe unittest {
+	int[3] a = [1, 2, 3];
+	StructuralSumType!(int[]) x = a[];
+
+	assert(x[1] == 2);
+}
+
+// Index assignment
+@safe unittest {
+	int[3] a = [1, 2, 3];
+	StructuralSumType!(int[]) x = a[];
+	x[1] = 4;
+
+	assert(a[1] == 4);
+}
+
+// Slicing
+@safe unittest {
+	int[3] a = [1, 2, 3];
+	StructuralSumType!(int[]) x = a[];
+
+	assert(x[] == a[]);
 }
 
 static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
