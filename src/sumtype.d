@@ -1484,12 +1484,16 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		 */
 		static size_t stride(size_t i)()
 		{
+			import core.checkedint: mulu;
+
 			size_t result = 1;
+			bool overflow = false;
 
 			static foreach (S; SumTypes[0 .. i]) {
-				result *= S.Types.length;
+				result = mulu(result, S.Types.length, overflow);
 			}
 
+			assert(!overflow);
 			return result;
 		}
 
@@ -1618,6 +1622,9 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		 *
 		 * Conveniently, this is equal to stride!(SumTypes.length), so we can
 		 * use that function to compute it.
+		 *
+		 * This is the largest number that matchImpl computes, so if it doesn't
+		 * overflow, we don't have to check anywhere else.
 		 */
 		enum numCases = stride!(SumTypes.length);
 
