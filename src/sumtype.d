@@ -2293,7 +2293,12 @@ struct StructuralSumType(Types...)
 		return asSumType.match!((ref value) => value(forward!args));
 	}
 
-	// Index operator
+	/**
+	 * Index operator
+	 *
+	 * Currently supports indexing with any number of arguments, and slicing
+	 * with zero arguments.
+	 */
 	auto ref opIndex(this This, Args...)(auto ref Args args)
 	{
 		import core.lifetime: forward;
@@ -2301,7 +2306,7 @@ struct StructuralSumType(Types...)
 		return asSumType.match!(ref (ref value) => value[forward!args]);
 	}
 
-	// Slice operator
+	/// ditto
 	auto ref opIndex(this This)()
 	{
 		return asSumType.match!((ref value) => value[]);
