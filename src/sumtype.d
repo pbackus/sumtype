@@ -2507,6 +2507,26 @@ version (D_Exceptions)
 	assert(x.member == 456);
 }
 
+// Properties are lvalues
+// Needs fix for dlang issue 21243
+version(none)
+@safe unittest {
+	static struct A
+	{
+		int member;
+	}
+
+	static void inc(ref int n)
+	{
+		n++;
+	}
+
+	StructuralSumType!A x = A(42);
+	inc(x.member);
+
+	assert(x.member = 43);
+}
+
 // Member functions
 @safe unittest {
 	static struct A
@@ -2685,6 +2705,7 @@ version (D_BetterC) {} else
 }
 
 // Call operator that returns by ref
+// Needs fix for dlang issue 21243
 version(none)
 @safe unittest {
 	int m;
