@@ -18,16 +18,6 @@ Authors: Paul Backus
 +/
 module sumtype;
 
-import std.format: FormatSpec, singleSpec;
-import std.meta: AliasSeq, Filter, IndexOf = staticIndexOf, Map = staticMap;
-import std.meta: NoDuplicates;
-import std.meta: anySatisfy, allSatisfy;
-import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
-import std.traits: isAssignable, isCopyable, isStaticArray;
-import std.traits: ConstOf, ImmutableOf, TemplateArgsOf;
-import std.typecons: ReplaceTypeUnless;
-import std.typecons: Flag;
-
 /// $(H3 Basic usage)
 version (D_BetterC) {} else
 @safe unittest {
@@ -239,6 +229,19 @@ version (D_BetterC) {} else
     assert(pprint(*myExpr) == "(a + (2 * b))");
 }
 
+import std.format: FormatSpec, singleSpec;
+import std.meta: AliasSeq, Filter, IndexOf = staticIndexOf, Map = staticMap;
+import std.meta: NoDuplicates;
+import std.meta: anySatisfy, allSatisfy;
+import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
+import std.traits: isAssignable, isCopyable, isStaticArray;
+import std.traits: ConstOf, ImmutableOf, TemplateArgsOf;
+import std.typecons: ReplaceTypeUnless;
+import std.typecons: Flag;
+
+/// `This` placeholder, for use in self-referential types.
+public import std.variant: This;
+
 // Converts an unsigned integer to a compile-time string constant.
 private enum toCtString(ulong n) = n.stringof[0 .. $ - "LU".length];
 
@@ -255,9 +258,6 @@ private enum isAssignableTo(T) =
 private enum isHashable(T) = __traits(compiles,
 	() nothrow @safe { hashOf(T.init); }
 );
-
-/// `This` placeholder, for use in self-referential types.
-public import std.variant: This;
 
 /**
  * A tagged union that can hold a single value from any of a specified set of
