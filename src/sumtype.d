@@ -1624,7 +1624,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		 * use that function to compute it.
 		 *
 		 * This is the largest number that matchImpl computes, so if it doesn't
-		 * overflow, we don't have to check anywhere else.
+		 * overflow, we don't have to check for overflow anywhere else.
 		 */
 		enum numCases = stride!(SumTypes.length);
 
