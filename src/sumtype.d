@@ -1475,24 +1475,28 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 	auto matchImpl(SumTypes...)(auto ref SumTypes args)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
-		/* The stride that the i-th argument's tag is multiplied by when
+		/* The stride that the dim-th argument's tag is multiplied by when
 		 * converting TagTuples to and from case indices ("caseIds").
 		 *
-		 * Named by analogy to the stride that the i-th index into a
+		 * Named by analogy to the stride that the dim-th index into a
 		 * multidimensional static array is multiplied by to calculate the
 		 * offset of a specific element.
 		 */
-		static size_t stride(size_t i)()
+		static size_t stride(size_t dim)()
 		{
 			import core.checkedint: mulu;
 
 			size_t result = 1;
 			bool overflow = false;
 
-			static foreach (S; SumTypes[0 .. i]) {
+			static foreach (S; SumTypes[0 .. dim]) {
 				result = mulu(result, S.Types.length, overflow);
 			}
 
+			/* The largest number matchImpl uses, numCases, is calculated with
+			 * stride!(SumTypes.length), so as long as this overflow check
+			 * passes, we don't need to check for overflow anywhere else.
+			 */
 			assert(!overflow);
 			return result;
 		}
@@ -1574,31 +1578,31 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		 * will instead be interpreted as a sequence of zero-argument function
 		 * *calls*, with optional parentheses omitted.
 		 */
-		template getValues(size_t caseId)
+		template values(size_t caseId)
 		{
 			enum tags = TagTuple.fromCaseId(caseId);
 
-			auto ref getValue(size_t i)()
+			ref getValue(size_t i)()
 			{
 				enum tid = tags[i];
 				alias T = SumTypes[i].Types[tid];
 				return args[i].get!T;
 			}
 
-			alias getValues = Map!(getValue, Iota!(tags.length));
+			alias values = Map!(getValue, Iota!(tags.length));
 		}
 
 		/* An AliasSeq of the types of the member values returned by the
-		 * functions in `getValues!caseId`.
+		 * functions in `values!caseId`.
 		 *
 		 * Note that these are the actual (that is, qualified) types of the
 		 * member values, which may not be the same as the types listed in
 		 * the arguments' `.Types` properties.
 		 *
-		 * typeof(getValues!caseId) won't work because it gives the types
+		 * typeof(values!caseId) won't work because it gives the types
 		 * of the functions, not the return values (even with @property).
 		 */
-		template getTypes(size_t caseId)
+		template valueTypes(size_t caseId)
 		{
 			enum tags = TagTuple.fromCaseId(caseId);
 
@@ -1609,7 +1613,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 				alias getType = typeof(args[i].get!T());
 			}
 
-			alias getTypes = Map!(getType, Iota!(tags.length));
+			alias valueTypes = Map!(getType, Iota!(tags.length));
 		}
 
 		/* The total number of cases is
@@ -1622,9 +1626,6 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		 *
 		 * Conveniently, this is equal to stride!(SumTypes.length), so we can
 		 * use that function to compute it.
-		 *
-		 * This is the largest number that matchImpl computes, so if it doesn't
-		 * overflow, we don't have to check for overflow anywhere else.
 		 */
 		enum numCases = stride!(SumTypes.length);
 
@@ -1644,7 +1645,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 			static foreach (caseId; 0 .. numCases) {
 				static foreach (hid, handler; handlers) {
-					static if (canMatch!(handler, getTypes!caseId)) {
+					static if (canMatch!(handler, valueTypes!caseId)) {
 						if (matches[caseId] == noMatch) {
 							matches[caseId] = hid;
 						}
@@ -1682,14 +1683,14 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			static foreach (caseId; 0 .. numCases) {
 				case caseId:
 					static if (matches[caseId] != noMatch) {
-						return mixin(handlerName!(matches[caseId]))(getValues!caseId);
+						return mixin(handlerName!(matches[caseId]))(values!caseId);
 					} else {
 						static if(exhaustive) {
 							static assert(false,
-								"No matching handler for types `" ~ getTypes!caseId.stringof ~ "`");
+								"No matching handler for types `" ~ valueTypes!caseId.stringof ~ "`");
 						} else {
 							throw new MatchException(
-								"No matching handler for types `" ~ getTypes!caseId.stringof ~ "`");
+								"No matching handler for types `" ~ valueTypes!caseId.stringof ~ "`");
 						}
 					}
 			}
