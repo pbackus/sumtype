@@ -533,8 +533,24 @@ public:
 	bool opEquals(this This, Rhs)(auto ref Rhs rhs)
 		if (isSumType!Rhs && is(This.Types == Rhs.Types))
 	{
+		import std.meta: ApplyLeft;
+		import std.traits: CopyTypeQualifiers;
+
+		alias ThisTypes = Map!(ApplyLeft!(CopyTypeQualifiers, This), This.Types);
+		alias RhsTypes = Map!(ApplyLeft!(CopyTypeQualifiers, Rhs), Rhs.Types);
+
 		return AliasSeq!(this, rhs).match!((ref value, ref rhsValue) {
-			static if (is(typeof(value) == typeof(rhsValue))) {
+			enum thisTid = IndexOf!(typeof(value), ThisTypes);
+			enum rhsTid = IndexOf!(typeof(rhsValue), RhsTypes);
+
+			enum sameType = is(typeof(value) == typeof(rhsValue));
+			enum sameTag = thisTid == rhsTid;
+
+			/* Differently-qualified instances of the same SumType may contain
+			 * different types with the same tag, or the same type with
+			 * different tags.
+			 */
+			static if (sameType || sameTag) {
 				return value == rhsValue;
 			} else {
 				return false;
@@ -665,6 +681,22 @@ public:
 	assert(x != z);
 	assert(x != w);
 	assert(x != v);
+
+}
+
+// Equality of differently-qualified SumTypes
+version(D_BetterC) {} else
+@safe unittest {
+	alias SumA = SumType!(int, float);
+	alias SumB = SumType!(const(int[]), int[]);
+	alias SumC = SumType!(int[], const(int[]));
+
+	int[] ma = [1, 2, 3];
+	const(int[]) ca = [1, 2, 3];
+
+	assert(const(SumA)(123) == SumA(123));
+	assert(const(SumB)(ma[]) == SumB(ca[]));
+	assert(const(SumC)(ma[]) == SumC(ca[]));
 }
 
 // Imported types
