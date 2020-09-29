@@ -1465,7 +1465,7 @@ private template Iota(size_t n)
 }
 
 @safe unittest {
-	assert(Iota!0 == AliasSeq!());
+	assert(is(Iota!0 == AliasSeq!()));
 	assert(Iota!1 == AliasSeq!(0));
 	assert(Iota!3 == AliasSeq!(0, 1, 2));
 }
