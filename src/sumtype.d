@@ -534,7 +534,7 @@ public:
 		if (isSumType!Rhs && is(This.Types == Rhs.Types))
 	{
 		return AliasSeq!(this, rhs).match!((ref value, ref rhsValue) {
-			static if (is(typeof(value) == typeof(rhsValue))) {
+			static if (is(typeof(cast() value) == typeof(cast() rhsValue))) {
 				return value == rhsValue;
 			} else {
 				return false;
@@ -665,6 +665,8 @@ public:
 	assert(x != z);
 	assert(x != w);
 	assert(x != v);
+
+	assert(const(MySum)(123) == MySum(123));
 }
 
 // Imported types
