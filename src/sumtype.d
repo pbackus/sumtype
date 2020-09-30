@@ -533,8 +533,40 @@ public:
 	bool opEquals(this This, Rhs)(auto ref Rhs rhs)
 		if (isSumType!Rhs && is(This.Types == Rhs.Types))
 	{
+		import std.meta: ApplyLeft;
+		import std.traits: CopyTypeQualifiers;
+
+		alias ThisTypes = Map!(ApplyLeft!(CopyTypeQualifiers, This), This.Types);
+		alias RhsTypes = Map!(ApplyLeft!(CopyTypeQualifiers, Rhs), Rhs.Types);
+
 		return AliasSeq!(this, rhs).match!((ref value, ref rhsValue) {
-			static if (is(typeof(value) == typeof(rhsValue))) {
+			/* Deduce tags from types of values.
+			 *
+			 * If a SumType has duplicate members--that is, two or more members
+			 * with the same type but different tags--this will always choose
+			 * the tag of the first one. This can happen is if a type qualifier
+			 * applied to a SumType causes the types of two members to merge;
+			 * for example, `const(SumType!(int, const(int)))` has two members
+			 * of type `const(int)`.
+			 *
+			 * Duplicate members are considered equivalent, since they are
+			 * impossible to distinguish by pattern matching.
+			 */
+			enum thisTid = IndexOf!(typeof(value), ThisTypes);
+			enum rhsTid = IndexOf!(typeof(rhsValue), RhsTypes);
+
+			enum sameTag = thisTid == rhsTid;
+			enum sameType = is(typeof(value) == typeof(rhsValue));
+
+			/* Checking for equal tags allows differently-qualified SumTypes
+			 * to be compared, as long as the values support it.
+			 *
+			 * If either This or Rhs has duplicate members, then those members
+			 * should be compared even if their tags do not match. Otherwise,
+			 * if there are no duplicate members, sameType implies sameTag,
+			 * so checking it is at worst redundant.
+			 */
+			static if (sameTag || sameType) {
 				return value == rhsValue;
 			} else {
 				return false;
@@ -665,6 +697,22 @@ public:
 	assert(x != z);
 	assert(x != w);
 	assert(x != v);
+
+}
+
+// Equality of differently-qualified SumTypes
+version(D_BetterC) {} else
+@safe unittest {
+	alias SumA = SumType!(int, float);
+	alias SumB = SumType!(const(int[]), int[]);
+	alias SumC = SumType!(int[], const(int[]));
+
+	int[] ma = [1, 2, 3];
+	const(int[]) ca = [1, 2, 3];
+
+	assert(const(SumA)(123) == SumA(123));
+	assert(const(SumB)(ma[]) == SumB(ca[]));
+	assert(const(SumC)(ma[]) == SumC(ca[]));
 }
 
 // Imported types
