@@ -2747,26 +2747,29 @@ version(none)
 }
 
 // Indexing
+version(D_BetterC) {} else
 @safe unittest {
-	int[3] a = [1, 2, 3];
-	StructuralSumType!(int[]) x = a[];
+	int[] a = [1, 2, 3];
+	StructuralSumType!(int[]) x = a;
 
 	assert(x[1] == 2);
 }
 
 // Index assignment
+version(D_BetterC) {} else
 @safe unittest {
-	int[3] a = [1, 2, 3];
-	StructuralSumType!(int[]) x = a[];
+	int[] a = [1, 2, 3];
+	StructuralSumType!(int[]) x = a;
 	x[1] = 4;
 
 	assert(a[1] == 4);
 }
 
 // Slicing
+version(D_BetterC) {} else
 @safe unittest {
-	int[3] a = [1, 2, 3];
-	StructuralSumType!(int[]) x = a[];
+	int[] a = [1, 2, 3];
+	StructuralSumType!(int[]) x = a;
 
 	assert(x[] == a[]);
 }
