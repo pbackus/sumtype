@@ -1318,7 +1318,7 @@ template match(handlers...)
 	 * Params:
 	 *   args = One or more [SumType] objects.
 	 */
-	auto match(SumTypes...)(auto ref SumTypes args)
+	auto ref match(SumTypes...)(auto ref SumTypes args)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
 		return matchImpl!(Yes.exhaustive, handlers)(args);
@@ -1456,7 +1456,7 @@ template tryMatch(handlers...)
 	 * Params:
 	 *   args = One or more [SumType] objects.
 	 */
-	auto tryMatch(SumTypes...)(auto ref SumTypes args)
+	auto ref tryMatch(SumTypes...)(auto ref SumTypes args)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
 		return matchImpl!(No.exhaustive, handlers)(args);
@@ -1520,7 +1520,7 @@ private template Iota(size_t n)
 
 private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 {
-	auto matchImpl(SumTypes...)(auto ref SumTypes args)
+	auto ref matchImpl(SumTypes...)(auto ref SumTypes args)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
 		/* The stride that the dim-th argument's tag is multiplied by when
@@ -2165,6 +2165,613 @@ unittest {
 	assert(fun(MySum(""), MySum(0))  == 1);
 	assert(fun(MySum(0),  MySum("")) == 2);
 	assert(fun(MySum(""), MySum("")) == 3);
+}
+
+/**
+ * A [SumType] wrapper that provides direct access to methods and properties
+ * common to all of its members.
+ *
+ * Attempting to access a property or call a method that is not available for
+ * all members will result in a compile-time error.
+ */
+struct StructuralSumType(Types...)
+{
+	/// Provides access to the stored value as a [SumType] object.
+	SumType!Types asSumType;
+
+	static foreach (T; Types) {
+		/// Constructs a `StructuralSumType` holding a specific value
+		this()(auto ref T value)
+		{
+			import core.lifetime: forward;
+
+			static if (isCopyable!T) {
+				asSumType = SumType!Types(value);
+			} else {
+				asSumType = SumType!Types(forward!value);
+			}
+		}
+
+		/// ditto
+		this()(auto ref const(T) value) const
+		{
+			asSumType = const(SumType!Types)(value);
+		}
+
+		/// ditto
+		this()(auto ref immutable(T) value) immutable
+		{
+			asSumType = immutable(SumType!Types)(value);
+		}
+	}
+
+	static foreach(T; Types) {
+		static if (isAssignableTo!T) {
+			/// Assigns a value to a `StructuralSumType`
+			ref StructuralSumType opAssign()(auto ref T rhs)
+			{
+				import core.lifetime: forward;
+
+				asSumType = forward!rhs;
+				return this;
+			}
+		}
+	}
+
+	/// Property access
+	auto ref opDispatch(string name, this This, Args...)(auto ref Args args)
+	{
+		import core.lifetime: forward;
+
+		return asSumType.match!((ref value) {
+			static if (args.length == 0) {
+				return __traits(getMember, value, name);
+			} else static if (args.length == 1) {
+				/* If this is a "real" assignment, and not a property setter or
+				 * single-argument method call, it won't work if the right-hand
+				 * side is an AliasSeq.
+				 */
+				return __traits(getMember, value, name) = forward!(args[0]);
+			} else {
+				return __traits(getMember, value, name) = forward!args;
+			}
+		});
+	}
+
+	/// Unary operators
+	auto ref opUnary(string op, this This)()
+	{
+		return asSumType.match!((ref value) => mixin(op, "value"));
+	}
+
+	/// Binary operators
+	auto ref opBinary(string op, this This, Rhs)(auto ref Rhs rhs)
+	{
+		return asSumType.match!((ref value) => mixin("value", op, "rhs"));
+	}
+
+	/// ditto
+	auto ref opBinaryRight(string op, this This, Lhs)(auto ref Lhs lhs)
+	{
+		return asSumType.match!((ref value) => mixin("lhs", op, "value"));
+	}
+
+	/// Assignment with an operator
+	auto ref opOpAssign(string op, this This, Rhs)(Rhs rhs)
+	{
+		return asSumType.match!(ref (ref value) => mixin("value", op, "=", "rhs"));
+	}
+
+	/// Compares a `StructuralSumType`'s value with another value
+	bool opEquals(Rhs)(auto ref Rhs rhs) const
+	{
+		return asSumType.match!((ref value) => value == rhs);
+	}
+
+	/// ditto
+	auto opCmp(this This, Rhs)(auto ref Rhs rhs)
+	{
+		return asSumType.match!((ref value) {
+			static if (__traits(compiles, value.opCmp(rhs))) {
+				return value.opCmp(rhs);
+			} else static if (__traits(compiles, rhs.opCmp(value))) {
+				return -rhs.opCmp(value);
+			} else {
+				/* Built-in comparison operators always give a total
+				 * ordering, so there's no need to handle NaN here.
+				 */
+				return value < rhs ? -1 : value > rhs ? 1 : 0;
+			}
+		});
+	}
+
+	/// Function call operator
+	auto ref opCall(this This, Args...)(auto ref Args args)
+	{
+		import core.lifetime: forward;
+
+		return asSumType.match!((ref value) => value(forward!args));
+	}
+
+	/**
+	 * Index operator
+	 *
+	 * Currently supports indexing with any number of arguments, and slicing
+	 * with zero arguments.
+	 */
+	auto ref opIndex(this This, Args...)(auto ref Args args)
+	{
+		import core.lifetime: forward;
+
+		return asSumType.match!(ref (ref value) => value[forward!args]);
+	}
+
+	/// ditto
+	auto ref opIndex(this This)()
+	{
+		return asSumType.match!((ref value) => value[]);
+	}
+}
+
+// Construction from value
+@safe unittest {
+	alias MySum = StructuralSumType!(int, float);
+
+	assert(__traits(compiles, MySum(42)));
+	assert(__traits(compiles, MySum(3.14)));
+}
+
+// const and immutable
+@safe unittest {
+	alias MySum = StructuralSumType!(int[]);
+
+	const int[] ca;
+	immutable int[] ia;
+
+	assert(__traits(compiles, const(MySum)(ca)));
+	assert(__traits(compiles, immutable(MySum)(ia)));
+}
+
+// Assignment
+@safe unittest {
+	alias MySum = StructuralSumType!(int, float);
+
+	MySum x = 42;
+
+	assert(__traits(compiles, x = 3.14));
+}
+
+// Self assignment
+@safe unittest {
+	alias MySum = StructuralSumType!int;
+
+	MySum x;
+	MySum y;
+
+	x = y;
+}
+
+// Equality
+@safe unittest {
+	alias MySum = StructuralSumType!(int, float);
+
+	MySum x = MySum(123);
+	MySum y = MySum(123);
+	MySum z = MySum(456);
+	MySum w = MySum(123.0);
+	MySum v = MySum(456.0);
+
+	assert(x == 123);
+	assert(x == y);
+	assert(x != z);
+	assert((x == w) == (123 == cast(float) 123.0));
+	assert(x != v);
+}
+
+// Equality of const StructuralSumTypes
+@safe unittest {
+	alias MySum = StructuralSumType!int;
+
+	assert(__traits(compiles,
+		const(MySum)(123) == const(MySum)(456)
+	));
+}
+
+// Types with @disable this(this)
+@safe unittest {
+	import core.lifetime: move;
+
+	static struct NoCopy
+	{
+		@disable this(this);
+	}
+
+	alias MySum = StructuralSumType!NoCopy;
+
+	NoCopy lval = NoCopy();
+
+	MySum x = NoCopy();
+	MySum y = NoCopy();
+
+	assert(__traits(compiles, SumType!NoCopy(NoCopy())));
+	assert(!__traits(compiles, SumType!NoCopy(lval)));
+
+	assert(__traits(compiles, y = NoCopy()));
+	assert(__traits(compiles, y = move(x)));
+	assert(!__traits(compiles, y = lval));
+	assert(!__traits(compiles, y = x));
+
+	assert(__traits(compiles, x == y));
+}
+
+// Can use the result of assignment
+@safe unittest {
+	alias MySum = StructuralSumType!(int, float);
+
+	MySum a = MySum(123);
+	MySum b = MySum(3.14);
+
+	assert((a = b) == b);
+	assert((a = MySum(123)) == MySum(123));
+	assert((a = 3.14) == MySum(3.14));
+	assert(((a = b) = MySum(123)) == MySum(123));
+}
+
+// Matching
+@safe unittest {
+	alias MySum = StructuralSumType!(int, float);
+
+	MySum x = MySum(42);
+	MySum y = MySum(3.14);
+
+	assert(x.asSumType.match!((int v) => true, (float v) => false));
+	assert(y.asSumType.match!((int v) => false, (float v) => true));
+}
+
+// Non-exhaustive matching
+version (D_Exceptions)
+@system unittest {
+	import std.exception: assertThrown, assertNotThrown;
+
+	alias MySum = StructuralSumType!(int, float);
+
+	MySum x = MySum(42);
+	MySum y = MySum(3.14);
+
+	assertNotThrown!MatchException(x.asSumType.tryMatch!((int n) => true));
+	assertThrown!MatchException(y.asSumType.tryMatch!((int n) => true));
+}
+
+// Common property access
+@safe unittest {
+	static struct A
+	{
+		int member;
+	}
+
+	static struct B
+	{
+		int member;
+	}
+
+	alias MySum = StructuralSumType!(A, B);
+
+	MySum x = A(123);
+	MySum y = B(456);
+
+	assert(x.member == 123);
+	assert(y.member == 456);
+}
+
+// Qualified common property access
+@safe unittest {
+	static struct A
+	{
+		int[] member;
+	}
+
+	static struct B
+	{
+		int[] member;
+	}
+
+	alias MySum = StructuralSumType!(A, B);
+
+	immutable int[1] a1 = [123];
+	immutable int[1] a2 = [456];
+
+	immutable MySum x = immutable(A)(a1);
+	immutable MySum y = immutable(B)(a2);
+
+	assert(x.member[0] == 123);
+	assert(y.member[0] == 456);
+}
+
+// Properties with a common type
+@safe unittest {
+	static struct A
+	{
+		int member;
+	}
+
+	static struct B
+	{
+		double member;
+	}
+
+	alias MySum = StructuralSumType!(A, B);
+
+	MySum x;
+
+	assert(__traits(compiles, x.member));
+}
+
+// Property assignment
+@safe unittest {
+	static struct A
+	{
+		int member;
+	}
+
+	static struct B
+	{
+		int member;
+	}
+
+	alias MySum = StructuralSumType!(A, B);
+
+	MySum x = A(123);
+	x.member = 456;
+
+	assert(x.member == 456);
+}
+
+// Properties are lvalues
+// Needs fix for dlang issue 21243
+version(none)
+@safe unittest {
+	static struct A
+	{
+		int member;
+	}
+
+	static void inc(ref int n)
+	{
+		n++;
+	}
+
+	StructuralSumType!A x = A(42);
+	inc(x.member);
+
+	assert(x.member = 43);
+}
+
+// Member functions
+@safe unittest {
+	static struct A
+	{
+		int fun(int n, int m) { return n + m; }
+	}
+
+	static struct B
+	{
+		int fun(int n, int m) { return n * m; }
+	}
+
+	alias MySum = StructuralSumType!(A, B);
+
+	MySum x = A();
+	MySum y = B();
+
+	assert(x.fun(2, 3) == 5);
+	assert(y.fun(2, 3) == 6);
+}
+
+// Member functions + qualifiers
+@safe unittest {
+	static struct A
+	{
+		int fun(int n, int m) const { return n + m; }
+	}
+
+	static struct B
+	{
+		int fun(int n, int m) const { return n * m; }
+	}
+
+	alias MySum = StructuralSumType!(A, B);
+
+	const MySum x = A();
+	immutable MySum y = B();
+
+	assert(x.fun(2, 3) == 5);
+	assert(y.fun(2, 3) == 6);
+}
+
+// Qualified member function overloads
+@safe unittest {
+	static struct S
+	{
+		string fun() inout { return "inout"; }
+		string fun() immutable { return "immutable"; }
+	}
+
+	immutable(StructuralSumType!S) x;
+	assert(x.fun() == "immutable");
+}
+
+// Member functions with non-copyable arguments
+@safe unittest {
+	static struct NoCopy
+	{
+		@disable this(this);
+	}
+
+	static struct S
+	{
+		void fun(NoCopy nc) {}
+	}
+
+	StructuralSumType!S x;
+	assert(__traits(compiles, x.fun(NoCopy())));
+}
+
+// Unary operators
+@safe unittest {
+	alias MySum = StructuralSumType!int;
+
+	MySum x = 123;
+	const MySum y = 456;
+	immutable MySum z = 789;
+
+	assert(-x == -123);
+	assert(-y == -456);
+	assert(-z == -789);
+}
+
+// Binary operators
+@safe unittest {
+	alias MySum = StructuralSumType!int;
+
+	MySum x = 123;
+	const MySum y = 456;
+	immutable MySum z = 789;
+
+	assert(x + y == 579);
+	assert(z - y == 333);
+}
+
+// Qualified operator overloads
+@safe unittest {
+	static struct TestUnary
+	{
+		string opUnary(string op : "-")() inout { return "inout"; }
+		string opUnary(string op : "-")() immutable { return "immutable"; }
+	}
+
+	static struct TestBinary
+	{
+		string opBinary(string op : "+")(inout(TestBinary) rhs) inout
+		{
+			return "inout";
+		}
+		string opBinary(string op : "+")(immutable(TestBinary) rhs) immutable
+		{
+			return "immutable";
+		}
+	}
+
+	immutable(StructuralSumType!TestUnary) tu;
+	immutable(StructuralSumType!TestBinary) tb;
+
+	assert(-tu == "immutable");
+	assert(tb + tb == "immutable");
+}
+
+// Comparison
+@safe unittest {
+	alias MySum = StructuralSumType!int;
+
+	MySum x = 123;
+	MySum y = 456;
+
+	assert(x < 200);
+	assert(y >= 200);
+	assert(x < y);
+	assert(y >= x);
+}
+
+// Partial ordering
+@safe unittest {
+	struct S
+	{
+		int n;
+
+		double opCmp(S rhs)
+		{
+			// make numbers with different parity incomparable
+			if ((n & 1) == (rhs.n & 1)) {
+				return n < rhs.n ? -1 : n > rhs.n ? +1 : 0;
+			} else {
+				return double.nan;
+			}
+		}
+
+		double opEquals(S rhs)
+		{
+			return opCmp(rhs);
+		}
+	}
+
+	alias MySum = StructuralSumType!S;
+
+	MySum x = S(1);
+	MySum y = S(2);
+	MySum z = S(3);
+
+	assert(x < z);
+	assert(!(y < z));
+	assert(!(y >= z));
+}
+
+// Workaround for dlang issue 21269
+version (D_BetterC) {} else
+// Call operator
+@safe unittest {
+	StructuralSumType!(int function(int) @safe) x = (int n) @safe => n + 1;
+
+	assert(x(123) == 124);
+}
+
+// Call operator that returns by ref
+// Needs fix for dlang issue 21243
+version(none)
+@safe unittest {
+	int m;
+	auto fun = ref (int _) @safe => m;
+	StructuralSumType!(typeof(fun)) x = fun;
+	x(0) = 123;
+
+	assert(m == 123);
+}
+
+// Assignment + operator
+@safe unittest {
+	alias MySum = StructuralSumType!int;
+
+	MySum x = 0;
+
+	assert((x += 1) == 1);
+	assert((x += 2) == 3);
+	assert(((x += 1) += 1) == 5);
+}
+
+// Indexing
+version(D_BetterC) {} else
+@safe unittest {
+	int[] a = [1, 2, 3];
+	StructuralSumType!(int[]) x = a;
+
+	assert(x[1] == 2);
+}
+
+// Index assignment
+version(D_BetterC) {} else
+@safe unittest {
+	int[] a = [1, 2, 3];
+	StructuralSumType!(int[]) x = a;
+	x[1] = 4;
+
+	assert(a[1] == 4);
+}
+
+// Slicing
+version(D_BetterC) {} else
+@safe unittest {
+	int[] a = [1, 2, 3];
+	StructuralSumType!(int[]) x = a;
+
+	assert(x[] == a[]);
 }
 
 static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
