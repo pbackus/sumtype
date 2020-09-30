@@ -7,6 +7,7 @@ branches:
     - master
 
 d:
+  - dmd
   - dmd-2.094.0
   - dmd-2.093.1
   - dmd-2.092.1
@@ -14,6 +15,7 @@ d:
   - dmd-2.090.1
   - dmd-2.089.1
   - dmd-2.088.1
+  - ldc
   - ldc-1.23.0
   - ldc-1.22.0
   - ldc-1.21.0
