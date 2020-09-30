@@ -540,17 +540,33 @@ public:
 		alias RhsTypes = Map!(ApplyLeft!(CopyTypeQualifiers, Rhs), Rhs.Types);
 
 		return AliasSeq!(this, rhs).match!((ref value, ref rhsValue) {
+			/* Deduce tags from types of values.
+			 *
+			 * If a SumType has duplicate members--that is, two or more members
+			 * with the same type but different tags--this will always choose
+			 * the tag of the first one. This can happen is if a type qualifier
+			 * applied to a SumType causes the types of two members to merge;
+			 * for example, `const(SumType!(int, const(int)))` has two members
+			 * of type `const(int)`.
+			 *
+			 * Duplicate members are considered equivalent, since they are
+			 * impossible to distinguish by pattern matching.
+			 */
 			enum thisTid = IndexOf!(typeof(value), ThisTypes);
 			enum rhsTid = IndexOf!(typeof(rhsValue), RhsTypes);
 
-			enum sameType = is(typeof(value) == typeof(rhsValue));
 			enum sameTag = thisTid == rhsTid;
+			enum sameType = is(typeof(value) == typeof(rhsValue));
 
-			/* Differently-qualified instances of the same SumType may contain
-			 * different types with the same tag, or the same type with
-			 * different tags.
+			/* Checking for equal tags allows differently-qualified SumTypes
+			 * to be compared, as long as the values support it.
+			 *
+			 * If either This or Rhs has duplicate members, then those members
+			 * should be compared even if their tags do not match. Otherwise,
+			 * if there are no duplicate members, sameType implies sameTag,
+			 * so checking it is at worst redundant.
 			 */
-			static if (sameType || sameTag) {
+			static if (sameTag || sameType) {
 				return value == rhsValue;
 			} else {
 				return false;
