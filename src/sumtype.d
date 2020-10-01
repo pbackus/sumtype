@@ -2223,7 +2223,7 @@ struct StructuralSumType(Types...)
 	{
 		import core.lifetime: forward;
 
-		return asSumType.match!((ref value) {
+		enum handler = q{(ref value) {
 			static if (args.length == 0) {
 				return __traits(getMember, value, name);
 			} else static if (args.length == 1) {
@@ -2235,7 +2235,14 @@ struct StructuralSumType(Types...)
 			} else {
 				return __traits(getMember, value, name) = forward!args;
 			}
-		});
+		}};
+
+		// Workaround for dlang issue 21243
+		static if (__traits(compiles, asSumType.match!(mixin("ref ", handler)))) {
+			return asSumType.match!(mixin("ref ", handler));
+		} else {
+			return asSumType.match!(mixin(handler));
+		}
 	}
 
 	/// Unary operators
@@ -2290,7 +2297,14 @@ struct StructuralSumType(Types...)
 	{
 		import core.lifetime: forward;
 
-		return asSumType.match!((ref value) => value(forward!args));
+		enum handler = q{(ref value) => value(forward!args)};
+
+		// Workaround for dlang issue 21243
+		static if (__traits(compiles, asSumType.match!(mixin("ref ", handler)))) {
+			return asSumType.match!(mixin("ref ", handler));
+		} else {
+			return asSumType.match!(mixin(handler));
+		}
 	}
 
 	/**
@@ -2527,8 +2541,6 @@ version (D_Exceptions)
 }
 
 // Properties are lvalues
-// Needs fix for dlang issue 21243
-version(none)
 @safe unittest {
 	static struct A
 	{
@@ -2723,12 +2735,12 @@ version (D_BetterC) {} else
 	assert(x(123) == 124);
 }
 
+// Workaround for dlang issue 21269
+version (D_BetterC) {} else
 // Call operator that returns by ref
-// Needs fix for dlang issue 21243
-version(none)
 @safe unittest {
 	int m;
-	auto fun = ref (int _) @safe => m;
+	alias fun = ref (int _) @safe => m;
 	StructuralSumType!(typeof(fun)) x = fun;
 	x(0) = 123;
 
