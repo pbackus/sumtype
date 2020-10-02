@@ -8,7 +8,7 @@
 	"license": "BSL-1.0",
 
 	"toolchainRequirements": {
-		"frontend": ">=2.088"
+		"frontend": ">=2.090"
 	},
 
 	"buildTypes": {
