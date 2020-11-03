@@ -1497,7 +1497,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 	auto ref matchImpl(SumTypes...)(auto ref SumTypes args)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
-		/* The stride that the dim-th argument's tag is multiplied by when
+		/* The number that the dim-th argument's tag is multiplied by when
 		 * converting TagTuples to and from case indices ("caseIds").
 		 *
 		 * Named by analogy to the stride that the dim-th index into a
