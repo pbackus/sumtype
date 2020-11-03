@@ -1630,11 +1630,12 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		{
 			enum tags = TagTuple.fromCaseId(caseId);
 
-			ref getValue(size_t i)()
+			// Workaround for dlang issue 21348
+			ref getValue(size_t i)(ref SumTypes[i] arg = args[i])
 			{
 				enum tid = tags[i];
 				alias T = SumTypes[i].Types[tid];
-				return args[i].get!T;
+				return arg.get!T;
 			}
 
 			alias values = Map!(getValue, Iota!(tags.length));
@@ -2165,6 +2166,16 @@ unittest {
 	assert(fun(MySum(""), MySum(0))  == 1);
 	assert(fun(MySum(0),  MySum("")) == 2);
 	assert(fun(MySum(""), MySum("")) == 3);
+}
+
+// inout SumTypes
+@safe unittest {
+	assert(__traits(compiles, {
+		inout(int[]) fun(inout(SumType!(int[])) x)
+		{
+			return x.match!((inout(int[]) a) => a);
+		}
+	}));
 }
 
 static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
