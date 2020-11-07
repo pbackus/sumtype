@@ -9,16 +9,8 @@ branches:
 d:
   - dmd
   - dmd-2.094.1
-  - dmd-2.093.1
-  - dmd-2.092.1
-  - dmd-2.091.1
-  - dmd-2.090.1
   - ldc
   - ldc-1.24.0
-  - ldc-1.23.0
-  - ldc-1.22.0
-  - ldc-1.21.0
-  - ldc-1.20.0
 
 script:
   - dub test --compiler=${DC}

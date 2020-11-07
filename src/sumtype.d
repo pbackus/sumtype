@@ -235,7 +235,7 @@ import std.meta: NoDuplicates;
 import std.meta: anySatisfy, allSatisfy;
 import std.traits: hasElaborateCopyConstructor, hasElaborateDestructor;
 import std.traits: isAssignable, isCopyable, isStaticArray;
-import std.traits: ConstOf, ImmutableOf, TemplateArgsOf;
+import std.traits: ConstOf, ImmutableOf, InoutOf, TemplateArgsOf;
 import std.traits: CommonType;
 import std.typecons: ReplaceTypeUnless;
 import std.typecons: Flag;
@@ -342,17 +342,20 @@ public:
 		{
 			import core.lifetime: forward;
 
-			static if (isCopyable!T) {
-				mixin("Storage newStorage = { ",
-					Storage.memberName!T, ": value",
-				" };");
-			} else {
-				mixin("Storage newStorage = { ",
-					Storage.memberName!T, " : forward!value",
-				" };");
-			}
+			storage = () {
+				static if (isCopyable!T) {
+					mixin("Storage newStorage = { ",
+						Storage.memberName!T, ": value",
+					" };");
+				} else {
+					mixin("Storage newStorage = { ",
+						Storage.memberName!T, " : forward!value",
+					" };");
+				}
 
-			storage = newStorage;
+				return newStorage;
+			}();
+
 			tag = tid;
 		}
 
@@ -360,22 +363,28 @@ public:
 			/// ditto
 			this()(auto ref const(T) value) const
 			{
-				mixin("const(Storage) newStorage = { ",
-					Storage.memberName!T, ": value",
-				" };");
+				storage = () {
+					mixin("const(Storage) newStorage = { ",
+						Storage.memberName!T, ": value",
+					" };");
 
-				storage = newStorage;
+					return newStorage;
+				}();
+
 				tag = tid;
 			}
 
 			/// ditto
 			this()(auto ref immutable(T) value) immutable
 			{
-				mixin("immutable(Storage) newStorage = { ",
-					Storage.memberName!T, ": value",
-				" };");
+				storage = () {
+					mixin("immutable(Storage) newStorage = { ",
+						Storage.memberName!T, ": value",
+					" };");
 
-				storage = newStorage;
+					return newStorage;
+				}();
+
 				tag = tid;
 			}
 		} else {
@@ -384,15 +393,22 @@ public:
 		}
 	}
 
-	static if (allSatisfy!(isCopyable, Types)) {
-		static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
+	static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
+		private enum hasPostblit(T) = __traits(hasPostblit, T);
+
+		static if (
+			allSatisfy!(isCopyable, Map!(InoutOf, Types))
+			&& !anySatisfy!(hasPostblit, Map!(InoutOf, Types))
+		) {
 			/// Constructs a `SumType` that's a copy of another `SumType`
-			this(ref SumType other)
+			this(ref inout(SumType) other) inout
 			{
 				storage = other.match!((ref value) {
-					alias T = typeof(value);
+					alias OtherTypes = Map!(InoutOf, Types);
+					enum tid = IndexOf!(typeof(value), OtherTypes);
+					alias T = Types[tid];
 
-					mixin("Storage newStorage = { ",
+					mixin("inout(Storage) newStorage = { ",
 						Storage.memberName!T, ": value",
 					" };");
 
@@ -401,46 +417,71 @@ public:
 
 				tag = other.tag;
 			}
+		} else {
+			static if (allSatisfy!(isCopyable, Types)) {
+				/// ditto
+				this(ref SumType other)
+				{
+					storage = other.match!((ref value) {
+						alias T = typeof(value);
 
-			/// ditto
-			this(ref const(SumType) other) const
-			{
-				storage = other.match!((ref value) {
-					alias OtherTypes = Map!(ConstOf, Types);
-					enum tid = IndexOf!(typeof(value), OtherTypes);
-					alias T = Types[tid];
+						mixin("Storage newStorage = { ",
+							Storage.memberName!T, ": value",
+						" };");
 
-					mixin("const(Storage) newStorage = { ",
-						Storage.memberName!T, ": value",
-					" };");
+						return newStorage;
+					});
 
-					return newStorage;
-				});
-
-				tag = other.tag;
+					tag = other.tag;
+				}
+			} else {
+				@disable this(ref SumType other);
 			}
 
-			/// ditto
-			this(ref immutable(SumType) other) immutable
-			{
-				storage = other.match!((ref value) {
-					alias OtherTypes = Map!(ImmutableOf, Types);
-					enum tid = IndexOf!(typeof(value), OtherTypes);
-					alias T = Types[tid];
+			static if (allSatisfy!(isCopyable, Map!(ConstOf, Types))) {
+				/// ditto
+				this(ref const(SumType) other) const
+				{
+					storage = other.match!((ref value) {
+						alias OtherTypes = Map!(ConstOf, Types);
+						enum tid = IndexOf!(typeof(value), OtherTypes);
+						alias T = Types[tid];
 
-					mixin("immutable(Storage) newStorage = { ",
-						Storage.memberName!T, ": value",
-					" };");
+						mixin("const(Storage) newStorage = { ",
+							Storage.memberName!T, ": value",
+						" };");
 
-					return newStorage;
-				});
+						return newStorage;
+					});
 
-				tag = other.tag;
+					tag = other.tag;
+				}
+			} else {
+				@disable this(ref const(SumType) other) const;
+			}
+
+			static if (allSatisfy!(isCopyable, Map!(ImmutableOf, Types))) {
+				/// ditto
+				this(ref immutable(SumType) other) immutable
+				{
+					storage = other.match!((ref value) {
+						alias OtherTypes = Map!(ImmutableOf, Types);
+						enum tid = IndexOf!(typeof(value), OtherTypes);
+						alias T = Types[tid];
+
+						mixin("immutable(Storage) newStorage = { ",
+							Storage.memberName!T, ": value",
+						" };");
+
+						return newStorage;
+					});
+
+					tag = other.tag;
+				}
+			} else {
+				@disable this(ref immutable(SumType) other) immutable;
 			}
 		}
-	} else {
-		/// `@disable`d if any member type is non-copyable.
-		@disable this(this);
 	}
 
 	version(SumTypeNoDefaultCtor) {
@@ -833,6 +874,7 @@ version (D_BetterC) {} else
 
 	assert(!__traits(compiles, MySum()));
 	assert(__traits(compiles, MySum(42)));
+	auto x = MySum(42);
 }
 
 // const SumTypes
@@ -1167,24 +1209,41 @@ version(D_BetterC) {} else
 	assert(((a = b) = MySum(123)) == MySum(123));
 }
 
-version(none) {
-	// Known bug; needs fix for dlang issue 19902
-	// Types with copy constructors
-	@safe unittest {
-		static struct S
+// Types with copy constructors
+@safe unittest {
+	static struct S
+	{
+		int n;
+
+		this(ref return scope inout S other) inout
 		{
-			int n;
-			this(ref return scope inout S other) inout { n++; }
+			n = other.n + 1;
 		}
-
-		SumType!S x = S();
-		SumType!S y = x;
-
-		auto xval = x.get!S.n;
-		auto yval = y.get!S.n;
-
-		assert(xval != yval);
 	}
+
+	SumType!S x = S();
+	SumType!S y = x;
+
+	auto xval = x.get!S.n;
+	auto yval = y.get!S.n;
+
+	assert(xval != yval);
+}
+
+// Copyable by generated copy constructors
+@safe unittest {
+	static struct Inner
+	{
+		ref this(ref inout Inner other) {}
+	}
+
+	static struct Outer
+	{
+		SumType!Inner inner;
+	}
+
+	Outer x;
+	Outer y = x;
 }
 
 // Types with disabled opEquals
