@@ -21,7 +21,7 @@ module sumtype;
 /// $(H3 Basic usage)
 version (D_BetterC) {} else
 @safe unittest {
-    import std.math: approxEqual;
+    import std.math: isClose;
 
     struct Fahrenheit { double degrees; }
     struct Celsius { double degrees; }
@@ -47,9 +47,9 @@ version (D_BetterC) {} else
         );
     }
 
-    assert(toFahrenheit(t1).degrees.approxEqual(98.6));
-    assert(toFahrenheit(t2).degrees.approxEqual(212));
-    assert(toFahrenheit(t3).degrees.approxEqual(32));
+    assert(toFahrenheit(t1).degrees.isClose(98.6));
+    assert(toFahrenheit(t2).degrees.isClose(212));
+    assert(toFahrenheit(t3).degrees.isClose(32));
 
     // Use ref to modify the value in place.
     pure @safe @nogc nothrow
@@ -63,7 +63,7 @@ version (D_BetterC) {} else
     }
 
     freeze(t1);
-    assert(toFahrenheit(t1).degrees.approxEqual(32));
+    assert(toFahrenheit(t1).degrees.isClose(32));
 
     // Use a catch-all handler to give a default result.
     pure @safe @nogc nothrow
@@ -90,7 +90,7 @@ version (D_BetterC) {} else
  */
 version (D_BetterC) {} else
 @safe unittest {
-    import std.math: approxEqual, cos, PI, sqrt;
+    import std.math: isClose, cos, PI, sqrt;
 
     struct Rectangular { double x, y; }
     struct Polar { double r, theta; }
@@ -117,10 +117,10 @@ version (D_BetterC) {} else
     Vector u = Rectangular(1, 1);
     Vector v = Polar(1, PI/4);
 
-    assert(length(u).approxEqual(sqrt(2.0)));
-    assert(length(v).approxEqual(1));
-    assert(horiz(u).approxEqual(1));
-    assert(horiz(v).approxEqual(sqrt(0.5)));
+    assert(length(u).isClose(sqrt(2.0)));
+    assert(length(v).isClose(1));
+    assert(horiz(u).isClose(1));
+    assert(horiz(v).isClose(sqrt(0.5)));
 }
 
 /** $(H3 Arithmetic expression evaluator)
@@ -1851,17 +1851,17 @@ version (D_BetterC) {} else
 
 version(unittest) {
 	version(D_BetterC) {
-		// std.math.approxEqual depends on core.runtime.math, so use a
+		// std.math.isClose depends on core.runtime.math, so use a
 		// libc-based version for testing with -betterC
 		@safe pure @nogc nothrow
-		private bool approxEqual(double lhs, double rhs)
+		private bool isClose(double lhs, double rhs)
 		{
 			import core.stdc.math: fabs;
 
 			return (lhs - rhs) < 1e-5;
 		}
 	} else {
-		import std.math: approxEqual;
+		import std.math: isClose;
 	}
 }
 
@@ -1873,7 +1873,7 @@ version(unittest) {
 	MySum y = MySum(3.14);
 
 	assert(x.match!(v => v*2) == 84);
-	assert(y.match!(v => v*2).approxEqual(6.28));
+	assert(y.match!(v => v*2).isClose(6.28));
 }
 
 // Fallback to generic handler
@@ -1905,7 +1905,7 @@ version (D_BetterC) {} else
 	MySum w = MySum(chars[]);
 
 	assert(x.match!(v => v*2, v => v.length) == 84);
-	assert(y.match!(v => v*2, v => v.length).approxEqual(6.28));
+	assert(y.match!(v => v*2, v => v.length).isClose(6.28));
 	assert(w.match!(v => v*2, v => v.length) == 3);
 	assert(z.match!(v => v*2, v => v.length) == 3);
 }
@@ -2023,7 +2023,7 @@ version (D_Exceptions)
 		(ref double d) { d *= 2; }
 	);
 
-	assert(value.get!double.approxEqual(6.28));
+	assert(value.get!double.isClose(6.28));
 }
 
 // Unreachable handlers
