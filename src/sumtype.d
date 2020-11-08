@@ -240,7 +240,7 @@ import std.traits: CommonType;
 import std.typecons: ReplaceTypeUnless;
 import std.typecons: Flag;
 
-/// `This` placeholder, for use in self-referential types.
+/// Placeholder used to refer to the enclosing [SumType]
 struct This {}
 
 // Converts an unsigned integer to a compile-time string constant.
@@ -1512,6 +1512,7 @@ template tryMatch(handlers...)
 version (D_Exceptions)
 class MatchException : Exception
 {
+	///
 	pure @safe @nogc nothrow
 	this(string msg, string file = __FILE__, size_t line = __LINE__)
 	{
