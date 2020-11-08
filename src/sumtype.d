@@ -1292,21 +1292,22 @@ unittest {
 /// True if `T` is a `SumType` or implicitly converts to one, otherwise false.
 enum bool isSumType(T) = is(T : SumType!Args, Args...);
 
+///
 @safe unittest {
-	static struct Wrapper
+	static struct ConvertsToSumType
 	{
-		SumType!int s;
-		alias s this;
+		SumType!int payload;
+		alias payload this;
 	}
 
-	static struct Container
+	static struct ContainsSumType
 	{
-		SumType!int s;
+		SumType!int payload;
 	}
 
 	assert(isSumType!(SumType!int));
-	assert(isSumType!Wrapper);
-	assert(!isSumType!Container);
+	assert(isSumType!ConvertsToSumType);
+	assert(!isSumType!ContainsSumType);
 }
 
 /**
