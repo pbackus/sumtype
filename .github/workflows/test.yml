@@ -12,6 +12,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
+          - windows-latest
           - macOS-latest
         dc:
           - dmd-latest
@@ -28,8 +29,16 @@ jobs:
         with:
           compiler: ${{ matrix.dc }}
 
-      - name: Run tests
+      - name: Run tests (POSIX)
         run: |
           dub test --compiler=${DC}
           dub test --compiler=${DC} --build=unittest-dip1000
           if [ "$DC" = "dmd" ]; then ./test-betterc.sh; fi
+        if: matrix.os != 'windows-latest'
+
+      - name: Run tests (Windows)
+        run: |
+          dub test --compiler=$env:DC
+          dub test --compiler=$env:DC --build=unittest-dip1000
+          if ($env:DC -eq 'dmd') { dmd -unittest -g -betterC -I=src -i -run test_betterc.d }
+        if: matrix.os == 'windows-latest'
