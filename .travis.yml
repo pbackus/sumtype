@@ -17,22 +17,22 @@ script:
   - dub test --compiler=${DC} --build=unittest-dip1000
   - if [ "$DC" = "dmd" ]; then ./test-betterc.sh; fi
 
-jobs:
-  include:
-    - stage: deploy
-      script:
-        - wget https://github.com/adamdruppe/adrdox/archive/master.zip
-        - unzip master.zip
-        - pushd adrdox-master && make && popd
-        - export PATH=$PATH:$PWD/adrdox-master
-        - doc2 --genSearchIndex --genSource -o generated-docs src
-      deploy: &pages
-        provider: pages
-        skip_cleanup: true
-        local_dir: generated-docs
-        github_token: $GH_REPO_TOKEN
-        on:
-          branch: master
+# jobs:
+#   include:
+#     - stage: deploy
+#       script:
+#         - wget https://github.com/adamdruppe/adrdox/archive/master.zip
+#         - unzip master.zip
+#         - pushd adrdox-master && make && popd
+#         - export PATH=$PATH:$PWD/adrdox-master
+#         - doc2 --genSearchIndex --genSource -o generated-docs src
+#       deploy: &pages
+#         provider: pages
+#         skip_cleanup: true
+#         local_dir: generated-docs
+#         github_token: $GH_REPO_TOKEN
+#         on:
+#           branch: master
 
 env:
   global:
