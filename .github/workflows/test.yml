@@ -1,0 +1,36 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      -master
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macOS-latest
+        dc:
+          - dmd-latest
+          - dmd-2.094.1
+          - ldc-latest
+          - ldc-1.24.0
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install D compiler
+        uses: dlang-community/setup-dlang@v1
+        with:
+          compiler: ${{ matrix.dc }}
+
+      - name: Run tests
+        run: |
+          dub test --compiler=${DC}
+          dub test --compiler=${DC} --build=unittest-dip1000
+          if [ "$DC" = "dmd" ]; then ./test-betterc.sh; fi
