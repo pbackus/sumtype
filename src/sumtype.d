@@ -241,7 +241,7 @@ import std.typecons: ReplaceTypeUnless;
 import std.typecons: Flag;
 
 /// `This` placeholder, for use in self-referential types.
-public import std.variant: This;
+struct This {}
 
 // Converts an unsigned integer to a compile-time string constant.
 private enum toCtString(ulong n) = n.stringof[0 .. $ - "LU".length];
@@ -761,16 +761,6 @@ version(D_BetterC) {} else
 	assert(is(MySum.Types == AliasSeq!(int, float, MySum*)));
 }
 
-// Works alongside Algebraic
-version (D_BetterC) {} else
-@safe unittest {
-	import std.variant;
-
-	alias Bar = Algebraic!(This*);
-
-	assert(is(Bar.AllowedTypes[0] == Bar*));
-}
-
 // Types with destructors and postblits
 @system unittest {
 	int copies;
@@ -1086,6 +1076,16 @@ version (D_BetterC) {} else
 	static assert(__traits(compiles, SumType!(Nat*, Tuple!(This*, This*))));
 }
 
+// Self-referential SumTypes inside Algebraic
+version(D_BetterC) {} else
+@safe unittest {
+	import std.variant: Algebraic;
+
+	alias T = Algebraic!(SumType!(This*));
+
+	assert(is(T.AllowedTypes[0].Types[0] == T.AllowedTypes[0]*));
+}
+
 // Doesn't call @system postblits in @safe code
 @safe unittest {
 	static struct SystemCopy { @system this(this) {} }
@@ -1273,6 +1273,13 @@ version(D_BetterC) {} else
 	SumType!(string, int) y = 123;
 
 	assert(!__traits(compiles, x != y));
+}
+
+// Self-reference in return/parameter type of function pointer member
+@safe unittest {
+	assert(__traits(compiles, {
+		alias T = SumType!(int, This delegate(This));
+	}));
 }
 
 /// True if `T` is an instance of the `SumType` template, otherwise false.
