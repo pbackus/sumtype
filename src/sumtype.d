@@ -1296,7 +1296,7 @@ unittest {
 	assert(!isSumTypeInstance!Wrapper);
 }
 
-/// True if `T` is a `SumType` or implicitly converts to one, otherwise false.
+/// True if `T` is a [SumType] or implicitly converts to one, otherwise false.
 enum bool isSumType(T) = is(T : SumType!Args, Args...);
 
 ///
