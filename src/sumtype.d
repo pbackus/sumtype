@@ -240,7 +240,7 @@ import std.traits: CommonType;
 import std.typecons: ReplaceTypeUnless;
 import std.typecons: Flag;
 
-/// Placeholder used to refer to the enclosing [SumType]
+/// Placeholder used to refer to the enclosing [SumType].
 struct This {}
 
 // Converts an unsigned integer to a compile-time string constant.
@@ -400,7 +400,7 @@ public:
 			allSatisfy!(isCopyable, Map!(InoutOf, Types))
 			&& !anySatisfy!(hasPostblit, Map!(InoutOf, Types))
 		) {
-			/// Constructs a `SumType` that's a copy of another `SumType`
+			/// Constructs a `SumType` that's a copy of another `SumType`.
 			this(ref inout(SumType) other) inout
 			{
 				storage = other.match!((ref value) {
