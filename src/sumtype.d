@@ -637,7 +637,7 @@ public:
 
 	version (D_BetterC) {} else
 	/**
-	 * Handles formatted writing of the `SumType`'s value.
+	 * Handles formatted writing of the `SumType`'s current value.
 	 *
 	 * Not available when compiled with `-betterC`.
 	 *
@@ -1330,8 +1330,8 @@ enum bool isSumType(T) = is(T : SumType!Args, Args...);
  * Every type must have a matching handler, and every handler must match at
  * least one type. This is enforced at compile time.
  *
- * Handlers may be functions, delegates, or objects with opCall overloads. If a
- * function with more than one overload is given as a handler, all of the
+ * Handlers may be functions, delegates, or objects with `opCall` overloads. If
+ * a function with more than one overload is given as a handler, all of the
  * overloads are considered as potential matches.
  *
  * Templated handlers are also accepted, and will match any type for which they
@@ -1341,7 +1341,7 @@ enum bool isSumType(T) = is(T : SumType!Args, Args...);
  *
  * If multiple [SumType]s are passed to match, their values are passed to the
  * handlers as separate arguments, and matching is done for each possible
- * combination of argument types. See [#multiple-dispatch|"Multiple dispatch"] for
+ * combination of value types. See [#multiple-dispatch|"Multiple dispatch"] for
  * an example.
  *
  * Returns:
