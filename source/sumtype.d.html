@@ -268,7 +268,7 @@
 <a class="br" href="#L240" id="L240">240 </a><span class="kwrd">import</span> <span class="hid">std.typecons</span>: <span class="hid">ReplaceTypeUnless</span>;
 <a class="br" href="#L241" id="L241">241 </a><span class="kwrd">import</span> <span class="hid">std.typecons</span>: <span class="hid">Flag</span>;
 <a class="br" href="#L242" id="L242">242 </a>
-<a class="br" href="#L243" id="L243">243 </a><span class="com">/// Placeholder used to refer to the enclosing [SumType]</span>
+<a class="br" href="#L243" id="L243">243 </a><span class="com">/// Placeholder used to refer to the enclosing [SumType].</span>
 <a class="br" href="#L244" id="L244">244 </a><span class="kwrd">struct</span> <a class="hid" href="sumtype.d.html#L244" title="sumtype.This">This</a> {}
 <a class="br" href="#L245" id="L245">245 </a>
 <a class="br" href="#L246" id="L246">246 </a><span class="com">// Converts an unsigned integer to a compile-time string constant.</span>
@@ -428,7 +428,7 @@
 <a class="br" href="#L400" id="L400">400 </a>			<span class="hid">allSatisfy</span>!(<span class="hid">isCopyable</span>, <span class="hid">Map</span>!(<span class="hid">InoutOf</span>, <span class="hid">Types</span>))
 <a class="br" href="#L401" id="L401">401 </a>			&amp;&amp; !<span class="hid">anySatisfy</span>!(<span class="hid">hasPostblit</span>, <span class="hid">Map</span>!(<span class="hid">InoutOf</span>, <span class="hid">Types</span>))
 <a class="br" href="#L402" id="L402">402 </a>		) {
-<a class="br" href="#L403" id="L403">403 </a>			<span class="com">/// Constructs a `SumType` that's a copy of another `SumType`</span>
+<a class="br" href="#L403" id="L403">403 </a>			<span class="com">/// Constructs a `SumType` that's a copy of another `SumType`.</span>
 <a class="br" href="#L404" id="L404">404 </a>			<span class="kwrd">this</span>(<span class="kwrd">ref</span> <span class="kwrd">inout</span>(<a class="hid" href="sumtype.d.html#L283" title="sumtype.SumType">SumType</a>) <span class="hid">other</span>) <span class="kwrd">inout</span>
 <a class="br" href="#L405" id="L405">405 </a>			{
 <a class="br" href="#L406" id="L406">406 </a>				<span class="hid">storage</span> = <span class="hid">other.match</span>!((<span class="kwrd">ref</span> <span class="hid">value</span>) {
@@ -665,7 +665,7 @@
 <a class="br" href="#L637" id="L637">637 </a>
 <a class="br" href="#L638" id="L638">638 </a>	<span class="kwrd">version</span> (<span class="hid">D_BetterC</span>) {} <span class="kwrd">else</span>
 <a class="br" href="#L639" id="L639">639 </a>	<span class="com">/**
-<a class="br" href="#L640" id="L640">640 </a>	 * Handles formatted writing of the `SumType`'s value.
+<a class="br" href="#L640" id="L640">640 </a>	 * Handles formatted writing of the `SumType`'s current value.
 <a class="br" href="#L641" id="L641">641 </a>	 *
 <a class="br" href="#L642" id="L642">642 </a>	 * Not available when compiled with `-betterC`.
 <a class="br" href="#L643" id="L643">643 </a>	 *
@@ -1358,8 +1358,8 @@
 <a class="br" href="#L1330" id="L1330">1330 </a> * Every type must have a matching handler, and every handler must match at
 <a class="br" href="#L1331" id="L1331">1331 </a> * least one type. This is enforced at compile time.
 <a class="br" href="#L1332" id="L1332">1332 </a> *
-<a class="br" href="#L1333" id="L1333">1333 </a> * Handlers may be functions, delegates, or objects with opCall overloads. If a
-<a class="br" href="#L1334" id="L1334">1334 </a> * function with more than one overload is given as a handler, all of the
+<a class="br" href="#L1333" id="L1333">1333 </a> * Handlers may be functions, delegates, or objects with `opCall` overloads. If
+<a class="br" href="#L1334" id="L1334">1334 </a> * a function with more than one overload is given as a handler, all of the
 <a class="br" href="#L1335" id="L1335">1335 </a> * overloads are considered as potential matches.
 <a class="br" href="#L1336" id="L1336">1336 </a> *
 <a class="br" href="#L1337" id="L1337">1337 </a> * Templated handlers are also accepted, and will match any type for which they
@@ -1369,7 +1369,7 @@
 <a class="br" href="#L1341" id="L1341">1341 </a> *
 <a class="br" href="#L1342" id="L1342">1342 </a> * If multiple [SumType]s are passed to match, their values are passed to the
 <a class="br" href="#L1343" id="L1343">1343 </a> * handlers as separate arguments, and matching is done for each possible
-<a class="br" href="#L1344" id="L1344">1344 </a> * combination of argument types. See [#multiple-dispatch|&quot;Multiple dispatch&quot;] for
+<a class="br" href="#L1344" id="L1344">1344 </a> * combination of value types. See [#multiple-dispatch|&quot;Multiple dispatch&quot;] for
 <a class="br" href="#L1345" id="L1345">1345 </a> * an example.
 <a class="br" href="#L1346" id="L1346">1346 </a> *
 <a class="br" href="#L1347" id="L1347">1347 </a> * Returns:
