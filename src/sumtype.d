@@ -1532,6 +1532,14 @@ template canMatch(alias handler, Ts...)
 	enum canMatch = is(typeof((Ts args) => handler(args)));
 }
 
+///
+@safe unittest {
+    alias handleInt = (int i) => "got an int";
+
+    assert( canMatch!(handleInt, int));
+    assert(!canMatch!(handleInt, string));
+}
+
 // Includes all overloads of the given handler
 @safe unittest {
 	static struct OverloadSet
