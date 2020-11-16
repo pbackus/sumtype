@@ -1285,7 +1285,7 @@ version(D_BetterC) {} else
 /// True if `T` is an instance of the `SumType` template, otherwise false.
 private enum bool isSumTypeInstance(T) = is(T == SumType!Args, Args...);
 
-unittest {
+@safe unittest {
 	static struct Wrapper
 	{
 		SumType!int s;
@@ -2066,7 +2066,7 @@ version (D_Exceptions)
 }
 
 // Unsafe handlers
-unittest {
+@system unittest {
 	SumType!int x;
 	alias unsafeHandler = (int x) @system { return; };
 
