@@ -1875,7 +1875,7 @@ version(unittest) {
 		{
 			import core.stdc.math: fabs;
 
-			return (lhs - rhs) < 1e-5;
+			return fabs(lhs - rhs) < 1e-5;
 		}
 	} else {
 		import std.math: isClose;
