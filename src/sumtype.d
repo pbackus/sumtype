@@ -487,7 +487,7 @@ public:
 		}
 	}
 
-	version(SumTypeNoDefaultCtor) {
+	version (SumTypeNoDefaultCtor) {
 		@disable this();
 	}
 
@@ -719,7 +719,7 @@ public:
 }
 
 // Equality of differently-qualified SumTypes
-version(D_BetterC) {} else
+version (D_BetterC) {} else
 @safe unittest {
 	alias SumA = SumType!(int, float);
 	alias SumB = SumType!(const(int[]), int[]);
@@ -918,7 +918,7 @@ version (D_BetterC) {} else
 }
 
 // string formatting
-version(D_BetterC) {} else
+version (D_BetterC) {} else
 @safe unittest {
 	import std.format: format;
 
@@ -929,7 +929,7 @@ version(D_BetterC) {} else
 }
 
 // string formatting of qualified SumTypes
-version(D_BetterC) {} else
+version (D_BetterC) {} else
 @safe unittest {
 	import std.format: format;
 
@@ -1080,7 +1080,7 @@ version (D_BetterC) {} else
 }
 
 // Self-referential SumTypes inside Algebraic
-version(D_BetterC) {} else
+version (D_BetterC) {} else
 @safe unittest {
 	import std.variant: Algebraic;
 
@@ -1187,7 +1187,7 @@ version (D_BetterC) {} else
 }
 
 // toString with non-copyable types
-version(D_BetterC) {} else
+version (D_BetterC) {} else
 @safe unittest {
 	struct NoCopy
 	{
@@ -1426,7 +1426,7 @@ template match(handlers...)
 
     alias Point = SumType!(Point2D, Point3D);
 
-    version(none) {
+    version (none) {
         // This function works, but the code is ugly and repetitive.
         // It uses three separate calls to match!
         @safe pure nothrow @nogc
@@ -1869,8 +1869,8 @@ version (D_BetterC) {} else
 	assert(!y.match!((int v) => v == answer, (float v) => v == answer));
 }
 
-version(unittest) {
-	version(D_BetterC) {
+version (unittest) {
+	version (D_BetterC) {
 		// std.math.isClose depends on core.runtime.math, so use a
 		// libc-based version for testing with -betterC
 		@safe pure @nogc nothrow
