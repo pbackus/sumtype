@@ -330,7 +330,10 @@ private:
 		if (IndexOf!(T, Types) >= 0)
 	{
 		enum tid = IndexOf!(T, Types);
-		assert(tag == tid);
+		assert(tag == tid,
+			"This `" ~ SumType.stringof ~
+			"` does not contain a(n) `" ~ T.stringof ~ "`"
+		);
 		return __traits(getMember, storage, Storage.memberName!T);
 	}
 
@@ -1595,7 +1598,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			 * stride!(SumTypes.length), so as long as this overflow check
 			 * passes, we don't need to check for overflow anywhere else.
 			 */
-			assert(!overflow);
+			assert(!overflow, "Integer overflow");
 			return result;
 		}
 
@@ -1795,7 +1798,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			}
 		}
 
-		assert(false); // unreached
+		assert(false, "unreachable");
 	}
 }
 
