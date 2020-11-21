@@ -2032,8 +2032,6 @@ version (D_Exceptions)
 
 // Handlers with ref parameters
 @safe unittest {
-	import std.meta: staticIndexOf;
-
 	alias Value = SumType!(long, double);
 
 	auto value = Value(3.14);
