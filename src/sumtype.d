@@ -631,7 +631,7 @@ public:
 	 *
 	 * Not available when compiled with `-betterC`.
 	 */
-	string toString(this T)()
+	string toString(this This)()
 	{
 		import std.conv: to;
 
