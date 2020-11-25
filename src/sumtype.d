@@ -251,8 +251,8 @@ private enum isHashable(T) = __traits(compiles,
 );
 
 /**
- * A tagged union that can hold a single value from any of a specified set of
- * types.
+ * A [tagged union](https://en.wikipedia.org/wiki/Tagged_union) that can hold a
+ * single value from any of a specified set of types.
  *
  * The value in a `SumType` can be operated on using [match|pattern matching].
  *
