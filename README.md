@@ -3,6 +3,8 @@ sumtype
 
 A sum type for modern D.
 
+Random change to check that tests run on pull requests.
+
 Features
 --------
 
