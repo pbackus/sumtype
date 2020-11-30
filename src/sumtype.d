@@ -591,11 +591,7 @@ public:
 		/// Calls the destructor of the `SumType`'s current value.
 		~this()
 		{
-			this.match!((ref value) {
-				static if (hasElaborateDestructor!(typeof(value))) {
-					destroy(value);
-				}
-			});
+			this.match!destroyIfOwner;
 		}
 	}
 
