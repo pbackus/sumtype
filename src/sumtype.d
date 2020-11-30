@@ -1598,18 +1598,11 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		 * Because D does not allow a struct to be the controlling expression
 		 * of a switch statement, we cannot dispatch on the TagTuple directly.
 		 * Instead, we must map each TagTuple to a unique integer and generate
-		 * a case label for each of those integers. This mapping is implemented
-		 * in `fromCaseId` and `toCaseId`.
+		 * a case label for each of those integers.
 		 *
-		 * The mapping is done by pretending we are indexing into an
-		 * `args.length`-dimensional static array of type
-		 *
-		 *   ubyte[SumTypes[0].Types.length]...[SumTypes[$-1].Types.length]
-		 *
-		 * ...where each element corresponds to the TagTuple whose tags can be
-		 * used (in reverse order) as indices to retrieve it. The caseId for
-		 * that TagTuple is the (hypothetical) offset, in bytes, of its
-		 * corresponding element.
+		 * This mapping is implemented in `fromCaseId` and `toCaseId`. It uses
+		 * the same technique that's used to map index tuples to memory offsets
+		 * in a multidimensional static array.
 		 *
 		 * For example, when `args` consists of two SumTypes with two member
 		 * types each, the TagTuples corresponding to each case label are:
@@ -1618,6 +1611,9 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		 *   case 1:  TagTuple([1, 0])
 		 *   case 2:  TagTuple([0, 1])
 		 *   case 3:  TagTuple([1, 1])
+		 *
+		 * When there is only one argument, the caseId is equal to that
+		 * argument's tag.
 		 */
 		static struct TagTuple
 		{
@@ -1702,10 +1698,6 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		/* The total number of cases is
 		 *
 		 *   Π SumTypes[i].Types.length for 0 ≤ i < SumTypes.length
-		 *
-		 * Or, equivalently,
-		 *
-		 *   ubyte[SumTypes[0].Types.length]...[SumTypes[$-1].Types.length].sizeof
 		 *
 		 * Conveniently, this is equal to stride!(SumTypes.length), so we can
 		 * use that function to compute it.
