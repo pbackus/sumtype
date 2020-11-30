@@ -509,7 +509,7 @@ public:
 					cast(void) () @system {}();
 				}
 
-				this.match!(.maybeDestroyValue);
+				this.match!destroyIfOwner;
 
 				mixin("Storage newStorage = { ",
 					Storage.memberName!T, ": forward!rhs",
@@ -1306,8 +1306,6 @@ enum bool isSumType(T) = is(T : SumType!Args, Args...);
 	assert(!isSumType!ContainsSumType);
 }
 
-private enum size_t sumTypeLength(S) = S.Types.length;
-
 /**
  * Calls a type-appropriate function with the value held in a [SumType].
  *
@@ -1566,7 +1564,7 @@ private template Iota(size_t n)
  * multidimensional static array is multiplied by to calculate the
  * offset of a specific element.
  */
-private size_t stride(size_t dim, length...)()
+private size_t stride(size_t dim, lengths...)()
 {
 	import core.checkedint: mulu;
 
@@ -1574,7 +1572,7 @@ private size_t stride(size_t dim, length...)()
 	bool overflow = false;
 
 	static foreach (i; 0 .. dim) {
-		result = mulu(result, length[i], overflow);
+		result = mulu(result, lengths[i], overflow);
 	}
 
 	/* The largest number matchImpl uses, numCases, is calculated with
@@ -1590,7 +1588,8 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 	auto matchImpl(SumTypes...)(auto ref SumTypes args)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
-		alias stride(size_t i) = .stride!(i, Map!(sumTypeLength, SumTypes));
+		enum typeCount(SumType) = SumType.Types.length;
+		alias stride(size_t i) = .stride!(i, Map!(typeCount, SumTypes));
 
 		/* A TagTuple represents a single possible set of tags that `args`
 		 * could have at runtime.
@@ -1662,24 +1661,21 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 		 * A list of arguments to be passed to a handler needed for the case
 		 * labeled with `caseId`.
 		 */
-		template values(size_t caseId)
+		template handlerArgs(size_t caseId)
 		{
 			enum tags = TagTuple.fromCaseId(caseId);
-			enum getValue(size_t i: tags.length) = "";
-			enum getValue(size_t i) = "args[" ~ toCtString!i ~ "].get!(SumTypes[" ~ toCtString!i ~ "]" ~
-				".Types[" ~ toCtString!(tags[i]) ~ "])(), " ~ getValue!(i + 1);
-			enum values = getValue!0;
+			enum argsFrom(size_t i: tags.length) = "";
+			enum argsFrom(size_t i) = "args[" ~ toCtString!i ~ "].get!(SumTypes[" ~ toCtString!i ~ "]" ~
+				".Types[" ~ toCtString!(tags[i]) ~ "])(), " ~ argsFrom!(i + 1);
+			enum handlerArgs = argsFrom!0;
 		}
 
-		/* An AliasSeq of the types of the member values returned by the
-		 * functions in `values!caseId`.
+		/* An AliasSeq of the types of the member values in the argument list
+		 * returned by `handlerArgs!caseId`.
 		 *
 		 * Note that these are the actual (that is, qualified) types of the
 		 * member values, which may not be the same as the types listed in
 		 * the arguments' `.Types` properties.
-		 *
-		 * typeof(values!caseId) won't work because it gives the types
-		 * of the functions, not the return values (even with @property).
 		 */
 		template valueTypes(size_t caseId)
 		{
@@ -1758,7 +1754,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 			static foreach (caseId; 0 .. numCases) {
 				case caseId:
 					static if (matches[caseId] != noMatch) {
-						return mixin(handlerName!(matches[caseId]) ~ "(" ~ values!caseId ~ ")");
+						return mixin(handlerName!(matches[caseId]), "(", handlerArgs!caseId, ")");
 					} else {
 						static if(exhaustive) {
 							static assert(false,
@@ -2211,7 +2207,7 @@ static if (__traits(compiles, { import std.traits: isRvalueAssignable; })) {
 	@property ref T lvalueOf(T)(inout __InoutWorkaroundStruct = __InoutWorkaroundStruct.init);
 }
 
-private void maybeDestroyValue(T)(ref T value)
+private void destroyIfOwner(T)(ref T value)
 {
 	static if (hasElaborateDestructor!T) {
 		destroy(value);
