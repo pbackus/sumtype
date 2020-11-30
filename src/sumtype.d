@@ -250,6 +250,8 @@ private enum isHashable(T) = __traits(compiles,
 	() nothrow @safe { hashOf(T.init); }
 );
 
+private enum hasPostblit(T) = __traits(hasPostblit, T);
+
 /**
  * A [tagged union](https://en.wikipedia.org/wiki/Tagged_union) that can hold a
  * single value from any of a specified set of types.
@@ -387,8 +389,6 @@ public:
 	}
 
 	static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
-		private enum hasPostblit(T) = __traits(hasPostblit, T);
-
 		static if (
 			allSatisfy!(isCopyable, Map!(InoutOf, Types))
 			&& !anySatisfy!(hasPostblit, Map!(InoutOf, Types))
