@@ -340,7 +340,8 @@ public:
 			storage = () {
 				static if (isCopyable!T) {
 					mixin("Storage newStorage = { ",
-						Storage.memberName!T, ": value",
+						// Workaround for dlang issue 21542
+						Storage.memberName!T, ": (__ctfe ? value : forward!value)",
 					" };");
 				} else {
 					mixin("Storage newStorage = { ",
