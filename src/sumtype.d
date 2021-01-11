@@ -289,6 +289,7 @@ private:
 
 	union Storage
 	{
+		// Workaround for dlang issue 20068
 		template memberName(T)
 			if (IndexOf!(T, Types) >= 0)
 		{
@@ -337,6 +338,7 @@ public:
 		{
 			import core.lifetime: forward;
 
+			// Workaround for dlang issue 21229
 			storage = () {
 				static if (isCopyable!T) {
 					mixin("Storage newStorage = { ",
