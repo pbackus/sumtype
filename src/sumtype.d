@@ -334,7 +334,7 @@ public:
 
 	static foreach (tid, T; Types) {
 		/// Constructs a `SumType` holding a specific value.
-		this()(auto ref T value)
+		this(T value)
 		{
 			import core.lifetime: forward;
 
@@ -358,32 +358,37 @@ public:
 		}
 
 		static if (isCopyable!T) {
-			/// ditto
-			this()(auto ref const(T) value) const
-			{
-				storage = () {
-					mixin("const(Storage) newStorage = { ",
-						Storage.memberName!T, ": value",
-					" };");
+			// Avoid defining the same constructor multiple times
+			static if (IndexOf!(const(T), Map!(ConstOf, Types)) == tid) {
+				/// ditto
+				this(const(T) value) const
+				{
+					storage = () {
+						mixin("const(Storage) newStorage = { ",
+							Storage.memberName!T, ": value",
+						" };");
 
-					return newStorage;
-				}();
+						return newStorage;
+					}();
 
-				tag = tid;
+					tag = tid;
+				}
 			}
 
-			/// ditto
-			this()(auto ref immutable(T) value) immutable
-			{
-				storage = () {
-					mixin("immutable(Storage) newStorage = { ",
-						Storage.memberName!T, ": value",
-					" };");
+			static if (IndexOf!(immutable(T), Map!(ImmutableOf, Types)) == tid) {
+				/// ditto
+				this(immutable(T) value) immutable
+				{
+					storage = () {
+						mixin("immutable(Storage) newStorage = { ",
+							Storage.memberName!T, ": value",
+						" };");
 
-					return newStorage;
-				}();
+						return newStorage;
+					}();
 
-				tag = tid;
+					tag = tid;
+				}
 			}
 		} else {
 			@disable this(const(T) value) const;
@@ -499,7 +504,7 @@ public:
 			 * guarantee that there are no outstanding references to $(I any)
 			 * of the `SumType`'s members when the assignment occurs.
 			 */
-			ref SumType opAssign()(auto ref T rhs)
+			ref SumType opAssign(T rhs)
 			{
 				import core.lifetime: forward;
 				import std.traits: hasIndirections, hasNested;
@@ -1268,6 +1273,16 @@ version (D_BetterC) {} else
 	assert(__traits(compiles, {
 		alias T = SumType!(int, This delegate(This));
 	}));
+}
+
+// Construction and assignment from implicitly-convertible lvalue
+@safe unittest {
+	alias MySum = SumType!bool;
+
+	const(bool) b = true;
+
+	assert(__traits(compiles, { MySum x = b; }));
+	assert(__traits(compiles, { MySum x; x = b; }));
 }
 
 /// True if `T` is an instance of the `SumType` template, otherwise false.
