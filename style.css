@@ -276,7 +276,7 @@ pre.d_code  { background-color: #fdf6e3; color: #002b36; padding: 0.25em; border
 .documentation-comment li,
 .documentation-comment p {
 	/* white-space: pre-line; */
-	max-width: 74ch;
+	/* max-width: 74ch; */
 	/*font-size: 1.1rem;*/
 	font-size: 1.0rem;
 	line-height: 1.5;
@@ -1542,6 +1542,11 @@ tt.D.highlighted a {
 .specially-highlighted {
 	background-color: yellow;
 	background-color: rgba(255, 255, 0, 0.5);
+}
+
+.console .specially-highlighted {
+	background-color: rgba(255, 255, 0, 1.0);
+	color: black;
 }
 
 .quickindex {

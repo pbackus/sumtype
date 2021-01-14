@@ -62,7 +62,11 @@ function adrdox_search(searchTerm) {
 		hits.push( { decl: name, score: hitsObj[name] } );
 
 	hits.sort(function(a, b) {
-		return Number(b.score) - Number(a.score);
+		var s1 = Number(b.score);
+		var s2 = Number(a.score);
+		if(s1 == s2)
+			return a.decl < b.decl;
+		return s1 - s2;
 	});
 
 	var container = document.getElementById("page-content");
@@ -71,6 +75,8 @@ function adrdox_search(searchTerm) {
 	var resultsElement = document.createElement("dl");
 	resultsElement.className = "member-list";
 	container.appendChild(resultsElement);
+
+	var prevFqn;
 
 	for(var a = 0; a < hits.length; a++) {
 		var decl = searchDocument.querySelector("adrdox > listing decl[id=\""+hits[a].decl+"\"]");
@@ -84,16 +90,25 @@ function adrdox_search(searchTerm) {
 		var par = decl;
 		while(par) {
 			fqn.push(par.querySelector("name").textContent);
+			if(par.getAttribute("type") == "module")
+				break;
 			par = par.parentNode;
 			if(par.tagName != "decl")
 				break;
 		}
 
-		link.textContent = fqn.reverse().join(".\u200B");
+		var newFqn = fqn.reverse().join(".\u200B");
+
+		if(newFqn == prevFqn)
+			continue;
+		prevFqn = newFqn;
+
+		link.textContent = newFqn;
 
 		dt.appendChild(link);
 		dt.className = "search-result";
 		dt.setAttribute("data-score", hits[a].score);
+		dt.setAttribute("data-decl", hits[a].decl);
 		resultsElement.appendChild(dt);
 
 		var dd = document.createElement("dd");
