@@ -63,6 +63,7 @@ a:visited {
 
 body {
 	font-family: "Roboto Slab", sans-serif;
+	tab-size: 4;
 }
 
 h1, #page-nav a, .quickindex a.xref, .breadcrumb, dt > a {
