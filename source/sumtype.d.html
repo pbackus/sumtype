@@ -600,7 +600,7 @@
 <a class="br" href="#L572" id="L572">572 </a>	 * contain values of the same type, and those values are equal.
 <a class="br" href="#L573" id="L573">573 </a>	 */</span>
 <a class="br" href="#L574" id="L574">574 </a>	<span class="type">bool</span> <span class="hid">opEquals</span>(<span class="kwrd">this</span> <a class="hid" href="sumtype.d.html#L234" title="sumtype.This">This</a>, <span class="hid">Rhs</span>)(<span class="kwrd">auto</span> <span class="kwrd">ref</span> <span class="hid">Rhs</span> <span class="hid">rhs</span>)
-<a class="br" href="#L575" id="L575">575 </a>		<span class="kwrd">if</span> (<span class="kwrd">is</span>(<span class="hid">CommonType</span>!(<a class="hid" href="sumtype.d.html#L234" title="sumtype.This">This</a>, <span class="hid">Rhs</span>)))
+<a class="br" href="#L575" id="L575">575 </a>		<span class="kwrd">if</span> (!<span class="kwrd">is</span>(<span class="hid">CommonType</span>!(<a class="hid" href="sumtype.d.html#L234" title="sumtype.This">This</a>, <span class="hid">Rhs</span>) == <span class="type">void</span>))
 <a class="br" href="#L576" id="L576">576 </a>	{
 <a class="br" href="#L577" id="L577">577 </a>		<span class="kwrd">static</span> <span class="kwrd">if</span> (<span class="kwrd">is</span>(<a class="hid" href="sumtype.d.html#L234" title="sumtype.This">This</a> == <span class="hid">Rhs</span>)) {
 <a class="br" href="#L578" id="L578">578 </a>			<span class="kwrd">return</span> <span class="hid">AliasSeq</span>!(<span class="kwrd">this</span>, <span class="hid">rhs</span>).<a class="hid" href="sumtype.d.html#L1367" title="sumtype.match">match</a>!((<span class="kwrd">ref</span> <span class="hid">value</span>, <span class="kwrd">ref</span> <span class="hid">rhsValue</span>) {
