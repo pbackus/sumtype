@@ -1354,7 +1354,7 @@ enum bool isSumType(T) = is(T : SumType!Args, Args...);
  * [sumtype#introspection-based-matching|"Introspection-based matching"] for an
  * example of templated handler usage.
  *
- * If multiple [SumType]s are passed to match, their values are passed to the
+ * If multiple [SumType]s are passed to `match`, their values are passed to the
  * handlers as separate arguments, and matching is done for each possible
  * combination of value types. See [#multiple-dispatch|"Multiple dispatch"] for
  * an example.
