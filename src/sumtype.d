@@ -672,16 +672,9 @@ public:
 	 * If the `SumType` is qualified, then its qualifiers are applied to
 	 * [Types] before determining the index.
 	 */
-	size_t typeIndex(this This)()
+	size_t typeIndex() const
 	{
-		import std.traits: CopyTypeQualifiers;
-
-		alias Qualify(T) = CopyTypeQualifiers!(This, T);
-		alias QualifiedTypes = Map!(Qualify, Types);
-
-		return this.match!((ref value) =>
-			IndexOf!(typeof(value), QualifiedTypes)
-		);
+		return tag;
 	}
 }
 
@@ -1357,6 +1350,19 @@ version (D_BetterC) {} else
 	assert(isIndexOf!(int[], MySum.Types)(x.typeIndex));
 	assert(isIndexOf!(const(int[]), Map!(ConstOf, MySum.Types))(y.typeIndex));
 	assert(isIndexOf!(const(int[]), Map!(ConstOf, MySum.Types))(z.typeIndex));
+}
+
+// Type index for differently-qualified versions of the same SumType
+// Disabled in BetterC due to use of dynamic arrays
+version (D_BetterC) {} else
+@safe unittest {
+	alias MySum = SumType!(const(int[]), int[]);
+
+	int[] ma = [1, 2, 3];
+	auto x = MySum(ma);
+	const y = x;
+
+	assert(x.typeIndex == y.typeIndex);
 }
 
 /// True if `T` is an instance of the `SumType` template, otherwise false.
