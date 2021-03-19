@@ -664,6 +664,25 @@ public:
 			return this.match!hashOf;
 		}
 	}
+
+	/**
+	 * Returns the index of the type of the `SumType`'s current value in the
+	 * `SumType`'s [Types].
+	 *
+	 * If the `SumType` is qualified, then its qualifiers are applied to
+	 * [Types] before determining the index.
+	 */
+	size_t typeIndex(this This)()
+	{
+		import std.traits: CopyTypeQualifiers;
+
+		alias Qualify(T) = CopyTypeQualifiers!(This, T);
+		alias QualifiedTypes = Map!(Qualify, Types);
+
+		return this.match!((ref value) =>
+			IndexOf!(typeof(value), QualifiedTypes)
+		);
+	}
 }
 
 // Construction
@@ -1295,6 +1314,28 @@ version (D_BetterC) {} else
 
 	assert(__traits(compiles, { MySum x = b; }));
 	assert(__traits(compiles, { MySum x; x = b; }));
+}
+
+// Type index
+@safe unittest {
+	alias MySum = SumType!(int, float);
+
+	assert(MySum(42).typeIndex == IndexOf!(int, MySum.Types));
+	assert(MySum(3.14).typeIndex == IndexOf!(float, MySum.Types));
+}
+
+// Type index for qualified SumTypes
+// Disabled in BetterC due to use of dynamic arrays
+version (D_BetterC) {} else
+@safe unittest {
+	alias MySum = SumType!(const(int[]), int[]);
+
+	int[] ma = [1, 2, 3];
+	// Construct as mutable and convert to const to get mismatched type + tag
+	const x = MySum(ma);
+
+	assert(MySum(ma).typeIndex == IndexOf!(int[], MySum.Types));
+	assert(x.typeIndex == IndexOf!(const(int[]), Map!(ConstOf, MySum.Types)));
 }
 
 /// True if `T` is an instance of the `SumType` template, otherwise false.
