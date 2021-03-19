@@ -664,6 +664,15 @@ public:
 			return this.match!hashOf;
 		}
 	}
+
+	/**
+	 * Returns the index of the type of the `SumType`'s current value in the
+	 * `SumType`'s [Types].
+	 */
+	size_t typeIndex() const
+	{
+		return tag;
+	}
 }
 
 // Construction
@@ -1295,6 +1304,14 @@ version (D_BetterC) {} else
 
 	assert(__traits(compiles, { MySum x = b; }));
 	assert(__traits(compiles, { MySum x; x = b; }));
+}
+
+// Type index
+@safe unittest {
+	alias MySum = SumType!(int, float);
+
+	assert(MySum(42).typeIndex == IndexOf!(int, MySum.Types));
+	assert(MySum(3.14).typeIndex == IndexOf!(float, MySum.Types));
 }
 
 /// True if `T` is an instance of the `SumType` template, otherwise false.
