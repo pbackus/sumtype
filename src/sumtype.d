@@ -1320,8 +1320,17 @@ version (D_BetterC) {} else
 @safe unittest {
 	alias MySum = SumType!(int, float);
 
-	assert(MySum(42).typeIndex == IndexOf!(int, MySum.Types));
-	assert(MySum(3.14).typeIndex == IndexOf!(float, MySum.Types));
+	static bool isIndexOf(Target, Types...)(size_t i)
+	{
+		switch (i) {
+			static foreach (tid, T; Types)
+				case tid: return is(T == Target);
+			default: return false;
+		}
+	}
+
+	assert(isIndexOf!(int, MySum.Types)(MySum(42).typeIndex));
+	assert(isIndexOf!(float, MySum.Types)(MySum(3.14).typeIndex));
 }
 
 // Type index for qualified SumTypes
@@ -1330,12 +1339,24 @@ version (D_BetterC) {} else
 @safe unittest {
 	alias MySum = SumType!(const(int[]), int[]);
 
+	static bool isIndexOf(Target, Types...)(size_t i)
+	{
+		switch (i) {
+			static foreach (tid, T; Types)
+				case tid: return is(T == Target);
+			default: return false;
+		}
+	}
+
 	int[] ma = [1, 2, 3];
 	// Construct as mutable and convert to const to get mismatched type + tag
-	const x = MySum(ma);
+	auto x = MySum(ma);
+	const y = MySum(ma);
+	auto z = const(MySum)(ma);
 
-	assert(MySum(ma).typeIndex == IndexOf!(int[], MySum.Types));
-	assert(x.typeIndex == IndexOf!(const(int[]), Map!(ConstOf, MySum.Types)));
+	assert(isIndexOf!(int[], MySum.Types)(x.typeIndex));
+	assert(isIndexOf!(const(int[]), Map!(ConstOf, MySum.Types))(y.typeIndex));
+	assert(isIndexOf!(const(int[]), Map!(ConstOf, MySum.Types))(z.typeIndex));
 }
 
 /// True if `T` is an instance of the `SumType` template, otherwise false.
