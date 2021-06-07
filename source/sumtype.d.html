@@ -273,7 +273,7 @@
 <a class="br" href="#L245" id="L245">245 </a>
 <a class="br" href="#L246" id="L246">246 </a><span class="com">// True if a variable of type T can appear on the lhs of an assignment</span>
 <a class="br" href="#L247" id="L247">247 </a><span class="kwrd">private</span> <span class="kwrd">enum</span> <a class="hid" href="sumtype.d.html#L247" title="sumtype.isAssignableTo">isAssignableTo</a>(<span class="hid">T</span>) =
-<a class="br" href="#L248" id="L248">248 </a>	<span class="hid">isAssignable</span>!<span class="hid">T</span> || (!<span class="hid">isCopyable</span>!<span class="hid">T</span> &amp;&amp; <a class="hid" href="sumtype.d.html#L2302" title="sumtype.isRvalueAssignable">isRvalueAssignable</a>!<span class="hid">T</span>);
+<a class="br" href="#L248" id="L248">248 </a>	<span class="hid">isAssignable</span>!<span class="hid">T</span> || (!<span class="hid">isCopyable</span>!<span class="hid">T</span> &amp;&amp; <a class="hid" href="sumtype.d.html#L2311" title="sumtype.isRvalueAssignable">isRvalueAssignable</a>!<span class="hid">T</span>);
 <a class="br" href="#L249" id="L249">249 </a>
 <a class="br" href="#L250" id="L250">250 </a><span class="com">// toHash is required by the language spec to be nothrow and @safe</span>
 <a class="br" href="#L251" id="L251">251 </a><span class="kwrd">private</span> <span class="kwrd">enum</span> <a class="hid" href="sumtype.d.html#L251" title="sumtype.isHashable">isHashable</a>(<span class="hid">T</span>) = <span class="kwrd">__traits</span>(<span class="hid">compiles</span>,
@@ -547,7 +547,7 @@
 <a class="br" href="#L519" id="L519">519 </a>					<span class="kwrd">cast</span>(<span class="type">void</span>) () @<span class="hid">system</span> {}();
 <a class="br" href="#L520" id="L520">520 </a>				}
 <a class="br" href="#L521" id="L521">521 </a>
-<a class="br" href="#L522" id="L522">522 </a>				<span class="kwrd">this</span>.<a class="hid" href="sumtype.d.html#L1435" title="sumtype.match">match</a>!<a class="hid" href="sumtype.d.html#L2308" title="sumtype.destroyIfOwner">destroyIfOwner</a>;
+<a class="br" href="#L522" id="L522">522 </a>				<span class="kwrd">this</span>.<a class="hid" href="sumtype.d.html#L1435" title="sumtype.match">match</a>!<a class="hid" href="sumtype.d.html#L2317" title="sumtype.destroyIfOwner">destroyIfOwner</a>;
 <a class="br" href="#L523" id="L523">523 </a>
 <a class="br" href="#L524" id="L524">524 </a>				<span class="kwrd">mixin</span>(<span class="str">&quot;Storage newStorage = { &quot;</span>,
 <a class="br" href="#L525" id="L525">525 </a>					<span class="hid">Storage.memberName</span>!<span class="hid">T</span>, <span class="str">&quot;: forward!rhs&quot;</span>,
@@ -629,7 +629,7 @@
 <a class="br" href="#L601" id="L601">601 </a>		<span class="com">/// Calls the destructor of the `SumType`'s current value.</span>
 <a class="br" href="#L602" id="L602">602 </a>		~<span class="kwrd">this</span>()
 <a class="br" href="#L603" id="L603">603 </a>		{
-<a class="br" href="#L604" id="L604">604 </a>			<span class="kwrd">this</span>.<a class="hid" href="sumtype.d.html#L1435" title="sumtype.match">match</a>!<a class="hid" href="sumtype.d.html#L2308" title="sumtype.destroyIfOwner">destroyIfOwner</a>;
+<a class="br" href="#L604" id="L604">604 </a>			<span class="kwrd">this</span>.<a class="hid" href="sumtype.d.html#L1435" title="sumtype.match">match</a>!<a class="hid" href="sumtype.d.html#L2317" title="sumtype.destroyIfOwner">destroyIfOwner</a>;
 <a class="br" href="#L605" id="L605">605 </a>		}
 <a class="br" href="#L606" id="L606">606 </a>	}
 <a class="br" href="#L607" id="L607">607 </a>
@@ -1707,7 +1707,7 @@
 <a class="br" href="#L1679" id="L1679">1679 </a>
 <a class="br" href="#L1680" id="L1680">1680 </a><span class="kwrd">private</span> <span class="kwrd">template</span> <a class="hid" href="sumtype.d.html#L1680" title="sumtype.matchImpl">matchImpl</a>(<span class="hid">Flag</span>!<span class="str">&quot;exhaustive&quot;</span> <span class="hid">exhaustive</span>, <span class="hid">handlers</span>...)
 <a class="br" href="#L1681" id="L1681">1681 </a>{
-<a class="br" href="#L1682" id="L1682">1682 </a>	<span class="kwrd">auto</span> <a class="hid" href="sumtype.d.html#L1680" title="sumtype.matchImpl">matchImpl</a>(<span class="hid">SumTypes</span>...)(<span class="kwrd">auto</span> <span class="kwrd">ref</span> <span class="hid">SumTypes</span> <span class="hid">args</span>)
+<a class="br" href="#L1682" id="L1682">1682 </a>	<span class="kwrd">auto</span> <span class="kwrd">ref</span> <a class="hid" href="sumtype.d.html#L1680" title="sumtype.matchImpl">matchImpl</a>(<span class="hid">SumTypes</span>...)(<span class="kwrd">auto</span> <span class="kwrd">ref</span> <span class="hid">SumTypes</span> <span class="hid">args</span>)
 <a class="br" href="#L1683" id="L1683">1683 </a>		<span class="kwrd">if</span> (<span class="hid">allSatisfy</span>!(<a class="hid" href="sumtype.d.html#L1383" title="sumtype.isSumType">isSumType</a>, <span class="hid">SumTypes</span>) &amp;&amp; <span class="hid">args.length</span> &gt; <span class="num">0</span>)
 <a class="br" href="#L1684" id="L1684">1684 </a>	{
 <a class="br" href="#L1685" id="L1685">1685 </a>		<span class="kwrd">enum</span> <span class="hid">typeCount</span>(<a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>) = <a class="hid" href="sumtype.d.html#L281" title="sumtype.SumType.Types">SumType.Types.length</a>;
@@ -2139,208 +2139,217 @@
 <a class="br" href="#L2111" id="L2111">2111 </a>	<span class="kwrd">assert</span>(<span class="hid">value.get</span>!<span class="type">double</span>.<a class="hid" href="sumtype.d.html#L1943" title="sumtype.isClose">isClose</a>(<span class="num">6.28</span>));
 <a class="br" href="#L2112" id="L2112">2112 </a>}
 <a class="br" href="#L2113" id="L2113">2113 </a>
-<a class="br" href="#L2114" id="L2114">2114 </a><span class="com">// Unreachable handlers</span>
+<a class="br" href="#L2114" id="L2114">2114 </a><span class="com">// Handlers that return by ref</span>
 <a class="br" href="#L2115" id="L2115">2115 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
-<a class="br" href="#L2116" id="L2116">2116 </a>	<span class="kwrd">alias</span> <span class="hid">MySum</span> = <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>, <span class="type">string</span>);
+<a class="br" href="#L2116" id="L2116">2116 </a>	<a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!<span class="type">int</span> <span class="hid">x</span> = <span class="num">123</span>;
 <a class="br" href="#L2117" id="L2117">2117 </a>
-<a class="br" href="#L2118" id="L2118">2118 </a>	<span class="hid">MySum</span> <span class="hid">s</span>;
+<a class="br" href="#L2118" id="L2118">2118 </a>	<span class="hid">x.match</span>!(<span class="kwrd">ref</span> (<span class="kwrd">ref</span> <span class="type">int</span> <span class="hid">n</span>) =&gt; <span class="hid">n</span>) = <span class="num">456</span>;
 <a class="br" href="#L2119" id="L2119">2119 </a>
-<a class="br" href="#L2120" id="L2120">2120 </a>	<span class="kwrd">assert</span>(!<span class="kwrd">__traits</span>(<span class="hid">compiles</span>,
-<a class="br" href="#L2121" id="L2121">2121 </a>		<span class="hid">s.match</span>!(
-<a class="br" href="#L2122" id="L2122">2122 </a>			(<span class="type">int</span> <span class="hid">_</span>) =&gt; <span class="num">0</span>,
-<a class="br" href="#L2123" id="L2123">2123 </a>			(<span class="type">string</span> <span class="hid">_</span>) =&gt; <span class="num">1</span>,
-<a class="br" href="#L2124" id="L2124">2124 </a>			(<span class="type">double</span> <span class="hid">_</span>) =&gt; <span class="num">2</span>
-<a class="br" href="#L2125" id="L2125">2125 </a>		)
-<a class="br" href="#L2126" id="L2126">2126 </a>	));
-<a class="br" href="#L2127" id="L2127">2127 </a>
-<a class="br" href="#L2128" id="L2128">2128 </a>	<span class="kwrd">assert</span>(!<span class="kwrd">__traits</span>(<span class="hid">compiles</span>,
-<a class="br" href="#L2129" id="L2129">2129 </a>		<span class="hid">s.match</span>!(
-<a class="br" href="#L2130" id="L2130">2130 </a>			<span class="hid">_</span> =&gt; <span class="num">0</span>,
-<a class="br" href="#L2131" id="L2131">2131 </a>			(<span class="type">int</span> <span class="hid">_</span>) =&gt; <span class="num">1</span>
-<a class="br" href="#L2132" id="L2132">2132 </a>		)
-<a class="br" href="#L2133" id="L2133">2133 </a>	));
-<a class="br" href="#L2134" id="L2134">2134 </a>}
-<a class="br" href="#L2135" id="L2135">2135 </a>
-<a class="br" href="#L2136" id="L2136">2136 </a><span class="com">// Unsafe handlers</span>
-<a class="br" href="#L2137" id="L2137">2137 </a>@<span class="hid">system</span> <span class="kwrd">unittest</span> {
-<a class="br" href="#L2138" id="L2138">2138 </a>	<a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!<span class="type">int</span> <span class="hid">x</span>;
-<a class="br" href="#L2139" id="L2139">2139 </a>	<span class="kwrd">alias</span> <span class="hid">unsafeHandler</span> = (<span class="type">int</span> <span class="hid">x</span>) @<span class="hid">system</span> { <span class="kwrd">return</span>; };
-<a class="br" href="#L2140" id="L2140">2140 </a>
-<a class="br" href="#L2141" id="L2141">2141 </a>	<span class="kwrd">assert</span>(!<span class="kwrd">__traits</span>(<span class="hid">compiles</span>, () @<span class="hid">safe</span> {
-<a class="br" href="#L2142" id="L2142">2142 </a>		<span class="hid">x.match</span>!<span class="hid">unsafeHandler</span>;
-<a class="br" href="#L2143" id="L2143">2143 </a>	}));
+<a class="br" href="#L2120" id="L2120">2120 </a>	<span class="kwrd">assert</span>(<span class="hid">x.match</span>!((<span class="type">int</span> <span class="hid">n</span>) =&gt; <span class="hid">n</span> == <span class="num">456</span>));
+<a class="br" href="#L2121" id="L2121">2121 </a>}
+<a class="br" href="#L2122" id="L2122">2122 </a>
+<a class="br" href="#L2123" id="L2123">2123 </a><span class="com">// Unreachable handlers</span>
+<a class="br" href="#L2124" id="L2124">2124 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
+<a class="br" href="#L2125" id="L2125">2125 </a>	<span class="kwrd">alias</span> <span class="hid">MySum</span> = <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>, <span class="type">string</span>);
+<a class="br" href="#L2126" id="L2126">2126 </a>
+<a class="br" href="#L2127" id="L2127">2127 </a>	<span class="hid">MySum</span> <span class="hid">s</span>;
+<a class="br" href="#L2128" id="L2128">2128 </a>
+<a class="br" href="#L2129" id="L2129">2129 </a>	<span class="kwrd">assert</span>(!<span class="kwrd">__traits</span>(<span class="hid">compiles</span>,
+<a class="br" href="#L2130" id="L2130">2130 </a>		<span class="hid">s.match</span>!(
+<a class="br" href="#L2131" id="L2131">2131 </a>			(<span class="type">int</span> <span class="hid">_</span>) =&gt; <span class="num">0</span>,
+<a class="br" href="#L2132" id="L2132">2132 </a>			(<span class="type">string</span> <span class="hid">_</span>) =&gt; <span class="num">1</span>,
+<a class="br" href="#L2133" id="L2133">2133 </a>			(<span class="type">double</span> <span class="hid">_</span>) =&gt; <span class="num">2</span>
+<a class="br" href="#L2134" id="L2134">2134 </a>		)
+<a class="br" href="#L2135" id="L2135">2135 </a>	));
+<a class="br" href="#L2136" id="L2136">2136 </a>
+<a class="br" href="#L2137" id="L2137">2137 </a>	<span class="kwrd">assert</span>(!<span class="kwrd">__traits</span>(<span class="hid">compiles</span>,
+<a class="br" href="#L2138" id="L2138">2138 </a>		<span class="hid">s.match</span>!(
+<a class="br" href="#L2139" id="L2139">2139 </a>			<span class="hid">_</span> =&gt; <span class="num">0</span>,
+<a class="br" href="#L2140" id="L2140">2140 </a>			(<span class="type">int</span> <span class="hid">_</span>) =&gt; <span class="num">1</span>
+<a class="br" href="#L2141" id="L2141">2141 </a>		)
+<a class="br" href="#L2142" id="L2142">2142 </a>	));
+<a class="br" href="#L2143" id="L2143">2143 </a>}
 <a class="br" href="#L2144" id="L2144">2144 </a>
-<a class="br" href="#L2145" id="L2145">2145 </a>	<span class="kwrd">assert</span>(<span class="kwrd">__traits</span>(<span class="hid">compiles</span>, () @<span class="hid">system</span> {
-<a class="br" href="#L2146" id="L2146">2146 </a>		<span class="kwrd">return</span> <span class="hid">x.match</span>!<span class="hid">unsafeHandler</span>;
-<a class="br" href="#L2147" id="L2147">2147 </a>	}));
-<a class="br" href="#L2148" id="L2148">2148 </a>}
+<a class="br" href="#L2145" id="L2145">2145 </a><span class="com">// Unsafe handlers</span>
+<a class="br" href="#L2146" id="L2146">2146 </a>@<span class="hid">system</span> <span class="kwrd">unittest</span> {
+<a class="br" href="#L2147" id="L2147">2147 </a>	<a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!<span class="type">int</span> <span class="hid">x</span>;
+<a class="br" href="#L2148" id="L2148">2148 </a>	<span class="kwrd">alias</span> <span class="hid">unsafeHandler</span> = (<span class="type">int</span> <span class="hid">x</span>) @<span class="hid">system</span> { <span class="kwrd">return</span>; };
 <a class="br" href="#L2149" id="L2149">2149 </a>
-<a class="br" href="#L2150" id="L2150">2150 </a><span class="com">// Overloaded handlers</span>
-<a class="br" href="#L2151" id="L2151">2151 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
-<a class="br" href="#L2152" id="L2152">2152 </a>	<span class="kwrd">static</span> <span class="kwrd">struct</span> <span class="hid">OverloadSet</span>
-<a class="br" href="#L2153" id="L2153">2153 </a>	{
-<a class="br" href="#L2154" id="L2154">2154 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="type">int</span> <span class="hid">i</span>) { <span class="kwrd">return</span> <span class="str">&quot;int&quot;</span>; }
-<a class="br" href="#L2155" id="L2155">2155 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="type">double</span> <span class="hid">d</span>) { <span class="kwrd">return</span> <span class="str">&quot;double&quot;</span>; }
-<a class="br" href="#L2156" id="L2156">2156 </a>	}
-<a class="br" href="#L2157" id="L2157">2157 </a>
-<a class="br" href="#L2158" id="L2158">2158 </a>	<span class="kwrd">alias</span> <span class="hid">MySum</span> = <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>, <span class="type">double</span>);
-<a class="br" href="#L2159" id="L2159">2159 </a>
-<a class="br" href="#L2160" id="L2160">2160 </a>	<span class="hid">MySum</span> <span class="hid">a</span> = <span class="num">42</span>;
-<a class="br" href="#L2161" id="L2161">2161 </a>	<span class="hid">MySum</span> <span class="hid">b</span> = <span class="num">3.14</span>;
-<a class="br" href="#L2162" id="L2162">2162 </a>
-<a class="br" href="#L2163" id="L2163">2163 </a>	<span class="kwrd">assert</span>(<span class="hid">a.match</span>!(<span class="hid">OverloadSet.fun</span>) == <span class="str">&quot;int&quot;</span>);
-<a class="br" href="#L2164" id="L2164">2164 </a>	<span class="kwrd">assert</span>(<span class="hid">b.match</span>!(<span class="hid">OverloadSet.fun</span>) == <span class="str">&quot;double&quot;</span>);
-<a class="br" href="#L2165" id="L2165">2165 </a>}
+<a class="br" href="#L2150" id="L2150">2150 </a>	<span class="kwrd">assert</span>(!<span class="kwrd">__traits</span>(<span class="hid">compiles</span>, () @<span class="hid">safe</span> {
+<a class="br" href="#L2151" id="L2151">2151 </a>		<span class="hid">x.match</span>!<span class="hid">unsafeHandler</span>;
+<a class="br" href="#L2152" id="L2152">2152 </a>	}));
+<a class="br" href="#L2153" id="L2153">2153 </a>
+<a class="br" href="#L2154" id="L2154">2154 </a>	<span class="kwrd">assert</span>(<span class="kwrd">__traits</span>(<span class="hid">compiles</span>, () @<span class="hid">system</span> {
+<a class="br" href="#L2155" id="L2155">2155 </a>		<span class="kwrd">return</span> <span class="hid">x.match</span>!<span class="hid">unsafeHandler</span>;
+<a class="br" href="#L2156" id="L2156">2156 </a>	}));
+<a class="br" href="#L2157" id="L2157">2157 </a>}
+<a class="br" href="#L2158" id="L2158">2158 </a>
+<a class="br" href="#L2159" id="L2159">2159 </a><span class="com">// Overloaded handlers</span>
+<a class="br" href="#L2160" id="L2160">2160 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
+<a class="br" href="#L2161" id="L2161">2161 </a>	<span class="kwrd">static</span> <span class="kwrd">struct</span> <span class="hid">OverloadSet</span>
+<a class="br" href="#L2162" id="L2162">2162 </a>	{
+<a class="br" href="#L2163" id="L2163">2163 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="type">int</span> <span class="hid">i</span>) { <span class="kwrd">return</span> <span class="str">&quot;int&quot;</span>; }
+<a class="br" href="#L2164" id="L2164">2164 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="type">double</span> <span class="hid">d</span>) { <span class="kwrd">return</span> <span class="str">&quot;double&quot;</span>; }
+<a class="br" href="#L2165" id="L2165">2165 </a>	}
 <a class="br" href="#L2166" id="L2166">2166 </a>
-<a class="br" href="#L2167" id="L2167">2167 </a><span class="com">// Overload sets that include SumType arguments</span>
-<a class="br" href="#L2168" id="L2168">2168 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
-<a class="br" href="#L2169" id="L2169">2169 </a>	<span class="kwrd">alias</span> <span class="hid">Inner</span> = <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>, <span class="type">double</span>);
-<a class="br" href="#L2170" id="L2170">2170 </a>	<span class="kwrd">alias</span> <span class="hid">Outer</span> = <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="hid">Inner</span>, <span class="type">string</span>);
+<a class="br" href="#L2167" id="L2167">2167 </a>	<span class="kwrd">alias</span> <span class="hid">MySum</span> = <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>, <span class="type">double</span>);
+<a class="br" href="#L2168" id="L2168">2168 </a>
+<a class="br" href="#L2169" id="L2169">2169 </a>	<span class="hid">MySum</span> <span class="hid">a</span> = <span class="num">42</span>;
+<a class="br" href="#L2170" id="L2170">2170 </a>	<span class="hid">MySum</span> <span class="hid">b</span> = <span class="num">3.14</span>;
 <a class="br" href="#L2171" id="L2171">2171 </a>
-<a class="br" href="#L2172" id="L2172">2172 </a>	<span class="kwrd">static</span> <span class="kwrd">struct</span> <span class="hid">OverloadSet</span>
-<a class="br" href="#L2173" id="L2173">2173 </a>	{
-<a class="br" href="#L2174" id="L2174">2174 </a>		@<span class="hid">safe</span>:
-<a class="br" href="#L2175" id="L2175">2175 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="type">int</span> <span class="hid">i</span>) { <span class="kwrd">return</span> <span class="str">&quot;int&quot;</span>; }
-<a class="br" href="#L2176" id="L2176">2176 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="type">double</span> <span class="hid">d</span>) { <span class="kwrd">return</span> <span class="str">&quot;double&quot;</span>; }
-<a class="br" href="#L2177" id="L2177">2177 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="type">string</span> <span class="hid">s</span>) { <span class="kwrd">return</span> <span class="str">&quot;string&quot;</span>; }
-<a class="br" href="#L2178" id="L2178">2178 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="hid">Inner</span> <span class="hid">i</span>) { <span class="kwrd">return</span> <span class="hid">i.match</span>!<span class="hid">fun</span>; }
-<a class="br" href="#L2179" id="L2179">2179 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="hid">Outer</span> <span class="hid">o</span>) { <span class="kwrd">return</span> <span class="hid">o.match</span>!<span class="hid">fun</span>; }
-<a class="br" href="#L2180" id="L2180">2180 </a>	}
-<a class="br" href="#L2181" id="L2181">2181 </a>
-<a class="br" href="#L2182" id="L2182">2182 </a>	<span class="hid">Outer</span> <span class="hid">a</span> = <span class="hid">Inner</span>(<span class="num">42</span>);
-<a class="br" href="#L2183" id="L2183">2183 </a>	<span class="hid">Outer</span> <span class="hid">b</span> = <span class="hid">Inner</span>(<span class="num">3.14</span>);
-<a class="br" href="#L2184" id="L2184">2184 </a>	<span class="hid">Outer</span> <span class="hid">c</span> = <span class="str">&quot;foo&quot;</span>;
-<a class="br" href="#L2185" id="L2185">2185 </a>
-<a class="br" href="#L2186" id="L2186">2186 </a>	<span class="kwrd">assert</span>(<span class="hid">OverloadSet.fun</span>(<span class="hid">a</span>) == <span class="str">&quot;int&quot;</span>);
-<a class="br" href="#L2187" id="L2187">2187 </a>	<span class="kwrd">assert</span>(<span class="hid">OverloadSet.fun</span>(<span class="hid">b</span>) == <span class="str">&quot;double&quot;</span>);
-<a class="br" href="#L2188" id="L2188">2188 </a>	<span class="kwrd">assert</span>(<span class="hid">OverloadSet.fun</span>(<span class="hid">c</span>) == <span class="str">&quot;string&quot;</span>);
-<a class="br" href="#L2189" id="L2189">2189 </a>}
+<a class="br" href="#L2172" id="L2172">2172 </a>	<span class="kwrd">assert</span>(<span class="hid">a.match</span>!(<span class="hid">OverloadSet.fun</span>) == <span class="str">&quot;int&quot;</span>);
+<a class="br" href="#L2173" id="L2173">2173 </a>	<span class="kwrd">assert</span>(<span class="hid">b.match</span>!(<span class="hid">OverloadSet.fun</span>) == <span class="str">&quot;double&quot;</span>);
+<a class="br" href="#L2174" id="L2174">2174 </a>}
+<a class="br" href="#L2175" id="L2175">2175 </a>
+<a class="br" href="#L2176" id="L2176">2176 </a><span class="com">// Overload sets that include SumType arguments</span>
+<a class="br" href="#L2177" id="L2177">2177 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
+<a class="br" href="#L2178" id="L2178">2178 </a>	<span class="kwrd">alias</span> <span class="hid">Inner</span> = <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>, <span class="type">double</span>);
+<a class="br" href="#L2179" id="L2179">2179 </a>	<span class="kwrd">alias</span> <span class="hid">Outer</span> = <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="hid">Inner</span>, <span class="type">string</span>);
+<a class="br" href="#L2180" id="L2180">2180 </a>
+<a class="br" href="#L2181" id="L2181">2181 </a>	<span class="kwrd">static</span> <span class="kwrd">struct</span> <span class="hid">OverloadSet</span>
+<a class="br" href="#L2182" id="L2182">2182 </a>	{
+<a class="br" href="#L2183" id="L2183">2183 </a>		@<span class="hid">safe</span>:
+<a class="br" href="#L2184" id="L2184">2184 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="type">int</span> <span class="hid">i</span>) { <span class="kwrd">return</span> <span class="str">&quot;int&quot;</span>; }
+<a class="br" href="#L2185" id="L2185">2185 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="type">double</span> <span class="hid">d</span>) { <span class="kwrd">return</span> <span class="str">&quot;double&quot;</span>; }
+<a class="br" href="#L2186" id="L2186">2186 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="type">string</span> <span class="hid">s</span>) { <span class="kwrd">return</span> <span class="str">&quot;string&quot;</span>; }
+<a class="br" href="#L2187" id="L2187">2187 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="hid">Inner</span> <span class="hid">i</span>) { <span class="kwrd">return</span> <span class="hid">i.match</span>!<span class="hid">fun</span>; }
+<a class="br" href="#L2188" id="L2188">2188 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="hid">Outer</span> <span class="hid">o</span>) { <span class="kwrd">return</span> <span class="hid">o.match</span>!<span class="hid">fun</span>; }
+<a class="br" href="#L2189" id="L2189">2189 </a>	}
 <a class="br" href="#L2190" id="L2190">2190 </a>
-<a class="br" href="#L2191" id="L2191">2191 </a><span class="com">// Overload sets with ref arguments</span>
-<a class="br" href="#L2192" id="L2192">2192 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
-<a class="br" href="#L2193" id="L2193">2193 </a>	<span class="kwrd">static</span> <span class="kwrd">struct</span> <span class="hid">OverloadSet</span>
-<a class="br" href="#L2194" id="L2194">2194 </a>	{
-<a class="br" href="#L2195" id="L2195">2195 </a>		<span class="kwrd">static</span> <span class="type">void</span> <span class="hid">fun</span>(<span class="kwrd">ref</span> <span class="type">int</span> <span class="hid">i</span>) { <span class="hid">i</span> = <span class="num">42</span>; }
-<a class="br" href="#L2196" id="L2196">2196 </a>		<span class="kwrd">static</span> <span class="type">void</span> <span class="hid">fun</span>(<span class="kwrd">ref</span> <span class="type">double</span> <span class="hid">d</span>) { <span class="hid">d</span> = <span class="num">3.14</span>; }
-<a class="br" href="#L2197" id="L2197">2197 </a>	}
-<a class="br" href="#L2198" id="L2198">2198 </a>
-<a class="br" href="#L2199" id="L2199">2199 </a>	<span class="kwrd">alias</span> <span class="hid">MySum</span> = <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>, <span class="type">double</span>);
-<a class="br" href="#L2200" id="L2200">2200 </a>
-<a class="br" href="#L2201" id="L2201">2201 </a>	<span class="hid">MySum</span> <span class="hid">x</span> = <span class="num">0</span>;
-<a class="br" href="#L2202" id="L2202">2202 </a>	<span class="hid">MySum</span> <span class="hid">y</span> = <span class="num">0.0</span>;
-<a class="br" href="#L2203" id="L2203">2203 </a>
-<a class="br" href="#L2204" id="L2204">2204 </a>	<span class="hid">x.match</span>!(<span class="hid">OverloadSet.fun</span>);
-<a class="br" href="#L2205" id="L2205">2205 </a>	<span class="hid">y.match</span>!(<span class="hid">OverloadSet.fun</span>);
-<a class="br" href="#L2206" id="L2206">2206 </a>
-<a class="br" href="#L2207" id="L2207">2207 </a>	<span class="kwrd">assert</span>(<span class="hid">x.match</span>!((<span class="hid">value</span>) =&gt; <span class="kwrd">is</span>(<span class="kwrd">typeof</span>(<span class="hid">value</span>) == <span class="type">int</span>) &amp;&amp; <span class="hid">value</span> == <span class="num">42</span>));
-<a class="br" href="#L2208" id="L2208">2208 </a>	<span class="kwrd">assert</span>(<span class="hid">y.match</span>!((<span class="hid">value</span>) =&gt; <span class="kwrd">is</span>(<span class="kwrd">typeof</span>(<span class="hid">value</span>) == <span class="type">double</span>) &amp;&amp; <span class="hid">value</span> == <span class="num">3.14</span>));
-<a class="br" href="#L2209" id="L2209">2209 </a>}
-<a class="br" href="#L2210" id="L2210">2210 </a>
-<a class="br" href="#L2211" id="L2211">2211 </a><span class="com">// Overload sets with templates</span>
-<a class="br" href="#L2212" id="L2212">2212 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
-<a class="br" href="#L2213" id="L2213">2213 </a>	<span class="kwrd">import</span> <span class="hid">std.traits</span>: <span class="hid">isNumeric</span>;
-<a class="br" href="#L2214" id="L2214">2214 </a>
-<a class="br" href="#L2215" id="L2215">2215 </a>	<span class="kwrd">static</span> <span class="kwrd">struct</span> <span class="hid">OverloadSet</span>
-<a class="br" href="#L2216" id="L2216">2216 </a>	{
-<a class="br" href="#L2217" id="L2217">2217 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="type">string</span> <span class="hid">arg</span>)
-<a class="br" href="#L2218" id="L2218">2218 </a>		{
-<a class="br" href="#L2219" id="L2219">2219 </a>			<span class="kwrd">return</span> <span class="str">&quot;string&quot;</span>;
-<a class="br" href="#L2220" id="L2220">2220 </a>		}
-<a class="br" href="#L2221" id="L2221">2221 </a>
-<a class="br" href="#L2222" id="L2222">2222 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="hid">T</span>)(<span class="hid">T</span> <span class="hid">arg</span>)
-<a class="br" href="#L2223" id="L2223">2223 </a>			<span class="kwrd">if</span> (<span class="hid">isNumeric</span>!<span class="hid">T</span>)
-<a class="br" href="#L2224" id="L2224">2224 </a>		{
-<a class="br" href="#L2225" id="L2225">2225 </a>			<span class="kwrd">return</span> <span class="str">&quot;numeric&quot;</span>;
-<a class="br" href="#L2226" id="L2226">2226 </a>		}
-<a class="br" href="#L2227" id="L2227">2227 </a>	}
-<a class="br" href="#L2228" id="L2228">2228 </a>
-<a class="br" href="#L2229" id="L2229">2229 </a>	<span class="kwrd">alias</span> <span class="hid">MySum</span> = <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>, <span class="type">string</span>);
+<a class="br" href="#L2191" id="L2191">2191 </a>	<span class="hid">Outer</span> <span class="hid">a</span> = <span class="hid">Inner</span>(<span class="num">42</span>);
+<a class="br" href="#L2192" id="L2192">2192 </a>	<span class="hid">Outer</span> <span class="hid">b</span> = <span class="hid">Inner</span>(<span class="num">3.14</span>);
+<a class="br" href="#L2193" id="L2193">2193 </a>	<span class="hid">Outer</span> <span class="hid">c</span> = <span class="str">&quot;foo&quot;</span>;
+<a class="br" href="#L2194" id="L2194">2194 </a>
+<a class="br" href="#L2195" id="L2195">2195 </a>	<span class="kwrd">assert</span>(<span class="hid">OverloadSet.fun</span>(<span class="hid">a</span>) == <span class="str">&quot;int&quot;</span>);
+<a class="br" href="#L2196" id="L2196">2196 </a>	<span class="kwrd">assert</span>(<span class="hid">OverloadSet.fun</span>(<span class="hid">b</span>) == <span class="str">&quot;double&quot;</span>);
+<a class="br" href="#L2197" id="L2197">2197 </a>	<span class="kwrd">assert</span>(<span class="hid">OverloadSet.fun</span>(<span class="hid">c</span>) == <span class="str">&quot;string&quot;</span>);
+<a class="br" href="#L2198" id="L2198">2198 </a>}
+<a class="br" href="#L2199" id="L2199">2199 </a>
+<a class="br" href="#L2200" id="L2200">2200 </a><span class="com">// Overload sets with ref arguments</span>
+<a class="br" href="#L2201" id="L2201">2201 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
+<a class="br" href="#L2202" id="L2202">2202 </a>	<span class="kwrd">static</span> <span class="kwrd">struct</span> <span class="hid">OverloadSet</span>
+<a class="br" href="#L2203" id="L2203">2203 </a>	{
+<a class="br" href="#L2204" id="L2204">2204 </a>		<span class="kwrd">static</span> <span class="type">void</span> <span class="hid">fun</span>(<span class="kwrd">ref</span> <span class="type">int</span> <span class="hid">i</span>) { <span class="hid">i</span> = <span class="num">42</span>; }
+<a class="br" href="#L2205" id="L2205">2205 </a>		<span class="kwrd">static</span> <span class="type">void</span> <span class="hid">fun</span>(<span class="kwrd">ref</span> <span class="type">double</span> <span class="hid">d</span>) { <span class="hid">d</span> = <span class="num">3.14</span>; }
+<a class="br" href="#L2206" id="L2206">2206 </a>	}
+<a class="br" href="#L2207" id="L2207">2207 </a>
+<a class="br" href="#L2208" id="L2208">2208 </a>	<span class="kwrd">alias</span> <span class="hid">MySum</span> = <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>, <span class="type">double</span>);
+<a class="br" href="#L2209" id="L2209">2209 </a>
+<a class="br" href="#L2210" id="L2210">2210 </a>	<span class="hid">MySum</span> <span class="hid">x</span> = <span class="num">0</span>;
+<a class="br" href="#L2211" id="L2211">2211 </a>	<span class="hid">MySum</span> <span class="hid">y</span> = <span class="num">0.0</span>;
+<a class="br" href="#L2212" id="L2212">2212 </a>
+<a class="br" href="#L2213" id="L2213">2213 </a>	<span class="hid">x.match</span>!(<span class="hid">OverloadSet.fun</span>);
+<a class="br" href="#L2214" id="L2214">2214 </a>	<span class="hid">y.match</span>!(<span class="hid">OverloadSet.fun</span>);
+<a class="br" href="#L2215" id="L2215">2215 </a>
+<a class="br" href="#L2216" id="L2216">2216 </a>	<span class="kwrd">assert</span>(<span class="hid">x.match</span>!((<span class="hid">value</span>) =&gt; <span class="kwrd">is</span>(<span class="kwrd">typeof</span>(<span class="hid">value</span>) == <span class="type">int</span>) &amp;&amp; <span class="hid">value</span> == <span class="num">42</span>));
+<a class="br" href="#L2217" id="L2217">2217 </a>	<span class="kwrd">assert</span>(<span class="hid">y.match</span>!((<span class="hid">value</span>) =&gt; <span class="kwrd">is</span>(<span class="kwrd">typeof</span>(<span class="hid">value</span>) == <span class="type">double</span>) &amp;&amp; <span class="hid">value</span> == <span class="num">3.14</span>));
+<a class="br" href="#L2218" id="L2218">2218 </a>}
+<a class="br" href="#L2219" id="L2219">2219 </a>
+<a class="br" href="#L2220" id="L2220">2220 </a><span class="com">// Overload sets with templates</span>
+<a class="br" href="#L2221" id="L2221">2221 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
+<a class="br" href="#L2222" id="L2222">2222 </a>	<span class="kwrd">import</span> <span class="hid">std.traits</span>: <span class="hid">isNumeric</span>;
+<a class="br" href="#L2223" id="L2223">2223 </a>
+<a class="br" href="#L2224" id="L2224">2224 </a>	<span class="kwrd">static</span> <span class="kwrd">struct</span> <span class="hid">OverloadSet</span>
+<a class="br" href="#L2225" id="L2225">2225 </a>	{
+<a class="br" href="#L2226" id="L2226">2226 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="type">string</span> <span class="hid">arg</span>)
+<a class="br" href="#L2227" id="L2227">2227 </a>		{
+<a class="br" href="#L2228" id="L2228">2228 </a>			<span class="kwrd">return</span> <span class="str">&quot;string&quot;</span>;
+<a class="br" href="#L2229" id="L2229">2229 </a>		}
 <a class="br" href="#L2230" id="L2230">2230 </a>
-<a class="br" href="#L2231" id="L2231">2231 </a>	<span class="hid">MySum</span> <span class="hid">x</span> = <span class="num">123</span>;
-<a class="br" href="#L2232" id="L2232">2232 </a>	<span class="hid">MySum</span> <span class="hid">y</span> = <span class="str">&quot;hello&quot;</span>;
-<a class="br" href="#L2233" id="L2233">2233 </a>
-<a class="br" href="#L2234" id="L2234">2234 </a>	<span class="kwrd">assert</span>(<span class="hid">x.match</span>!(<span class="hid">OverloadSet.fun</span>) == <span class="str">&quot;numeric&quot;</span>);
-<a class="br" href="#L2235" id="L2235">2235 </a>	<span class="kwrd">assert</span>(<span class="hid">y.match</span>!(<span class="hid">OverloadSet.fun</span>) == <span class="str">&quot;string&quot;</span>);
-<a class="br" href="#L2236" id="L2236">2236 </a>}
+<a class="br" href="#L2231" id="L2231">2231 </a>		<span class="kwrd">static</span> <span class="type">string</span> <span class="hid">fun</span>(<span class="hid">T</span>)(<span class="hid">T</span> <span class="hid">arg</span>)
+<a class="br" href="#L2232" id="L2232">2232 </a>			<span class="kwrd">if</span> (<span class="hid">isNumeric</span>!<span class="hid">T</span>)
+<a class="br" href="#L2233" id="L2233">2233 </a>		{
+<a class="br" href="#L2234" id="L2234">2234 </a>			<span class="kwrd">return</span> <span class="str">&quot;numeric&quot;</span>;
+<a class="br" href="#L2235" id="L2235">2235 </a>		}
+<a class="br" href="#L2236" id="L2236">2236 </a>	}
 <a class="br" href="#L2237" id="L2237">2237 </a>
-<a class="br" href="#L2238" id="L2238">2238 </a><span class="com">// Github issue #24</span>
-<a class="br" href="#L2239" id="L2239">2239 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
-<a class="br" href="#L2240" id="L2240">2240 </a>	<span class="kwrd">assert</span>(<span class="kwrd">__traits</span>(<span class="hid">compiles</span>, () @<span class="hid">nogc</span> {
-<a class="br" href="#L2241" id="L2241">2241 </a>		<span class="type">int</span> <span class="hid">acc</span> = <span class="num">0</span>;
-<a class="br" href="#L2242" id="L2242">2242 </a>		<a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!<span class="type">int</span>(<span class="num">1</span>).<a class="hid" href="sumtype.d.html#L1435" title="sumtype.match">match</a>!((<span class="type">int</span> <span class="hid">x</span>) =&gt; <span class="hid">acc</span> += <span class="hid">x</span>);
-<a class="br" href="#L2243" id="L2243">2243 </a>	}));
-<a class="br" href="#L2244" id="L2244">2244 </a>}
-<a class="br" href="#L2245" id="L2245">2245 </a>
-<a class="br" href="#L2246" id="L2246">2246 </a><span class="com">// Github issue #31</span>
-<a class="br" href="#L2247" id="L2247">2247 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
-<a class="br" href="#L2248" id="L2248">2248 </a>	<span class="kwrd">assert</span>(<span class="kwrd">__traits</span>(<span class="hid">compiles</span>, () @<span class="hid">nogc</span> {
-<a class="br" href="#L2249" id="L2249">2249 </a>		<span class="type">int</span> <span class="hid">acc</span> = <span class="num">0</span>;
-<a class="br" href="#L2250" id="L2250">2250 </a>
-<a class="br" href="#L2251" id="L2251">2251 </a>		<a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>, <span class="type">string</span>)(<span class="num">1</span>).<a class="hid" href="sumtype.d.html#L1435" title="sumtype.match">match</a>!(
-<a class="br" href="#L2252" id="L2252">2252 </a>			(<span class="type">int</span> <span class="hid">x</span>) =&gt; <span class="hid">acc</span> += <span class="hid">x</span>,
-<a class="br" href="#L2253" id="L2253">2253 </a>			(<span class="type">string</span> <span class="hid">_</span>) =&gt; <span class="num">0</span>,
-<a class="br" href="#L2254" id="L2254">2254 </a>		);
-<a class="br" href="#L2255" id="L2255">2255 </a>	}));
-<a class="br" href="#L2256" id="L2256">2256 </a>}
-<a class="br" href="#L2257" id="L2257">2257 </a>
-<a class="br" href="#L2258" id="L2258">2258 </a><span class="com">// Types that `alias this` a SumType</span>
-<a class="br" href="#L2259" id="L2259">2259 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
-<a class="br" href="#L2260" id="L2260">2260 </a>	<span class="kwrd">static</span> <span class="kwrd">struct</span> <span class="hid">A</span> {}
-<a class="br" href="#L2261" id="L2261">2261 </a>	<span class="kwrd">static</span> <span class="kwrd">struct</span> <span class="hid">B</span> {}
-<a class="br" href="#L2262" id="L2262">2262 </a>	<span class="kwrd">static</span> <span class="kwrd">struct</span> <span class="hid">D</span> { <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="hid">A</span>, <span class="hid">B</span>) <span class="hid">value</span>; <span class="kwrd">alias</span> <span class="hid">value</span> <span class="kwrd">this</span>; }
-<a class="br" href="#L2263" id="L2263">2263 </a>
-<a class="br" href="#L2264" id="L2264">2264 </a>	<span class="kwrd">assert</span>(<span class="kwrd">__traits</span>(<span class="hid">compiles</span>, <span class="hid">D</span>().<a class="hid" href="sumtype.d.html#L1435" title="sumtype.match">match</a>!(<span class="hid">_</span> =&gt; <span class="kwrd">true</span>)));
+<a class="br" href="#L2238" id="L2238">2238 </a>	<span class="kwrd">alias</span> <span class="hid">MySum</span> = <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>, <span class="type">string</span>);
+<a class="br" href="#L2239" id="L2239">2239 </a>
+<a class="br" href="#L2240" id="L2240">2240 </a>	<span class="hid">MySum</span> <span class="hid">x</span> = <span class="num">123</span>;
+<a class="br" href="#L2241" id="L2241">2241 </a>	<span class="hid">MySum</span> <span class="hid">y</span> = <span class="str">&quot;hello&quot;</span>;
+<a class="br" href="#L2242" id="L2242">2242 </a>
+<a class="br" href="#L2243" id="L2243">2243 </a>	<span class="kwrd">assert</span>(<span class="hid">x.match</span>!(<span class="hid">OverloadSet.fun</span>) == <span class="str">&quot;numeric&quot;</span>);
+<a class="br" href="#L2244" id="L2244">2244 </a>	<span class="kwrd">assert</span>(<span class="hid">y.match</span>!(<span class="hid">OverloadSet.fun</span>) == <span class="str">&quot;string&quot;</span>);
+<a class="br" href="#L2245" id="L2245">2245 </a>}
+<a class="br" href="#L2246" id="L2246">2246 </a>
+<a class="br" href="#L2247" id="L2247">2247 </a><span class="com">// Github issue #24</span>
+<a class="br" href="#L2248" id="L2248">2248 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
+<a class="br" href="#L2249" id="L2249">2249 </a>	<span class="kwrd">assert</span>(<span class="kwrd">__traits</span>(<span class="hid">compiles</span>, () @<span class="hid">nogc</span> {
+<a class="br" href="#L2250" id="L2250">2250 </a>		<span class="type">int</span> <span class="hid">acc</span> = <span class="num">0</span>;
+<a class="br" href="#L2251" id="L2251">2251 </a>		<a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!<span class="type">int</span>(<span class="num">1</span>).<a class="hid" href="sumtype.d.html#L1435" title="sumtype.match">match</a>!((<span class="type">int</span> <span class="hid">x</span>) =&gt; <span class="hid">acc</span> += <span class="hid">x</span>);
+<a class="br" href="#L2252" id="L2252">2252 </a>	}));
+<a class="br" href="#L2253" id="L2253">2253 </a>}
+<a class="br" href="#L2254" id="L2254">2254 </a>
+<a class="br" href="#L2255" id="L2255">2255 </a><span class="com">// Github issue #31</span>
+<a class="br" href="#L2256" id="L2256">2256 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
+<a class="br" href="#L2257" id="L2257">2257 </a>	<span class="kwrd">assert</span>(<span class="kwrd">__traits</span>(<span class="hid">compiles</span>, () @<span class="hid">nogc</span> {
+<a class="br" href="#L2258" id="L2258">2258 </a>		<span class="type">int</span> <span class="hid">acc</span> = <span class="num">0</span>;
+<a class="br" href="#L2259" id="L2259">2259 </a>
+<a class="br" href="#L2260" id="L2260">2260 </a>		<a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>, <span class="type">string</span>)(<span class="num">1</span>).<a class="hid" href="sumtype.d.html#L1435" title="sumtype.match">match</a>!(
+<a class="br" href="#L2261" id="L2261">2261 </a>			(<span class="type">int</span> <span class="hid">x</span>) =&gt; <span class="hid">acc</span> += <span class="hid">x</span>,
+<a class="br" href="#L2262" id="L2262">2262 </a>			(<span class="type">string</span> <span class="hid">_</span>) =&gt; <span class="num">0</span>,
+<a class="br" href="#L2263" id="L2263">2263 </a>		);
+<a class="br" href="#L2264" id="L2264">2264 </a>	}));
 <a class="br" href="#L2265" id="L2265">2265 </a>}
 <a class="br" href="#L2266" id="L2266">2266 </a>
-<a class="br" href="#L2267" id="L2267">2267 </a><span class="com">// Multiple dispatch</span>
+<a class="br" href="#L2267" id="L2267">2267 </a><span class="com">// Types that `alias this` a SumType</span>
 <a class="br" href="#L2268" id="L2268">2268 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
-<a class="br" href="#L2269" id="L2269">2269 </a>	<span class="kwrd">alias</span> <span class="hid">MySum</span> = <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>, <span class="type">string</span>);
-<a class="br" href="#L2270" id="L2270">2270 </a>
-<a class="br" href="#L2271" id="L2271">2271 </a>	<span class="kwrd">static</span> <span class="type">int</span> <span class="hid">fun</span>(<span class="hid">MySum</span> <span class="hid">x</span>, <span class="hid">MySum</span> <span class="hid">y</span>)
-<a class="br" href="#L2272" id="L2272">2272 </a>	{
-<a class="br" href="#L2273" id="L2273">2273 </a>		<span class="kwrd">import</span> <span class="hid">std.meta</span>: <span class="hid">Args</span> = <span class="hid">AliasSeq</span>;
-<a class="br" href="#L2274" id="L2274">2274 </a>
-<a class="br" href="#L2275" id="L2275">2275 </a>		<span class="kwrd">return</span> <span class="hid">Args</span>!(<span class="hid">x</span>, <span class="hid">y</span>).<a class="hid" href="sumtype.d.html#L1435" title="sumtype.match">match</a>!(
-<a class="br" href="#L2276" id="L2276">2276 </a>			(<span class="type">int</span>    <span class="hid">xv</span>, <span class="type">int</span>    <span class="hid">yv</span>) =&gt; <span class="num">0</span>,
-<a class="br" href="#L2277" id="L2277">2277 </a>			(<span class="type">string</span> <span class="hid">xv</span>, <span class="type">int</span>    <span class="hid">yv</span>) =&gt; <span class="num">1</span>,
-<a class="br" href="#L2278" id="L2278">2278 </a>			(<span class="type">int</span>    <span class="hid">xv</span>, <span class="type">string</span> <span class="hid">yv</span>) =&gt; <span class="num">2</span>,
-<a class="br" href="#L2279" id="L2279">2279 </a>			(<span class="type">string</span> <span class="hid">xv</span>, <span class="type">string</span> <span class="hid">yv</span>) =&gt; <span class="num">3</span>
-<a class="br" href="#L2280" id="L2280">2280 </a>		);
-<a class="br" href="#L2281" id="L2281">2281 </a>	}
-<a class="br" href="#L2282" id="L2282">2282 </a>
-<a class="br" href="#L2283" id="L2283">2283 </a>	<span class="kwrd">assert</span>(<span class="hid">fun</span>(<span class="hid">MySum</span>(<span class="num">0</span>),  <span class="hid">MySum</span>(<span class="num">0</span>))  == <span class="num">0</span>);
-<a class="br" href="#L2284" id="L2284">2284 </a>	<span class="kwrd">assert</span>(<span class="hid">fun</span>(<span class="hid">MySum</span>(<span class="str">&quot;&quot;</span>), <span class="hid">MySum</span>(<span class="num">0</span>))  == <span class="num">1</span>);
-<a class="br" href="#L2285" id="L2285">2285 </a>	<span class="kwrd">assert</span>(<span class="hid">fun</span>(<span class="hid">MySum</span>(<span class="num">0</span>),  <span class="hid">MySum</span>(<span class="str">&quot;&quot;</span>)) == <span class="num">2</span>);
-<a class="br" href="#L2286" id="L2286">2286 </a>	<span class="kwrd">assert</span>(<span class="hid">fun</span>(<span class="hid">MySum</span>(<span class="str">&quot;&quot;</span>), <span class="hid">MySum</span>(<span class="str">&quot;&quot;</span>)) == <span class="num">3</span>);
-<a class="br" href="#L2287" id="L2287">2287 </a>}
-<a class="br" href="#L2288" id="L2288">2288 </a>
-<a class="br" href="#L2289" id="L2289">2289 </a><span class="com">// inout SumTypes</span>
-<a class="br" href="#L2290" id="L2290">2290 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
-<a class="br" href="#L2291" id="L2291">2291 </a>	<span class="kwrd">assert</span>(<span class="kwrd">__traits</span>(<span class="hid">compiles</span>, {
-<a class="br" href="#L2292" id="L2292">2292 </a>		<span class="kwrd">inout</span>(<span class="type">int</span>[]) <span class="hid">fun</span>(<span class="kwrd">inout</span>(<a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>[])) <span class="hid">x</span>)
-<a class="br" href="#L2293" id="L2293">2293 </a>		{
-<a class="br" href="#L2294" id="L2294">2294 </a>			<span class="kwrd">return</span> <span class="hid">x.match</span>!((<span class="kwrd">inout</span>(<span class="type">int</span>[]) <span class="hid">a</span>) =&gt; <span class="hid">a</span>);
-<a class="br" href="#L2295" id="L2295">2295 </a>		}
-<a class="br" href="#L2296" id="L2296">2296 </a>	}));
-<a class="br" href="#L2297" id="L2297">2297 </a>}
-<a class="br" href="#L2298" id="L2298">2298 </a>
-<a class="br" href="#L2299" id="L2299">2299 </a><span class="kwrd">static</span> <span class="kwrd">if</span> (<span class="kwrd">__traits</span>(<span class="hid">compiles</span>, { <span class="kwrd">import</span> <span class="hid">std.traits</span>: <a class="hid" href="sumtype.d.html#L2302" title="sumtype.isRvalueAssignable">isRvalueAssignable</a>; })) {
-<a class="br" href="#L2300" id="L2300">2300 </a>	<span class="kwrd">import</span> <span class="hid">std.traits</span>: <a class="hid" href="sumtype.d.html#L2302" title="sumtype.isRvalueAssignable">isRvalueAssignable</a>;
-<a class="br" href="#L2301" id="L2301">2301 </a>} <span class="kwrd">else</span> <span class="kwrd">private</span> {
-<a class="br" href="#L2302" id="L2302">2302 </a>	<span class="kwrd">enum</span> <a class="hid" href="sumtype.d.html#L2302" title="sumtype.isRvalueAssignable">isRvalueAssignable</a>(<span class="hid">Lhs</span>, <span class="hid">Rhs</span> = <span class="hid">Lhs</span>) = <span class="kwrd">__traits</span>(<span class="hid">compiles</span>, <a class="hid" href="sumtype.d.html#L2305" title="sumtype.lvalueOf">lvalueOf</a>!<span class="hid">Lhs</span> = <a class="hid" href="sumtype.d.html#L2304" title="sumtype.rvalueOf">rvalueOf</a>!<span class="hid">Rhs</span>);
-<a class="br" href="#L2303" id="L2303">2303 </a>	<span class="kwrd">struct</span> <a class="hid" href="sumtype.d.html#L2303" title="sumtype.__InoutWorkaroundStruct">__InoutWorkaroundStruct</a>{}
-<a class="br" href="#L2304" id="L2304">2304 </a>	@<span class="hid">property</span> <span class="hid">T</span> <a class="hid" href="sumtype.d.html#L2304" title="sumtype.rvalueOf">rvalueOf</a>(<span class="hid">T</span>)(<span class="kwrd">inout</span> <a class="hid" href="sumtype.d.html#L2303" title="sumtype.__InoutWorkaroundStruct">__InoutWorkaroundStruct</a> = <a class="hid" href="sumtype.d.html#L2303" title="sumtype.__InoutWorkaroundStruct">__InoutWorkaroundStruct.init</a>);
-<a class="br" href="#L2305" id="L2305">2305 </a>	@<span class="hid">property</span> <span class="kwrd">ref</span> <span class="hid">T</span> <a class="hid" href="sumtype.d.html#L2305" title="sumtype.lvalueOf">lvalueOf</a>(<span class="hid">T</span>)(<span class="kwrd">inout</span> <a class="hid" href="sumtype.d.html#L2303" title="sumtype.__InoutWorkaroundStruct">__InoutWorkaroundStruct</a> = <a class="hid" href="sumtype.d.html#L2303" title="sumtype.__InoutWorkaroundStruct">__InoutWorkaroundStruct.init</a>);
+<a class="br" href="#L2269" id="L2269">2269 </a>	<span class="kwrd">static</span> <span class="kwrd">struct</span> <span class="hid">A</span> {}
+<a class="br" href="#L2270" id="L2270">2270 </a>	<span class="kwrd">static</span> <span class="kwrd">struct</span> <span class="hid">B</span> {}
+<a class="br" href="#L2271" id="L2271">2271 </a>	<span class="kwrd">static</span> <span class="kwrd">struct</span> <span class="hid">D</span> { <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="hid">A</span>, <span class="hid">B</span>) <span class="hid">value</span>; <span class="kwrd">alias</span> <span class="hid">value</span> <span class="kwrd">this</span>; }
+<a class="br" href="#L2272" id="L2272">2272 </a>
+<a class="br" href="#L2273" id="L2273">2273 </a>	<span class="kwrd">assert</span>(<span class="kwrd">__traits</span>(<span class="hid">compiles</span>, <span class="hid">D</span>().<a class="hid" href="sumtype.d.html#L1435" title="sumtype.match">match</a>!(<span class="hid">_</span> =&gt; <span class="kwrd">true</span>)));
+<a class="br" href="#L2274" id="L2274">2274 </a>}
+<a class="br" href="#L2275" id="L2275">2275 </a>
+<a class="br" href="#L2276" id="L2276">2276 </a><span class="com">// Multiple dispatch</span>
+<a class="br" href="#L2277" id="L2277">2277 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
+<a class="br" href="#L2278" id="L2278">2278 </a>	<span class="kwrd">alias</span> <span class="hid">MySum</span> = <a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>, <span class="type">string</span>);
+<a class="br" href="#L2279" id="L2279">2279 </a>
+<a class="br" href="#L2280" id="L2280">2280 </a>	<span class="kwrd">static</span> <span class="type">int</span> <span class="hid">fun</span>(<span class="hid">MySum</span> <span class="hid">x</span>, <span class="hid">MySum</span> <span class="hid">y</span>)
+<a class="br" href="#L2281" id="L2281">2281 </a>	{
+<a class="br" href="#L2282" id="L2282">2282 </a>		<span class="kwrd">import</span> <span class="hid">std.meta</span>: <span class="hid">Args</span> = <span class="hid">AliasSeq</span>;
+<a class="br" href="#L2283" id="L2283">2283 </a>
+<a class="br" href="#L2284" id="L2284">2284 </a>		<span class="kwrd">return</span> <span class="hid">Args</span>!(<span class="hid">x</span>, <span class="hid">y</span>).<a class="hid" href="sumtype.d.html#L1435" title="sumtype.match">match</a>!(
+<a class="br" href="#L2285" id="L2285">2285 </a>			(<span class="type">int</span>    <span class="hid">xv</span>, <span class="type">int</span>    <span class="hid">yv</span>) =&gt; <span class="num">0</span>,
+<a class="br" href="#L2286" id="L2286">2286 </a>			(<span class="type">string</span> <span class="hid">xv</span>, <span class="type">int</span>    <span class="hid">yv</span>) =&gt; <span class="num">1</span>,
+<a class="br" href="#L2287" id="L2287">2287 </a>			(<span class="type">int</span>    <span class="hid">xv</span>, <span class="type">string</span> <span class="hid">yv</span>) =&gt; <span class="num">2</span>,
+<a class="br" href="#L2288" id="L2288">2288 </a>			(<span class="type">string</span> <span class="hid">xv</span>, <span class="type">string</span> <span class="hid">yv</span>) =&gt; <span class="num">3</span>
+<a class="br" href="#L2289" id="L2289">2289 </a>		);
+<a class="br" href="#L2290" id="L2290">2290 </a>	}
+<a class="br" href="#L2291" id="L2291">2291 </a>
+<a class="br" href="#L2292" id="L2292">2292 </a>	<span class="kwrd">assert</span>(<span class="hid">fun</span>(<span class="hid">MySum</span>(<span class="num">0</span>),  <span class="hid">MySum</span>(<span class="num">0</span>))  == <span class="num">0</span>);
+<a class="br" href="#L2293" id="L2293">2293 </a>	<span class="kwrd">assert</span>(<span class="hid">fun</span>(<span class="hid">MySum</span>(<span class="str">&quot;&quot;</span>), <span class="hid">MySum</span>(<span class="num">0</span>))  == <span class="num">1</span>);
+<a class="br" href="#L2294" id="L2294">2294 </a>	<span class="kwrd">assert</span>(<span class="hid">fun</span>(<span class="hid">MySum</span>(<span class="num">0</span>),  <span class="hid">MySum</span>(<span class="str">&quot;&quot;</span>)) == <span class="num">2</span>);
+<a class="br" href="#L2295" id="L2295">2295 </a>	<span class="kwrd">assert</span>(<span class="hid">fun</span>(<span class="hid">MySum</span>(<span class="str">&quot;&quot;</span>), <span class="hid">MySum</span>(<span class="str">&quot;&quot;</span>)) == <span class="num">3</span>);
+<a class="br" href="#L2296" id="L2296">2296 </a>}
+<a class="br" href="#L2297" id="L2297">2297 </a>
+<a class="br" href="#L2298" id="L2298">2298 </a><span class="com">// inout SumTypes</span>
+<a class="br" href="#L2299" id="L2299">2299 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
+<a class="br" href="#L2300" id="L2300">2300 </a>	<span class="kwrd">assert</span>(<span class="kwrd">__traits</span>(<span class="hid">compiles</span>, {
+<a class="br" href="#L2301" id="L2301">2301 </a>		<span class="kwrd">inout</span>(<span class="type">int</span>[]) <span class="hid">fun</span>(<span class="kwrd">inout</span>(<a class="hid" href="sumtype.d.html#L277" title="sumtype.SumType">SumType</a>!(<span class="type">int</span>[])) <span class="hid">x</span>)
+<a class="br" href="#L2302" id="L2302">2302 </a>		{
+<a class="br" href="#L2303" id="L2303">2303 </a>			<span class="kwrd">return</span> <span class="hid">x.match</span>!((<span class="kwrd">inout</span>(<span class="type">int</span>[]) <span class="hid">a</span>) =&gt; <span class="hid">a</span>);
+<a class="br" href="#L2304" id="L2304">2304 </a>		}
+<a class="br" href="#L2305" id="L2305">2305 </a>	}));
 <a class="br" href="#L2306" id="L2306">2306 </a>}
 <a class="br" href="#L2307" id="L2307">2307 </a>
-<a class="br" href="#L2308" id="L2308">2308 </a><span class="kwrd">private</span> <span class="type">void</span> <a class="hid" href="sumtype.d.html#L2308" title="sumtype.destroyIfOwner">destroyIfOwner</a>(<span class="hid">T</span>)(<span class="kwrd">ref</span> <span class="hid">T</span> <span class="hid">value</span>)
-<a class="br" href="#L2309" id="L2309">2309 </a>{
-<a class="br" href="#L2310" id="L2310">2310 </a>	<span class="kwrd">static</span> <span class="kwrd">if</span> (<span class="hid">hasElaborateDestructor</span>!<span class="hid">T</span>) {
-<a class="br" href="#L2311" id="L2311">2311 </a>		<span class="hid">destroy</span>(<span class="hid">value</span>);
-<a class="br" href="#L2312" id="L2312">2312 </a>	}
-<a class="br" href="#L2313" id="L2313">2313 </a>}</pre></div>
+<a class="br" href="#L2308" id="L2308">2308 </a><span class="kwrd">static</span> <span class="kwrd">if</span> (<span class="kwrd">__traits</span>(<span class="hid">compiles</span>, { <span class="kwrd">import</span> <span class="hid">std.traits</span>: <a class="hid" href="sumtype.d.html#L2311" title="sumtype.isRvalueAssignable">isRvalueAssignable</a>; })) {
+<a class="br" href="#L2309" id="L2309">2309 </a>	<span class="kwrd">import</span> <span class="hid">std.traits</span>: <a class="hid" href="sumtype.d.html#L2311" title="sumtype.isRvalueAssignable">isRvalueAssignable</a>;
+<a class="br" href="#L2310" id="L2310">2310 </a>} <span class="kwrd">else</span> <span class="kwrd">private</span> {
+<a class="br" href="#L2311" id="L2311">2311 </a>	<span class="kwrd">enum</span> <a class="hid" href="sumtype.d.html#L2311" title="sumtype.isRvalueAssignable">isRvalueAssignable</a>(<span class="hid">Lhs</span>, <span class="hid">Rhs</span> = <span class="hid">Lhs</span>) = <span class="kwrd">__traits</span>(<span class="hid">compiles</span>, <a class="hid" href="sumtype.d.html#L2314" title="sumtype.lvalueOf">lvalueOf</a>!<span class="hid">Lhs</span> = <a class="hid" href="sumtype.d.html#L2313" title="sumtype.rvalueOf">rvalueOf</a>!<span class="hid">Rhs</span>);
+<a class="br" href="#L2312" id="L2312">2312 </a>	<span class="kwrd">struct</span> <a class="hid" href="sumtype.d.html#L2312" title="sumtype.__InoutWorkaroundStruct">__InoutWorkaroundStruct</a>{}
+<a class="br" href="#L2313" id="L2313">2313 </a>	@<span class="hid">property</span> <span class="hid">T</span> <a class="hid" href="sumtype.d.html#L2313" title="sumtype.rvalueOf">rvalueOf</a>(<span class="hid">T</span>)(<span class="kwrd">inout</span> <a class="hid" href="sumtype.d.html#L2312" title="sumtype.__InoutWorkaroundStruct">__InoutWorkaroundStruct</a> = <a class="hid" href="sumtype.d.html#L2312" title="sumtype.__InoutWorkaroundStruct">__InoutWorkaroundStruct.init</a>);
+<a class="br" href="#L2314" id="L2314">2314 </a>	@<span class="hid">property</span> <span class="kwrd">ref</span> <span class="hid">T</span> <a class="hid" href="sumtype.d.html#L2314" title="sumtype.lvalueOf">lvalueOf</a>(<span class="hid">T</span>)(<span class="kwrd">inout</span> <a class="hid" href="sumtype.d.html#L2312" title="sumtype.__InoutWorkaroundStruct">__InoutWorkaroundStruct</a> = <a class="hid" href="sumtype.d.html#L2312" title="sumtype.__InoutWorkaroundStruct">__InoutWorkaroundStruct.init</a>);
+<a class="br" href="#L2315" id="L2315">2315 </a>}
+<a class="br" href="#L2316" id="L2316">2316 </a>
+<a class="br" href="#L2317" id="L2317">2317 </a><span class="kwrd">private</span> <span class="type">void</span> <a class="hid" href="sumtype.d.html#L2317" title="sumtype.destroyIfOwner">destroyIfOwner</a>(<span class="hid">T</span>)(<span class="kwrd">ref</span> <span class="hid">T</span> <span class="hid">value</span>)
+<a class="br" href="#L2318" id="L2318">2318 </a>{
+<a class="br" href="#L2319" id="L2319">2319 </a>	<span class="kwrd">static</span> <span class="kwrd">if</span> (<span class="hid">hasElaborateDestructor</span>!<span class="hid">T</span>) {
+<a class="br" href="#L2320" id="L2320">2320 </a>		<span class="hid">destroy</span>(<span class="hid">value</span>);
+<a class="br" href="#L2321" id="L2321">2321 </a>	}
+<a class="br" href="#L2322" id="L2322">2322 </a>}</pre></div>
 		<div id="page-nav">
-		<div id="source-navigation"><div class="list-holder"><ul><li><a class="docs" href="../sumtype.html">[Docs] </a><a href="#L1">sumtype</a><ul><li><a href="#L222">std.format</a></li><li><a href="#L223">std.meta</a></li><li><a href="#L224">std.meta</a></li><li><a href="#L225">std.meta</a></li><li><a href="#L226">std.traits</a></li><li><a href="#L227">std.traits</a></li><li><a href="#L228">std.traits</a></li><li><a href="#L229">std.traits</a></li><li><a href="#L230">std.typecons</a></li><li><a href="#L231">std.typecons</a></li><li><a class="docs" href="../sumtype.This.html">[Docs] </a><a href="#L234">This</a></li><li><a href="#L237">toCtString</a></li><li><a href="#L247">isAssignableTo</a></li><li><a href="#L251">isHashable</a></li><li><a href="#L255">hasPostblit</a></li><li><a class="docs" href="../sumtype.SumType.html">[Docs] </a><a href="#L277">SumType</a><ul><li><a class="docs" href="../sumtype.SumType.Types.html">[Docs] </a><a href="#L281">Types</a></li><li><a href="#L287">canHoldTag</a></li><li><a href="#L288">unsignedInts</a></li><li><a href="#L290">Tag</a></li><li><a href="#L292">Storage</a><ul><li><a href="#L295">memberName</a><ul><li><a href="#L1">tid</a></li></ul></li></ul></li><li><a href="#L307">storage</a></li><li><a href="#L308">tag</a></li><li><a href="#L324">get</a></li><li><a class="docs" href="../sumtype.SumType.this.1.html">[Docs] </a><a href="#L339">this</a></li><li><a class="docs" href="../sumtype.SumType.this.2.html">[Docs] </a><a href="#L366">this</a></li><li><a class="docs" href="../sumtype.SumType.this.3.html">[Docs] </a><a href="#L382">this</a></li><li><a href="#L396">this</a></li><li><a href="#L397">this</a></li><li><a class="docs" href="../sumtype.SumType.this.4.html">[Docs] </a><a href="#L407">this</a></li><li><a class="docs" href="../sumtype.SumType.this.5.html">[Docs] </a><a href="#L426">this</a></li><li><a href="#L441">this</a></li><li><a class="docs" href="../sumtype.SumType.this.6.html">[Docs] </a><a href="#L446">this</a></li><li><a href="#L463">this</a></li><li><a class="docs" href="../sumtype.SumType.this.7.html">[Docs] </a><a href="#L468">this</a></li><li><a href="#L485">this</a></li><li><a href="#L491">this</a></li><li><a class="docs" href="../sumtype.SumType.opAssign.1.html">[Docs] </a><a href="#L509">opAssign</a></li><li><a class="docs" href="../sumtype.SumType.opAssign.2.html">[Docs] </a><a href="#L545">opAssign</a></li><li><a href="#L551">opAssign</a></li><li><a class="docs" href="../sumtype.SumType.opAssign.3.html">[Docs] </a><a href="#L559">opAssign</a></li><li><a class="docs" href="../sumtype.SumType.opEquals.html">[Docs] </a><a href="#L574">opEquals</a></li><li><a href="#L1">includeDtor</a></li><li><a href="#L1">includeDtor</a></li><li><a class="docs" href="../sumtype.SumType.~this.html">[Docs] </a><a href="#L602">~this</a></li><li><a class="docs" href="../sumtype.SumType.toString.1.html">[Docs] </a><a href="#L626">toString</a></li><li><a class="docs" href="../sumtype.SumType.toString.2.html">[Docs] </a><a href="#L645">toString</a></li><li><a class="docs" href="../sumtype.SumType.toHash.html">[Docs] </a><a href="#L662">toHash</a></li><li><a class="docs" href="../sumtype.SumType.typeIndex.html">[Docs] </a><a href="#L675">typeIndex</a></li></ul></li><li><a href="#L1369">isSumTypeInstance</a></li><li><a class="docs" href="../sumtype.isSumType.html">[Docs] </a><a href="#L1383">isSumType</a></li><li><a class="docs" href="../sumtype.match.html">[Docs] </a><a href="#L1435">match</a><ul><li><a href="#L1437">std.typecons</a></li><li><a class="docs" href="../sumtype.match.match.html">[Docs] </a><a href="#L1445">match</a></li></ul></li><li><a class="docs" href="../sumtype.tryMatch.html">[Docs] </a><a href="#L1573">tryMatch</a><ul><li><a href="#L1575">std.typecons</a></li><li><a class="docs" href="../sumtype.tryMatch.tryMatch.html">[Docs] </a><a href="#L1583">tryMatch</a></li></ul></li><li><a class="docs" href="../sumtype.MatchException.html">[Docs] </a><a href="#L1596">MatchException</a><ul><li><a class="docs" href="../sumtype.MatchException.this.html">[Docs] </a><a href="#L1600">this</a></li></ul></li><li><a class="docs" href="../sumtype.canMatch.html">[Docs] </a><a href="#L1612">canMatch</a><ul><li><a href="#L1">canMatch</a></li></ul></li><li><a href="#L1639">Iota</a><ul><li><a href="#L1642">Iota</a></li><li><a href="#L1644">Iota</a></li></ul></li><li><a href="#L1661">stride</a></li><li><a href="#L1680">matchImpl</a><ul><li><a href="#L1682">matchImpl</a></li></ul></li><li><a href="#L1943">isClose</a></li><li><a href="#L1950">std.math</a></li><li><a href="#L2300">std.traits</a></li><li><a href="#L2302">isRvalueAssignable</a></li><li><a href="#L2303">__InoutWorkaroundStruct</a></li><li><a href="#L2304">rvalueOf</a></li><li><a href="#L2305">lvalueOf</a></li><li><a href="#L2308">destroyIfOwner</a></li></ul></li></ul></div></div></div>
+		<div id="source-navigation"><div class="list-holder"><ul><li><a class="docs" href="../sumtype.html">[Docs] </a><a href="#L1">sumtype</a><ul><li><a href="#L222">std.format</a></li><li><a href="#L223">std.meta</a></li><li><a href="#L224">std.meta</a></li><li><a href="#L225">std.meta</a></li><li><a href="#L226">std.traits</a></li><li><a href="#L227">std.traits</a></li><li><a href="#L228">std.traits</a></li><li><a href="#L229">std.traits</a></li><li><a href="#L230">std.typecons</a></li><li><a href="#L231">std.typecons</a></li><li><a class="docs" href="../sumtype.This.html">[Docs] </a><a href="#L234">This</a></li><li><a href="#L237">toCtString</a></li><li><a href="#L247">isAssignableTo</a></li><li><a href="#L251">isHashable</a></li><li><a href="#L255">hasPostblit</a></li><li><a class="docs" href="../sumtype.SumType.html">[Docs] </a><a href="#L277">SumType</a><ul><li><a class="docs" href="../sumtype.SumType.Types.html">[Docs] </a><a href="#L281">Types</a></li><li><a href="#L287">canHoldTag</a></li><li><a href="#L288">unsignedInts</a></li><li><a href="#L290">Tag</a></li><li><a href="#L292">Storage</a><ul><li><a href="#L295">memberName</a><ul><li><a href="#L1">tid</a></li></ul></li></ul></li><li><a href="#L307">storage</a></li><li><a href="#L308">tag</a></li><li><a href="#L324">get</a></li><li><a class="docs" href="../sumtype.SumType.this.1.html">[Docs] </a><a href="#L339">this</a></li><li><a class="docs" href="../sumtype.SumType.this.2.html">[Docs] </a><a href="#L366">this</a></li><li><a class="docs" href="../sumtype.SumType.this.3.html">[Docs] </a><a href="#L382">this</a></li><li><a href="#L396">this</a></li><li><a href="#L397">this</a></li><li><a class="docs" href="../sumtype.SumType.this.4.html">[Docs] </a><a href="#L407">this</a></li><li><a class="docs" href="../sumtype.SumType.this.5.html">[Docs] </a><a href="#L426">this</a></li><li><a href="#L441">this</a></li><li><a class="docs" href="../sumtype.SumType.this.6.html">[Docs] </a><a href="#L446">this</a></li><li><a href="#L463">this</a></li><li><a class="docs" href="../sumtype.SumType.this.7.html">[Docs] </a><a href="#L468">this</a></li><li><a href="#L485">this</a></li><li><a href="#L491">this</a></li><li><a class="docs" href="../sumtype.SumType.opAssign.1.html">[Docs] </a><a href="#L509">opAssign</a></li><li><a class="docs" href="../sumtype.SumType.opAssign.2.html">[Docs] </a><a href="#L545">opAssign</a></li><li><a href="#L551">opAssign</a></li><li><a class="docs" href="../sumtype.SumType.opAssign.3.html">[Docs] </a><a href="#L559">opAssign</a></li><li><a class="docs" href="../sumtype.SumType.opEquals.html">[Docs] </a><a href="#L574">opEquals</a></li><li><a href="#L1">includeDtor</a></li><li><a href="#L1">includeDtor</a></li><li><a class="docs" href="../sumtype.SumType.~this.html">[Docs] </a><a href="#L602">~this</a></li><li><a class="docs" href="../sumtype.SumType.toString.1.html">[Docs] </a><a href="#L626">toString</a></li><li><a class="docs" href="../sumtype.SumType.toString.2.html">[Docs] </a><a href="#L645">toString</a></li><li><a class="docs" href="../sumtype.SumType.toHash.html">[Docs] </a><a href="#L662">toHash</a></li><li><a class="docs" href="../sumtype.SumType.typeIndex.html">[Docs] </a><a href="#L675">typeIndex</a></li></ul></li><li><a href="#L1369">isSumTypeInstance</a></li><li><a class="docs" href="../sumtype.isSumType.html">[Docs] </a><a href="#L1383">isSumType</a></li><li><a class="docs" href="../sumtype.match.html">[Docs] </a><a href="#L1435">match</a><ul><li><a href="#L1437">std.typecons</a></li><li><a class="docs" href="../sumtype.match.match.html">[Docs] </a><a href="#L1445">match</a></li></ul></li><li><a class="docs" href="../sumtype.tryMatch.html">[Docs] </a><a href="#L1573">tryMatch</a><ul><li><a href="#L1575">std.typecons</a></li><li><a class="docs" href="../sumtype.tryMatch.tryMatch.html">[Docs] </a><a href="#L1583">tryMatch</a></li></ul></li><li><a class="docs" href="../sumtype.MatchException.html">[Docs] </a><a href="#L1596">MatchException</a><ul><li><a class="docs" href="../sumtype.MatchException.this.html">[Docs] </a><a href="#L1600">this</a></li></ul></li><li><a class="docs" href="../sumtype.canMatch.html">[Docs] </a><a href="#L1612">canMatch</a><ul><li><a href="#L1">canMatch</a></li></ul></li><li><a href="#L1639">Iota</a><ul><li><a href="#L1642">Iota</a></li><li><a href="#L1644">Iota</a></li></ul></li><li><a href="#L1661">stride</a></li><li><a href="#L1680">matchImpl</a><ul><li><a href="#L1682">matchImpl</a></li></ul></li><li><a href="#L1943">isClose</a></li><li><a href="#L1950">std.math</a></li><li><a href="#L2309">std.traits</a></li><li><a href="#L2311">isRvalueAssignable</a></li><li><a href="#L2312">__InoutWorkaroundStruct</a></li><li><a href="#L2313">rvalueOf</a></li><li><a href="#L2314">lvalueOf</a></li><li><a href="#L2317">destroyIfOwner</a></li></ul></li></ul></div></div></div>
 	</div>
 	<div id="page-footer">Page generated by <a href="https://github.com/adamdruppe/adrdox">adrdox</a></div>
 </body>
