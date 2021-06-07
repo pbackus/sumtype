@@ -1679,7 +1679,7 @@ private size_t stride(size_t dim, lengths...)()
 
 private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 {
-	auto matchImpl(SumTypes...)(auto ref SumTypes args)
+	auto ref matchImpl(SumTypes...)(auto ref SumTypes args)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
 		enum typeCount(SumType) = SumType.Types.length;
@@ -2109,6 +2109,15 @@ version (D_Exceptions)
 	);
 
 	assert(value.get!double.isClose(6.28));
+}
+
+// Handlers that return by ref
+@safe unittest {
+	SumType!int x = 123;
+
+	x.match!(ref (ref int n) => n) = 456;
+
+	assert(x.match!((int n) => n == 456));
 }
 
 // Unreachable handlers
