@@ -359,7 +359,7 @@ public:
 			tag = tid;
 		}
 
-		static if (isCopyable!T) {
+		static if (isCopyable!(const(T))) {
 			// Avoid defining the same constructor multiple times
 			static if (IndexOf!(const(T), Map!(ConstOf, Types)) == tid) {
 				/// ditto
@@ -376,7 +376,11 @@ public:
 					tag = tid;
 				}
 			}
+		} else {
+			@disable this(const(T) value) const;
+		}
 
+		static if (isCopyable!(immutable(T))) {
 			static if (IndexOf!(immutable(T), Map!(ImmutableOf, Types)) == tid) {
 				/// ditto
 				this(immutable(T) value) immutable
@@ -393,7 +397,6 @@ public:
 				}
 			}
 		} else {
-			@disable this(const(T) value) const;
 			@disable this(immutable(T) value) immutable;
 		}
 	}
@@ -1261,6 +1264,18 @@ version (D_BetterC) {} else
 
 	Outer x;
 	Outer y = x;
+}
+
+// Types with qualified copy constructors
+@safe unittest {
+	static struct S
+	{
+		int n;
+		this(inout int n) inout { this.n = n; }
+		this(ref const S other) const { this.n = other.n; }
+	}
+
+	const SumType!S x = const(S)(1);
 }
 
 // Types with disabled opEquals
