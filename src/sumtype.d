@@ -1268,14 +1268,22 @@ version (D_BetterC) {} else
 
 // Types with qualified copy constructors
 @safe unittest {
-	static struct S
+	static struct ConstCopy
 	{
 		int n;
 		this(inout int n) inout { this.n = n; }
-		this(ref const S other) const { this.n = other.n; }
+		this(ref const typeof(this) other) const { this.n = other.n; }
 	}
 
-	const SumType!S x = const(S)(1);
+	static struct ImmutableCopy
+	{
+		int n;
+		this(inout int n) inout { this.n = n; }
+		this(ref immutable typeof(this) other) immutable { this.n = other.n; }
+	}
+
+	const SumType!ConstCopy x = const(ConstCopy)(1);
+	immutable SumType!ImmutableCopy y = immutable(ImmutableCopy)(1);
 }
 
 // Types with disabled opEquals
