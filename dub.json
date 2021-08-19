@@ -11,6 +11,8 @@
 		"frontend": ">=2.094"
 	},
 
+	"dflags": ["-preview=fieldwise"],
+
 	"buildTypes": {
 		"unittest-dip1000": {
 			"buildOptions": ["unittests", "debugMode", "debugInfo"],
