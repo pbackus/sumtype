@@ -701,8 +701,8 @@
 <a class="br" href="#L673" id="L673">673 </a>	 * Returns the index of the type of the `SumType`'s current value in the
 <a class="br" href="#L674" id="L674">674 </a>	 * `SumType`'s [Types].
 <a class="br" href="#L675" id="L675">675 </a>	 *
-<a class="br" href="#L676" id="L676">676 </a>	 * If the `SumType` is qualified, then its qualifiers are applied to
-<a class="br" href="#L677" id="L677">677 </a>	 * [Types] before determining the index.
+<a class="br" href="#L676" id="L676">676 </a>	 * If the `SumType` is qualified, returns the index of the type in [Types]
+<a class="br" href="#L677" id="L677">677 </a>	 * whose qualified version matches the `SumType`'s current value.
 <a class="br" href="#L678" id="L678">678 </a>	 */</span>
 <a class="br" href="#L679" id="L679">679 </a>	<span class="hid">size_t</span> <span class="hid">typeIndex</span>() <span class="kwrd">const</span>
 <a class="br" href="#L680" id="L680">680 </a>	{

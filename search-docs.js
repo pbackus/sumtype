@@ -55,6 +55,16 @@ function adrdox_search(searchTerm) {
 			else
 				hitsObj[hitschild[a].getAttribute("decl")] = Number(hitschild[a].getAttribute("score"));
 		}
+
+		if(stemmer(t) != t) {
+			var hitschild = searchDocument.querySelectorAll("adrdox > index > term[value=\""+t+"\"] > result");
+			for(var a = 0; a < hitschild.length; a++) {
+				if(hitsObj[hitschild[a].getAttribute("decl")])
+					hitsObj[hitschild[a].getAttribute("decl")] += Number(hitschild[a].getAttribute("score"));
+				else
+					hitsObj[hitschild[a].getAttribute("decl")] = Number(hitschild[a].getAttribute("score"));
+			}
+		}
 	}
 
 	var hits = [];
