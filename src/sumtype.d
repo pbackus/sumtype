@@ -340,21 +340,12 @@ public:
 		{
 			import core.lifetime: forward;
 
-			// Workaround for dlang issue 21229
-			storage = () {
-				static if (isCopyable!T) {
-					mixin("Storage newStorage = { ",
-						// Workaround for dlang issue 21542
-						Storage.memberName!T, ": (__ctfe ? value : forward!value)",
-					" };");
-				} else {
-					mixin("Storage newStorage = { ",
-						Storage.memberName!T, " : forward!value",
-					" };");
-				}
-
-				return newStorage;
-			}();
+			static if (isCopyable!T) {
+				// Workaround for dlang issue 21542
+				__traits(getMember, storage, Storage.memberName!T) = __ctfe ? value : forward!value;
+			} else {
+				__traits(getMember, storage, Storage.memberName!T) = forward!value;
+			}
 
 			tag = tid;
 		}
@@ -365,14 +356,7 @@ public:
 				/// ditto
 				this(const(T) value) const
 				{
-					storage = () {
-						mixin("const(Storage) newStorage = { ",
-							Storage.memberName!T, ": value",
-						" };");
-
-						return newStorage;
-					}();
-
+					__traits(getMember, storage, Storage.memberName!T) = value;
 					tag = tid;
 				}
 			}
@@ -385,14 +369,7 @@ public:
 				/// ditto
 				this(immutable(T) value) immutable
 				{
-					storage = () {
-						mixin("immutable(Storage) newStorage = { ",
-							Storage.memberName!T, ": value",
-						" };");
-
-						return newStorage;
-					}();
-
+					__traits(getMember, storage, Storage.memberName!T) = value;
 					tag = tid;
 				}
 			}
@@ -1396,6 +1373,23 @@ version (D_BetterC) {} else
 	assert(__traits(compiles, () @safe {
 		sm = "this should be @safe";
 	}));
+}
+
+// Pointers to local variables
+@safe unittest {
+	enum haveDip1000 = __traits(compiles, () @safe {
+		int n;
+		int* p = &n;
+	});
+
+	static if (haveDip1000) {
+		int n = 123;
+		immutable int ni = 456;
+
+		SumType!(int*) s = &n;
+		const SumType!(int*) sc = &n;
+		immutable SumType!(int*) si = &ni;
+	}
 }
 
 /// True if `T` is an instance of the `SumType` template, otherwise false.
