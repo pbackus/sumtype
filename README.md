@@ -3,6 +3,9 @@ sumtype
 
 A sum type for modern D.
 
+*Note*: Since DMD v2.097.0 (released 2021-06-03), [SumType is part of the standard library](https://dlang.org/changelog/2.097.0.html#std-sumtype).</br>
+The same functionalities can be accessed by importing `std.sumtype` and the official documentation is available [here](https://dlang.org/phobos/std_sumtype.html).
+
 Features
 --------
 
