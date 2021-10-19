@@ -3,8 +3,18 @@ sumtype
 
 A sum type for modern D.
 
-*Note*: Since DMD v2.097.0 (released 2021-06-03), [SumType is part of the standard library](https://dlang.org/changelog/2.097.0.html#std-sumtype).</br>
-The same functionalities can be accessed by importing `std.sumtype` and the official documentation is available [here](https://dlang.org/phobos/std_sumtype.html).
+*Note*: Since DMD v2.097.0 (released 2021-06-03), [`sumtype` is part of the
+standard library][changelog], and can be accessed by importing `std.sumtype`.
+
+Due to differing release schedules, features or bug fixes present in the latest
+release of `sumtype` may not be present in `std.sumtype`. Please refer to the
+[official `std.sumtype` documentation on dlang.org][std-docs] for information
+about the standard-library version, and report any issues encountered while
+using `std.sumtype` on the [official D issue tracker][bugzilla].
+
+[changelog]: https://dlang.org/changelog/2.097.0.html#std-sumtype
+[std-docs]: https://dlang.org/phobos/std_sumtype.html
+[bugzilla]: https://issues.dlang.org/
 
 Features
 --------
