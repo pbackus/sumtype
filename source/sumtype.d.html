@@ -46,8 +46,8 @@
 <a class="br" href="#L18" id="L18">18 </a>+/</span>
 <a class="br" href="#L19" id="L19">19 </a><span class="kwrd">module</span> <span class="hid">sumtype</span>;
 <a class="br" href="#L20" id="L20">20 </a>
-<a class="br" href="#L21" id="L21">21 </a><span class="com">/// $(H3 Basic usage)</span>
-<a class="br" href="#L22" id="L22">22 </a><span class="kwrd">version</span> (<span class="hid">D_BetterC</span>) {} <span class="kwrd">else</span>
+<a class="br" href="#L21" id="L21">21 </a><span class="kwrd">version</span> (<span class="hid">D_BetterC</span>) {} <span class="kwrd">else</span>
+<a class="br" href="#L22" id="L22">22 </a><span class="com">/// $(H3 Basic usage)</span>
 <a class="br" href="#L23" id="L23">23 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
 <a class="br" href="#L24" id="L24">24 </a>    <span class="kwrd">import</span> <span class="hid">std.math</span>: <a class="hid" href="sumtype.d.html#L1970" title="sumtype.isClose">isClose</a>;
 <a class="br" href="#L25" id="L25">25 </a>
@@ -105,15 +105,15 @@
 <a class="br" href="#L77" id="L77">77 </a>    <span class="kwrd">assert</span>(!<span class="hid">isFahrenheit</span>(<span class="hid">t3</span>));
 <a class="br" href="#L78" id="L78">78 </a>}
 <a class="br" href="#L79" id="L79">79 </a>
-<a class="br" href="#L80" id="L80">80 </a><span class="com">/** $(H3 Introspection-based matching)
-<a class="br" href="#L81" id="L81">81 </a> *
-<a class="br" href="#L82" id="L82">82 </a> * In the `length` and `horiz` functions below, the handlers for `match` do not
-<a class="br" href="#L83" id="L83">83 </a> * specify the types of their arguments. Instead, matching is done based on how
-<a class="br" href="#L84" id="L84">84 </a> * the argument is used in the body of the handler: any type with `x` and `y`
-<a class="br" href="#L85" id="L85">85 </a> * properties will be matched by the `rect` handlers, and any type with `r` and
-<a class="br" href="#L86" id="L86">86 </a> * `theta` properties will be matched by the `polar` handlers.
-<a class="br" href="#L87" id="L87">87 </a> */</span>
-<a class="br" href="#L88" id="L88">88 </a><span class="kwrd">version</span> (<span class="hid">D_BetterC</span>) {} <span class="kwrd">else</span>
+<a class="br" href="#L80" id="L80">80 </a><span class="kwrd">version</span> (<span class="hid">D_BetterC</span>) {} <span class="kwrd">else</span>
+<a class="br" href="#L81" id="L81">81 </a><span class="com">/** $(H3 Introspection-based matching)
+<a class="br" href="#L82" id="L82">82 </a> *
+<a class="br" href="#L83" id="L83">83 </a> * In the `length` and `horiz` functions below, the handlers for `match` do not
+<a class="br" href="#L84" id="L84">84 </a> * specify the types of their arguments. Instead, matching is done based on how
+<a class="br" href="#L85" id="L85">85 </a> * the argument is used in the body of the handler: any type with `x` and `y`
+<a class="br" href="#L86" id="L86">86 </a> * properties will be matched by the `rect` handlers, and any type with `r` and
+<a class="br" href="#L87" id="L87">87 </a> * `theta` properties will be matched by the `polar` handlers.
+<a class="br" href="#L88" id="L88">88 </a> */</span>
 <a class="br" href="#L89" id="L89">89 </a>@<span class="hid">safe</span> <span class="kwrd">unittest</span> {
 <a class="br" href="#L90" id="L90">90 </a>    <span class="kwrd">import</span> <span class="hid">std.math</span>: <a class="hid" href="sumtype.d.html#L1970" title="sumtype.isClose">isClose</a>, <span class="hid">cos</span>, <span class="hid">PI</span>, <span class="hid">sqrt</span>;
 <a class="br" href="#L91" id="L91">91 </a>
@@ -146,14 +146,14 @@
 <a class="br" href="#L118" id="L118">118 </a>    <span class="kwrd">assert</span>(<span class="hid">horiz</span>(<span class="hid">v</span>).<a class="hid" href="sumtype.d.html#L1970" title="sumtype.isClose">isClose</a>(<span class="hid">sqrt</span>(<span class="num">0.5</span>)));
 <a class="br" href="#L119" id="L119">119 </a>}
 <a class="br" href="#L120" id="L120">120 </a>
-<a class="br" href="#L121" id="L121">121 </a><span class="com">/** $(H3 Arithmetic expression evaluator)
-<a class="br" href="#L122" id="L122">122 </a> *
-<a class="br" href="#L123" id="L123">123 </a> * This example makes use of the special placeholder type `This` to define a
-<a class="br" href="#L124" id="L124">124 </a> * [https://en.wikipedia.org/wiki/Recursive_data_type|recursive data type]: an
-<a class="br" href="#L125" id="L125">125 </a> * [https://en.wikipedia.org/wiki/Abstract_syntax_tree|abstract syntax tree] for
-<a class="br" href="#L126" id="L126">126 </a> * representing simple arithmetic expressions.
-<a class="br" href="#L127" id="L127">127 </a> */</span>
-<a class="br" href="#L128" id="L128">128 </a><span class="kwrd">version</span> (<span class="hid">D_BetterC</span>) {} <span class="kwrd">else</span>
+<a class="br" href="#L121" id="L121">121 </a><span class="kwrd">version</span> (<span class="hid">D_BetterC</span>) {} <span class="kwrd">else</span>
+<a class="br" href="#L122" id="L122">122 </a><span class="com">/** $(H3 Arithmetic expression evaluator)
+<a class="br" href="#L123" id="L123">123 </a> *
+<a class="br" href="#L124" id="L124">124 </a> * This example makes use of the special placeholder type `This` to define a
+<a class="br" href="#L125" id="L125">125 </a> * [https://en.wikipedia.org/wiki/Recursive_data_type|recursive data type]: an
+<a class="br" href="#L126" id="L126">126 </a> * [https://en.wikipedia.org/wiki/Abstract_syntax_tree|abstract syntax tree] for
+<a class="br" href="#L127" id="L127">127 </a> * representing simple arithmetic expressions.
+<a class="br" href="#L128" id="L128">128 </a> */</span>
 <a class="br" href="#L129" id="L129">129 </a>@<span class="hid">system</span> <span class="kwrd">unittest</span> {
 <a class="br" href="#L130" id="L130">130 </a>    <span class="kwrd">import</span> <span class="hid">std.functional</span>: <span class="hid">partial</span>;
 <a class="br" href="#L131" id="L131">131 </a>    <span class="kwrd">import</span> <span class="hid">std.traits</span>: <span class="hid">EnumMembers</span>;
@@ -1604,27 +1604,27 @@
 <a class="br" href="#L1576" id="L1576">1576 </a>    <span class="kwrd">assert</span>(!<span class="hid">sameDimensions</span>(<span class="hid">d</span>, <span class="hid">b</span>));
 <a class="br" href="#L1577" id="L1577">1577 </a>}
 <a class="br" href="#L1578" id="L1578">1578 </a>
-<a class="br" href="#L1579" id="L1579">1579 </a><span class="com">/**
-<a class="br" href="#L1580" id="L1580">1580 </a> * Attempts to call a type-appropriate function with the value held in a
-<a class="br" href="#L1581" id="L1581">1581 </a> * [SumType], and throws on failure.
-<a class="br" href="#L1582" id="L1582">1582 </a> *
-<a class="br" href="#L1583" id="L1583">1583 </a> * Matches are chosen using the same rules as [match], but are not required to
-<a class="br" href="#L1584" id="L1584">1584 </a> * be exhaustive&#8212;in other words, a type (or combination of types) is allowed to
-<a class="br" href="#L1585" id="L1585">1585 </a> * have no matching handler. If a type without a handler is encountered at
-<a class="br" href="#L1586" id="L1586">1586 </a> * runtime, a [MatchException] is thrown.
-<a class="br" href="#L1587" id="L1587">1587 </a> *
-<a class="br" href="#L1588" id="L1588">1588 </a> * Not available when compiled with `-betterC`.
-<a class="br" href="#L1589" id="L1589">1589 </a> *
-<a class="br" href="#L1590" id="L1590">1590 </a> * Returns:
-<a class="br" href="#L1591" id="L1591">1591 </a> *   The value returned from the handler that matches the currently-held type,
-<a class="br" href="#L1592" id="L1592">1592 </a> *   if a handler was given for that type.
-<a class="br" href="#L1593" id="L1593">1593 </a> *
-<a class="br" href="#L1594" id="L1594">1594 </a> * Throws:
-<a class="br" href="#L1595" id="L1595">1595 </a> *   [MatchException], if the currently-held type has no matching handler.
-<a class="br" href="#L1596" id="L1596">1596 </a> *
-<a class="br" href="#L1597" id="L1597">1597 </a> * See_Also: `std.variant.tryVisit`
-<a class="br" href="#L1598" id="L1598">1598 </a> */</span>
-<a class="br" href="#L1599" id="L1599">1599 </a><span class="kwrd">version</span> (<span class="hid">D_Exceptions</span>)
+<a class="br" href="#L1579" id="L1579">1579 </a><span class="kwrd">version</span> (<span class="hid">D_Exceptions</span>)
+<a class="br" href="#L1580" id="L1580">1580 </a><span class="com">/**
+<a class="br" href="#L1581" id="L1581">1581 </a> * Attempts to call a type-appropriate function with the value held in a
+<a class="br" href="#L1582" id="L1582">1582 </a> * [SumType], and throws on failure.
+<a class="br" href="#L1583" id="L1583">1583 </a> *
+<a class="br" href="#L1584" id="L1584">1584 </a> * Matches are chosen using the same rules as [match], but are not required to
+<a class="br" href="#L1585" id="L1585">1585 </a> * be exhaustive&#8212;in other words, a type (or combination of types) is allowed to
+<a class="br" href="#L1586" id="L1586">1586 </a> * have no matching handler. If a type without a handler is encountered at
+<a class="br" href="#L1587" id="L1587">1587 </a> * runtime, a [MatchException] is thrown.
+<a class="br" href="#L1588" id="L1588">1588 </a> *
+<a class="br" href="#L1589" id="L1589">1589 </a> * Not available when compiled with `-betterC`.
+<a class="br" href="#L1590" id="L1590">1590 </a> *
+<a class="br" href="#L1591" id="L1591">1591 </a> * Returns:
+<a class="br" href="#L1592" id="L1592">1592 </a> *   The value returned from the handler that matches the currently-held type,
+<a class="br" href="#L1593" id="L1593">1593 </a> *   if a handler was given for that type.
+<a class="br" href="#L1594" id="L1594">1594 </a> *
+<a class="br" href="#L1595" id="L1595">1595 </a> * Throws:
+<a class="br" href="#L1596" id="L1596">1596 </a> *   [MatchException], if the currently-held type has no matching handler.
+<a class="br" href="#L1597" id="L1597">1597 </a> *
+<a class="br" href="#L1598" id="L1598">1598 </a> * See_Also: `std.variant.tryVisit`
+<a class="br" href="#L1599" id="L1599">1599 </a> */</span>
 <a class="br" href="#L1600" id="L1600">1600 </a><span class="kwrd">template</span> <a class="hid" href="sumtype.d.html#L1600" title="sumtype.tryMatch">tryMatch</a>(<span class="hid">handlers</span>...)
 <a class="br" href="#L1601" id="L1601">1601 </a>{
 <a class="br" href="#L1602" id="L1602">1602 </a>	<span class="kwrd">import</span> <span class="hid">std.typecons</span>: <span class="hid">No</span>;
@@ -1642,12 +1642,12 @@
 <a class="br" href="#L1614" id="L1614">1614 </a>	}
 <a class="br" href="#L1615" id="L1615">1615 </a>}
 <a class="br" href="#L1616" id="L1616">1616 </a>
-<a class="br" href="#L1617" id="L1617">1617 </a><span class="com">/**
-<a class="br" href="#L1618" id="L1618">1618 </a> * Thrown by [tryMatch] when an unhandled type is encountered.
-<a class="br" href="#L1619" id="L1619">1619 </a> *
-<a class="br" href="#L1620" id="L1620">1620 </a> * Not available when compiled with `-betterC`.
-<a class="br" href="#L1621" id="L1621">1621 </a> */</span>
-<a class="br" href="#L1622" id="L1622">1622 </a><span class="kwrd">version</span> (<span class="hid">D_Exceptions</span>)
+<a class="br" href="#L1617" id="L1617">1617 </a><span class="kwrd">version</span> (<span class="hid">D_Exceptions</span>)
+<a class="br" href="#L1618" id="L1618">1618 </a><span class="com">/**
+<a class="br" href="#L1619" id="L1619">1619 </a> * Thrown by [tryMatch] when an unhandled type is encountered.
+<a class="br" href="#L1620" id="L1620">1620 </a> *
+<a class="br" href="#L1621" id="L1621">1621 </a> * Not available when compiled with `-betterC`.
+<a class="br" href="#L1622" id="L1622">1622 </a> */</span>
 <a class="br" href="#L1623" id="L1623">1623 </a><span class="kwrd">class</span> <a class="hid" href="sumtype.d.html#L1623" title="sumtype.MatchException">MatchException</a> : <span class="hid">Exception</span>
 <a class="br" href="#L1624" id="L1624">1624 </a>{
 <a class="br" href="#L1625" id="L1625">1625 </a>	<span class="com">///</span>

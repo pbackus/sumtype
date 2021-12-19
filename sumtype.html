@@ -31,7 +31,184 @@ design-by-introspection to generate safe and efficient code. Its features
 include:</p><ul class="user-list"><li><a class="xref" href="sumtype.match.html">Pattern matching.</a></li><li>Support for self-referential types.</li><li>Full attribute correctness (<tt class="inline-code">pure</tt>, <tt class="inline-code">@safe</tt>, <tt class="inline-code">@nogc</tt>, and <tt class="inline-code">nothrow</tt> are
       inferred whenever possible).</li><li>A type-safe and memory-safe API compatible with DIP 1000 (<tt class="inline-code">scope</tt>).</li><li>No dependency on runtime type information (<tt class="inline-code">TypeInfo</tt>).</li><li>Compatibility with BetterC.</li></ul></div></div></div><div class="annotated-prototype"></div><h2 id="members">Members</h2><h3 class="member-list-header hide-from-toc" id="class">Classes</h3><dl class="member-list native"><dt><a href="sumtype.MatchException.html">MatchException</a><div class="simplified-prototype" style="max-width: 22ch;"><span class="builtin-type">class</span> <span class="name">MatchException</span></div></dt><dd><div><p>Thrown by <a class="xref" href="sumtype.tryMatch.html">tryMatch</a> when an unhandled type is encountered.</p></div></dd></dl><h3 class="member-list-header hide-from-toc" id="struct">Structs</h3><dl class="member-list native"><dt><a href="sumtype.SumType.html">SumType</a><div class="simplified-prototype" style="max-width: 26ch;"><span class="builtin-type">struct</span> <span class="name">SumType</span><span class="template-params">(Types...)</span></div></dt><dd><div><p>A <a href="https://en.wikipedia.org/wiki/Tagged_union">tagged union</a> that can hold a
 single value from any of a specified set of types.</p></div></dd><dt><a href="sumtype.This.html">This</a><div class="simplified-prototype" style="max-width: 12ch;"><span class="builtin-type">struct</span> <span class="name">This</span></div></dt><dd><div><p>Placeholder used to refer to the enclosing <a class="xref" href="sumtype.SumType.html">SumType</a>.</p></div></dd></dl><h3 class="member-list-header hide-from-toc" id="template">Templates</h3><dl class="member-list native"><dt><a href="sumtype.canMatch.html">canMatch</a><div class="simplified-prototype" style="max-width: 42ch;"><span class="builtin-type">template</span> <span class="name">canMatch</span><span class="template-params">(alias handler, Ts...)</span></div></dt><dd><div><p>True if <tt class="inline-code">handler</tt> is a potential match for <tt class="inline-code">Ts</tt>, otherwise false.</p></div></dd><dt><a href="sumtype.match.html">match</a><div class="simplified-prototype" style="max-width: 29ch;"><span class="builtin-type">template</span> <span class="name">match</span><span class="template-params">(handlers...)</span></div></dt><dd><div><p>Calls a type-appropriate function with the value held in a <a class="xref" href="sumtype.SumType.html">SumType</a>.</p></div></dd><dt><a href="sumtype.tryMatch.html">tryMatch</a><div class="simplified-prototype" style="max-width: 33ch;"><span class="builtin-type">template</span> <span class="name">tryMatch</span><span class="template-params">(handlers...)</span></div></dt><dd><div><p>Attempts to call a type-appropriate function with the value held in a
-<a class="xref" href="sumtype.SumType.html">SumType</a>, and throws on failure.</p></div></dd></dl><h3 class="member-list-header hide-from-toc" id="variable">Variables</h3><dl class="member-list native"><dt><a href="sumtype.isSumType.html">isSumType</a><div class="simplified-prototype" style="max-width: 25ch;"><tt class="highlighted"><span class="kwrd">enum</span></tt> <tt class="highlighted"><span class="type">bool</span></tt> <span class="name">isSumType</span><tt class="highlighted">(<span class="hid">T</span>)</tt>;</div></dt><dd><div><p>True if <tt class="inline-code">T</tt> is a <a class="xref" href="sumtype.SumType.html">SumType</a> or implicitly converts to one, otherwise false.</p></div></dd></dl><div><h2 id="meta">Meta</h2><div class="documentation-comment source-section other-section"><h3 id="source">Source</h3><div><p><a href="source/sumtype.d.html">See Source File</a><br /></p></div></div><div class="documentation-comment license-section other-section"><h3 id="license">License</h3><div><p>Boost License 1.0</p></div></div><div class="documentation-comment authors-section other-section"><h3 id="authors">Authors</h3><div><p>Paul Backus</p></div></div></div></div>
+<a class="xref" href="sumtype.SumType.html">SumType</a>, and throws on failure.</p></div></dd></dl><h3 class="member-list-header hide-from-toc" id="variable">Variables</h3><dl class="member-list native"><dt><a href="sumtype.isSumType.html">isSumType</a><div class="simplified-prototype" style="max-width: 25ch;"><tt class="highlighted"><span class="kwrd">enum</span></tt> <tt class="highlighted"><span class="type">bool</span></tt> <span class="name">isSumType</span><tt class="highlighted">(<span class="hid">T</span>)</tt>;</div></dt><dd><div><p>True if <tt class="inline-code">T</tt> is a <a class="xref" href="sumtype.SumType.html">SumType</a> or implicitly converts to one, otherwise false.</p></div></dd></dl><div><h2 id="examples"><a class="header-anchor" href="#examples">Examples</a></h2><div class="documentation-comment"><div></div></div><div class="unittest-example-holder"><div class="documentation-comment"><h3 class="user-header" id="basic-usage">Basic usage</h3></div><pre class="d_code highlighted"><span class="kwrd">import</span> <span class="hid">std</span>.<span class="hid">math</span>: <span class="hid">isClose</span>;
+
+<span class="kwrd">struct</span> <span class="hid">Fahrenheit</span> { <span class="type">double</span> <span class="hid">degrees</span>; }
+<span class="kwrd">struct</span> <span class="hid">Celsius</span> { <span class="type">double</span> <span class="hid">degrees</span>; }
+<span class="kwrd">struct</span> <span class="hid">Kelvin</span> { <span class="type">double</span> <span class="hid">degrees</span>; }
+
+<span class="kwrd">alias</span> <span class="hid">Temperature</span> = <span class="hid">SumType</span>!(<span class="hid">Fahrenheit</span>, <span class="hid">Celsius</span>, <span class="hid">Kelvin</span>);
+
+<span class="com">// Construct from any of the member types.</span>
+<span class="hid">Temperature</span> <span class="hid">t1</span> = <span class="hid">Fahrenheit</span>(<span class="num">98.6</span>);
+<span class="hid">Temperature</span> <span class="hid">t2</span> = <span class="hid">Celsius</span>(<span class="num">100</span>);
+<span class="hid">Temperature</span> <span class="hid">t3</span> = <span class="hid">Kelvin</span>(<span class="num">273</span>);
+
+<span class="com">// Use pattern matching to access the value.</span>
+<span class="hid">Fahrenheit</span> <span class="hid">toFahrenheit</span>(<span class="hid">Temperature</span> <span class="hid">t</span>)
+{
+    <span class="kwrd">return</span> <span class="hid">Fahrenheit</span>(
+        <span class="hid">t</span>.<span class="hid">match</span>!(
+            (<span class="hid">Fahrenheit</span> <span class="hid">f</span>) =&gt; <span class="hid">f</span>.<span class="hid">degrees</span>,
+            (<span class="hid">Celsius</span> <span class="hid">c</span>) =&gt; <span class="hid">c</span>.<span class="hid">degrees</span> * <span class="num">9.0</span>/<span class="num">5</span> + <span class="num">32</span>,
+            (<span class="hid">Kelvin</span> <span class="hid">k</span>) =&gt; <span class="hid">k</span>.<span class="hid">degrees</span> * <span class="num">9.0</span>/<span class="num">5</span> - <span class="num">459.4</span>
+        )
+    );
+}
+
+<span class="kwrd">assert</span>(<span class="hid">toFahrenheit</span>(<span class="hid">t1</span>).<span class="hid">degrees</span>.<span class="hid">isClose</span>(<span class="num">98.6</span>));
+<span class="kwrd">assert</span>(<span class="hid">toFahrenheit</span>(<span class="hid">t2</span>).<span class="hid">degrees</span>.<span class="hid">isClose</span>(<span class="num">212</span>));
+<span class="kwrd">assert</span>(<span class="hid">toFahrenheit</span>(<span class="hid">t3</span>).<span class="hid">degrees</span>.<span class="hid">isClose</span>(<span class="num">32</span>));
+
+<span class="com">// Use ref to modify the value in place.</span>
+<span class="type">void</span> <span class="hid">freeze</span>(<span class="kwrd">ref</span> <span class="hid">Temperature</span> <span class="hid">t</span>)
+{
+    <span class="hid">t</span>.<span class="hid">match</span>!(
+        (<span class="kwrd">ref</span> <span class="hid">Fahrenheit</span> <span class="hid">f</span>) =&gt; <span class="hid">f</span>.<span class="hid">degrees</span> = <span class="num">32</span>,
+        (<span class="kwrd">ref</span> <span class="hid">Celsius</span> <span class="hid">c</span>) =&gt; <span class="hid">c</span>.<span class="hid">degrees</span> = <span class="num">0</span>,
+        (<span class="kwrd">ref</span> <span class="hid">Kelvin</span> <span class="hid">k</span>) =&gt; <span class="hid">k</span>.<span class="hid">degrees</span> = <span class="num">273</span>
+    );
+}
+
+<span class="hid">freeze</span>(<span class="hid">t1</span>);
+<span class="kwrd">assert</span>(<span class="hid">toFahrenheit</span>(<span class="hid">t1</span>).<span class="hid">degrees</span>.<span class="hid">isClose</span>(<span class="num">32</span>));
+
+<span class="com">// Use a catch-all handler to give a default result.</span>
+<span class="type">bool</span> <span class="hid">isFahrenheit</span>(<span class="hid">Temperature</span> <span class="hid">t</span>)
+{
+    <span class="kwrd">return</span> <span class="hid">t</span>.<span class="hid">match</span>!(
+        (<span class="hid">Fahrenheit</span> <span class="hid">f</span>) =&gt; <span class="kwrd">true</span>,
+        <span class="hid">_</span> =&gt; <span class="kwrd">false</span>
+    );
+}
+
+<span class="kwrd">assert</span>(<span class="hid">isFahrenheit</span>(<span class="hid">t1</span>));
+<span class="kwrd">assert</span>(!<span class="hid">isFahrenheit</span>(<span class="hid">t2</span>));
+<span class="kwrd">assert</span>(!<span class="hid">isFahrenheit</span>(<span class="hid">t3</span>));</pre></div><div class="unittest-example-holder"><div class="documentation-comment"><h3 class="user-header" id="introspection-based-matching">Introspection-based matching</h3><p>In the <tt class="inline-code">length</tt> and <tt class="inline-code">horiz</tt> functions below, the handlers for <tt class="inline-code">match</tt> do not
+specify the types of their arguments. Instead, matching is done based on how
+the argument is used in the body of the handler: any type with <tt class="inline-code">x</tt> and <tt class="inline-code">y</tt>
+properties will be matched by the <tt class="inline-code">rect</tt> handlers, and any type with <tt class="inline-code">r</tt> and
+<tt class="inline-code">theta</tt> properties will be matched by the <tt class="inline-code">polar</tt> handlers.</p></div><pre class="d_code highlighted"><span class="kwrd">import</span> <span class="hid">std</span>.<span class="hid">math</span>: <span class="hid">isClose</span>, <span class="hid">cos</span>, <span class="hid">PI</span>, <span class="hid">sqrt</span>;
+
+<span class="kwrd">struct</span> <span class="hid">Rectangular</span> { <span class="type">double</span> <span class="hid">x</span>, <span class="hid">y</span>; }
+<span class="kwrd">struct</span> <span class="hid">Polar</span> { <span class="type">double</span> <span class="hid">r</span>, <span class="hid">theta</span>; }
+<span class="kwrd">alias</span> <span class="hid">Vector</span> = <span class="hid">SumType</span>!(<span class="hid">Rectangular</span>, <span class="hid">Polar</span>);
+
+<span class="type">double</span> <span class="hid">length</span>(<span class="hid">Vector</span> <span class="hid">v</span>)
+{
+    <span class="kwrd">return</span> <span class="hid">v</span>.<span class="hid">match</span>!(
+        <span class="hid">rect</span> =&gt; <span class="hid">sqrt</span>(<span class="hid">rect</span>.<span class="hid">x</span>^^<span class="num">2</span> + <span class="hid">rect</span>.<span class="hid">y</span>^^<span class="num">2</span>),
+        <span class="hid">polar</span> =&gt; <span class="hid">polar</span>.<span class="hid">r</span>
+    );
+}
+
+<span class="type">double</span> <span class="hid">horiz</span>(<span class="hid">Vector</span> <span class="hid">v</span>)
+{
+    <span class="kwrd">return</span> <span class="hid">v</span>.<span class="hid">match</span>!(
+        <span class="hid">rect</span> =&gt; <span class="hid">rect</span>.<span class="hid">x</span>,
+        <span class="hid">polar</span> =&gt; <span class="hid">polar</span>.<span class="hid">r</span> * <span class="hid">cos</span>(<span class="hid">polar</span>.<span class="hid">theta</span>)
+    );
+}
+
+<span class="hid">Vector</span> <span class="hid">u</span> = <span class="hid">Rectangular</span>(<span class="num">1</span>, <span class="num">1</span>);
+<span class="hid">Vector</span> <span class="hid">v</span> = <span class="hid">Polar</span>(<span class="num">1</span>, <span class="hid">PI</span>/<span class="num">4</span>);
+
+<span class="kwrd">assert</span>(<span class="hid">length</span>(<span class="hid">u</span>).<span class="hid">isClose</span>(<span class="hid">sqrt</span>(<span class="num">2.0</span>)));
+<span class="kwrd">assert</span>(<span class="hid">length</span>(<span class="hid">v</span>).<span class="hid">isClose</span>(<span class="num">1</span>));
+<span class="kwrd">assert</span>(<span class="hid">horiz</span>(<span class="hid">u</span>).<span class="hid">isClose</span>(<span class="num">1</span>));
+<span class="kwrd">assert</span>(<span class="hid">horiz</span>(<span class="hid">v</span>).<span class="hid">isClose</span>(<span class="hid">sqrt</span>(<span class="num">0.5</span>)));</pre></div><div class="unittest-example-holder"><div class="documentation-comment"><h3 class="user-header" id="arithmetic-expression-evaluator">Arithmetic expression evaluator</h3><p>This example makes use of the special placeholder type <tt class="inline-code">This</tt> to define a
+<a class="" href="https://en.wikipedia.org/wiki/Recursive_data_type">recursive data type</a>: an
+<a class="" href="https://en.wikipedia.org/wiki/Abstract_syntax_tree">abstract syntax tree</a> for
+representing simple arithmetic expressions.</p></div><pre class="d_code highlighted with-line-wrappers"><span class="br">1 </span><span class="kwrd">import</span> <span class="hid">std</span>.<span class="hid">functional</span>: <span class="hid">partial</span>;
+<span class="br">2 </span><span class="kwrd">import</span> <span class="hid">std</span>.<span class="hid">traits</span>: <span class="hid">EnumMembers</span>;
+<span class="br">3 </span><span class="kwrd">import</span> <span class="hid">std</span>.<span class="hid">typecons</span>: <span class="hid">Tuple</span>;
+<span class="br">4 </span>
+<span class="br">5 </span><span class="kwrd">enum</span> <span class="hid">Op</span> : <span class="type">string</span>
+<span class="br">6 </span>{
+<span class="br">7 </span>    <span class="hid">Plus</span>  = <span class="str">&quot;+&quot;</span>,
+<span class="br">8 </span>    <span class="hid">Minus</span> = <span class="str">&quot;-&quot;</span>,
+<span class="br">9 </span>    <span class="hid">Times</span> = <span class="str">&quot;*&quot;</span>,
+<span class="br">10 </span>    <span class="hid">Div</span>   = <span class="str">&quot;/&quot;</span>
+<span class="br">11 </span>}
+<span class="br">12 </span>
+<span class="br">13 </span><span class="com">// An expression is either</span>
+<span class="br">14 </span><span class="com">//  - a number,</span>
+<span class="br">15 </span><span class="com">//  - a variable, or</span>
+<span class="br">16 </span><span class="com">//  - a binary operation combining two sub-expressions.</span>
+<span class="br">17 </span><span class="kwrd">alias</span> <span class="hid">Expr</span> = <span class="hid">SumType</span>!(
+<span class="br">18 </span>    <span class="type">double</span>,
+<span class="br">19 </span>    <span class="type">string</span>,
+<span class="br">20 </span>    <span class="hid">Tuple</span>!(<span class="hid">Op</span>, <span class="str">&quot;op&quot;</span>, <span class="hid">This</span>*, <span class="str">&quot;lhs&quot;</span>, <span class="hid">This</span>*, <span class="str">&quot;rhs&quot;</span>)
+<span class="br">21 </span>);
+<span class="br">22 </span>
+<span class="br">23 </span><span class="com">// Shorthand for Tuple!(Op, &quot;op&quot;, Expr*, &quot;lhs&quot;, Expr*, &quot;rhs&quot;),</span>
+<span class="br">24 </span><span class="com">// the Tuple type above with Expr substituted for This.</span>
+<span class="br">25 </span><span class="kwrd">alias</span> <span class="hid">BinOp</span> = <span class="hid">Expr</span>.<span class="hid">Types</span>[<span class="num">2</span>];
+<span class="br">26 </span>
+<span class="br">27 </span><span class="com">// Factory function for number expressions</span>
+<span class="br">28 </span><span class="hid">Expr</span>* <span class="hid">num</span>(<span class="type">double</span> <span class="hid">value</span>)
+<span class="br">29 </span>{
+<span class="br">30 </span>    <span class="kwrd">return</span> <span class="kwrd">new</span> <span class="hid">Expr</span>(<span class="hid">value</span>);
+<span class="br">31 </span>}
+<span class="br">32 </span>
+<span class="br">33 </span><span class="com">// Factory function for variable expressions</span>
+<span class="br">34 </span><span class="hid">Expr</span>* <span class="hid">var</span>(<span class="type">string</span> <span class="hid">name</span>)
+<span class="br">35 </span>{
+<span class="br">36 </span>    <span class="kwrd">return</span> <span class="kwrd">new</span> <span class="hid">Expr</span>(<span class="hid">name</span>);
+<span class="br">37 </span>}
+<span class="br">38 </span>
+<span class="br">39 </span><span class="com">// Factory function for binary operation expressions</span>
+<span class="br">40 </span><span class="hid">Expr</span>* <span class="hid">binOp</span>(<span class="hid">Op</span> <span class="hid">op</span>, <span class="hid">Expr</span>* <span class="hid">lhs</span>, <span class="hid">Expr</span>* <span class="hid">rhs</span>)
+<span class="br">41 </span>{
+<span class="br">42 </span>    <span class="kwrd">return</span> <span class="kwrd">new</span> <span class="hid">Expr</span>(<span class="hid">BinOp</span>(<span class="hid">op</span>, <span class="hid">lhs</span>, <span class="hid">rhs</span>));
+<span class="br">43 </span>}
+<span class="br">44 </span>
+<span class="br">45 </span><span class="com">// Convenience wrappers for creating BinOp expressions</span>
+<span class="br">46 </span><span class="kwrd">alias</span> <span class="hid">sum</span>  = <span class="hid">partial</span>!(<span class="hid">binOp</span>, <span class="hid">Op</span>.<span class="hid">Plus</span>);
+<span class="br">47 </span><span class="kwrd">alias</span> <span class="hid">diff</span> = <span class="hid">partial</span>!(<span class="hid">binOp</span>, <span class="hid">Op</span>.<span class="hid">Minus</span>);
+<span class="br">48 </span><span class="kwrd">alias</span> <span class="hid">prod</span> = <span class="hid">partial</span>!(<span class="hid">binOp</span>, <span class="hid">Op</span>.<span class="hid">Times</span>);
+<span class="br">49 </span><span class="kwrd">alias</span> <span class="hid">quot</span> = <span class="hid">partial</span>!(<span class="hid">binOp</span>, <span class="hid">Op</span>.<span class="hid">Div</span>);
+<span class="br">50 </span>
+<span class="br">51 </span><span class="com">// Evaluate expr, looking up variables in env</span>
+<span class="br">52 </span><span class="type">double</span> <span class="hid">eval</span>(<span class="hid">Expr</span> <span class="hid">expr</span>, <span class="type">double</span>[<span class="type">string</span>] <span class="hid">env</span>)
+<span class="br">53 </span>{
+<span class="br">54 </span>    <span class="kwrd">return</span> <span class="hid">expr</span>.<span class="hid">match</span>!(
+<span class="br">55 </span>        (<span class="type">double</span> <span class="hid">num</span>) =&gt; <span class="hid">num</span>,
+<span class="br">56 </span>        (<span class="type">string</span> <span class="hid">var</span>) =&gt; <span class="hid">env</span>[<span class="hid">var</span>],
+<span class="br">57 </span>        (<span class="hid">BinOp</span> <span class="hid">bop</span>) {
+<span class="br">58 </span>            <span class="type">double</span> <span class="hid">lhs</span> = <span class="hid">eval</span>(*<span class="hid">bop</span>.<span class="hid">lhs</span>, <span class="hid">env</span>);
+<span class="br">59 </span>            <span class="type">double</span> <span class="hid">rhs</span> = <span class="hid">eval</span>(*<span class="hid">bop</span>.<span class="hid">rhs</span>, <span class="hid">env</span>);
+<span class="br">60 </span>            <span class="kwrd">final</span> <span class="kwrd">switch</span>(<span class="hid">bop</span>.<span class="hid">op</span>) {
+<span class="br">61 </span>                <span class="kwrd">static</span> <span class="kwrd">foreach</span>(<span class="hid">op</span>; <span class="hid">EnumMembers</span>!<span class="hid">Op</span>) {
+<span class="br">62 </span>                    <span class="kwrd">case</span> <span class="hid">op</span>:
+<span class="br">63 </span>                        <span class="kwrd">return</span> <span class="kwrd">mixin</span>(<span class="str">&quot;lhs&quot;</span> ~ <span class="hid">op</span> ~ <span class="str">&quot;rhs&quot;</span>);
+<span class="br">64 </span>                }
+<span class="br">65 </span>            }
+<span class="br">66 </span>        }
+<span class="br">67 </span>    );
+<span class="br">68 </span>}
+<span class="br">69 </span>
+<span class="br">70 </span><span class="com">// Return a &quot;pretty-printed&quot; representation of expr</span>
+<span class="br">71 </span><span class="type">string</span> <span class="hid">pprint</span>(<span class="hid">Expr</span> <span class="hid">expr</span>)
+<span class="br">72 </span>{
+<span class="br">73 </span>    <span class="kwrd">import</span> <span class="hid">std</span>.<span class="hid">format</span>;
+<span class="br">74 </span>
+<span class="br">75 </span>    <span class="kwrd">return</span> <span class="hid">expr</span>.<span class="hid">match</span>!(
+<span class="br">76 </span>        (<span class="type">double</span> <span class="hid">num</span>) =&gt; <span class="str">&quot;%g&quot;</span>.<span class="hid">format</span>(<span class="hid">num</span>),
+<span class="br">77 </span>        (<span class="type">string</span> <span class="hid">var</span>) =&gt; <span class="hid">var</span>,
+<span class="br">78 </span>        (<span class="hid">BinOp</span> <span class="hid">bop</span>) =&gt; <span class="str">&quot;(%s %s %s)&quot;</span>.<span class="hid">format</span>(
+<span class="br">79 </span>            <span class="hid">pprint</span>(*<span class="hid">bop</span>.<span class="hid">lhs</span>),
+<span class="br">80 </span>            <span class="kwrd">cast</span>(<span class="type">string</span>) <span class="hid">bop</span>.<span class="hid">op</span>,
+<span class="br">81 </span>            <span class="hid">pprint</span>(*<span class="hid">bop</span>.<span class="hid">rhs</span>)
+<span class="br">82 </span>        )
+<span class="br">83 </span>    );
+<span class="br">84 </span>}
+<span class="br">85 </span>
+<span class="br">86 </span><span class="hid">Expr</span>* <span class="hid">myExpr</span> = <span class="hid">sum</span>(<span class="hid">var</span>(<span class="str">&quot;a&quot;</span>), <span class="hid">prod</span>(<span class="hid">num</span>(<span class="num">2</span>), <span class="hid">var</span>(<span class="str">&quot;b&quot;</span>)));
+<span class="br">87 </span><span class="type">double</span>[<span class="type">string</span>] <span class="hid">myEnv</span> = [<span class="str">&quot;a&quot;</span>:<span class="num">3</span>, <span class="str">&quot;b&quot;</span>:<span class="num">4</span>, <span class="str">&quot;c&quot;</span>:<span class="num">7</span>];
+<span class="br">88 </span>
+<span class="br">89 </span><span class="kwrd">assert</span>(<span class="hid">eval</span>(*<span class="hid">myExpr</span>, <span class="hid">myEnv</span>) == <span class="num">11</span>);
+<span class="br">90 </span><span class="kwrd">assert</span>(<span class="hid">pprint</span>(*<span class="hid">myExpr</span>) == <span class="str">&quot;(a + (2 * b))&quot;</span>);</pre></div><h2 id="meta">Meta</h2><div class="documentation-comment source-section other-section"><h3 id="source">Source</h3><div><p><a href="source/sumtype.d.html">See Source File</a><br /></p></div></div><div class="documentation-comment license-section other-section"><h3 id="license">License</h3><div><p>Boost License 1.0</p></div></div><div class="documentation-comment authors-section other-section"><h3 id="authors">Authors</h3><div><p>Paul Backus</p></div></div></div></div>
 		<div id="page-nav">
 		<span class="type-separator">modules</span><ul><li><a class="module current" href="sumtype.html">sumtype</a></li></ul></div>
 	</div>
