@@ -18,8 +18,8 @@ Authors: Paul Backus
 +/
 module sumtype;
 
-/// $(H3 Basic usage)
 version (D_BetterC) {} else
+/// $(H3 Basic usage)
 @safe unittest {
     import std.math: isClose;
 
@@ -77,6 +77,7 @@ version (D_BetterC) {} else
     assert(!isFahrenheit(t3));
 }
 
+version (D_BetterC) {} else
 /** $(H3 Introspection-based matching)
  *
  * In the `length` and `horiz` functions below, the handlers for `match` do not
@@ -85,7 +86,6 @@ version (D_BetterC) {} else
  * properties will be matched by the `rect` handlers, and any type with `r` and
  * `theta` properties will be matched by the `polar` handlers.
  */
-version (D_BetterC) {} else
 @safe unittest {
     import std.math: isClose, cos, PI, sqrt;
 
@@ -118,6 +118,7 @@ version (D_BetterC) {} else
     assert(horiz(v).isClose(sqrt(0.5)));
 }
 
+version (D_BetterC) {} else
 /** $(H3 Arithmetic expression evaluator)
  *
  * This example makes use of the special placeholder type `This` to define a
@@ -125,7 +126,6 @@ version (D_BetterC) {} else
  * [https://en.wikipedia.org/wiki/Abstract_syntax_tree|abstract syntax tree] for
  * representing simple arithmetic expressions.
  */
-version (D_BetterC) {} else
 @system unittest {
     import std.functional: partial;
     import std.traits: EnumMembers;
@@ -1576,6 +1576,7 @@ template match(handlers...)
     assert(!sameDimensions(d, b));
 }
 
+version (D_Exceptions)
 /**
  * Attempts to call a type-appropriate function with the value held in a
  * [SumType], and throws on failure.
@@ -1596,7 +1597,6 @@ template match(handlers...)
  *
  * See_Also: `std.variant.tryVisit`
  */
-version (D_Exceptions)
 template tryMatch(handlers...)
 {
 	import std.typecons: No;
@@ -1614,12 +1614,12 @@ template tryMatch(handlers...)
 	}
 }
 
+version (D_Exceptions)
 /**
  * Thrown by [tryMatch] when an unhandled type is encountered.
  *
  * Not available when compiled with `-betterC`.
  */
-version (D_Exceptions)
 class MatchException : Exception
 {
 	///
