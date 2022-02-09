@@ -254,6 +254,8 @@ private enum isHashable(T) = __traits(compiles,
 
 private enum hasPostblit(T) = __traits(hasPostblit, T);
 
+private enum isInout(T) = is(T == inout);
+
 /**
  * A [tagged union](https://en.wikipedia.org/wiki/Tagged_union) that can hold a
  * single value from any of a specified set of types.
@@ -382,6 +384,7 @@ public:
 		static if (
 			allSatisfy!(isCopyable, Map!(InoutOf, Types))
 			&& !anySatisfy!(hasPostblit, Map!(InoutOf, Types))
+			&& allSatisfy!(isInout, Map!(InoutOf, Types))
 		) {
 			/// Constructs a `SumType` that's a copy of another `SumType`.
 			this(ref inout(SumType) other) inout
@@ -1390,6 +1393,21 @@ version (D_BetterC) {} else
 		const SumType!(int*) sc = &n;
 		immutable SumType!(int*) si = &ni;
 	}
+}
+
+// Dlang issue 22572: immutable member type with copy constructor
+@safe unittest {
+	static struct CopyConstruct
+	{
+		this(ref inout CopyConstruct other) inout {}
+	}
+
+	static immutable struct Value
+	{
+		CopyConstruct c;
+	}
+
+	SumType!Value s;
 }
 
 /// True if `T` is an instance of the `SumType` template, otherwise false.
