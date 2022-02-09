@@ -165,4 +165,16 @@ window.addEventListener("load", function() {
 			items[a].className = items[a].className.replace("with-line-wrappers", "");
 	}
 
+  // Keybind to focus search bar on '?' keydown.
+  document.addEventListener("keydown", (event) => {
+    if (event.key == "?") {
+      var searchBox = document.getElementsByName("searchTerm")[0];
+      // Hack so the '?' doesn't auto-populate in the search bar.
+      this.setTimeout(() => {
+        searchBox.focus();
+      }, 100);
+    }
+  });
+
+
 });
