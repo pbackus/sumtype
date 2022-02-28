@@ -1446,7 +1446,22 @@ private enum bool isSumTypeInstance(T) = is(T == SumType!Args, Args...);
 }
 
 /// True if `T` is a [SumType] or implicitly converts to one, otherwise false.
-enum bool isSumType(T) = is(T : SumType!Args, Args...);
+template isSumType(T)
+{
+	static if (is(T : SumType!Args, Args...)) {
+		enum isSumType = true;
+	} else static if (is(T == struct) && __traits(getAliasThis, T).length > 0) {
+		// Workaround for dlang issue 21975
+		import std.traits: ReturnType;
+
+		alias AliasThisType = ReturnType!((T t) =>
+			__traits(getMember, t, __traits(getAliasThis, T)[0])
+		);
+		enum isSumType = .isSumType!AliasThisType;
+	} else {
+		enum isSumType = false;
+	}
+}
 
 ///
 @safe unittest {
@@ -1464,6 +1479,24 @@ enum bool isSumType(T) = is(T : SumType!Args, Args...);
 	assert(isSumType!(SumType!int));
 	assert(isSumType!ConvertsToSumType);
 	assert(!isSumType!ContainsSumType);
+}
+
+@safe unittest {
+	static struct AliasThisVar(T)
+	{
+		SumType!T payload;
+		alias payload this;
+	}
+
+	static struct AliasThisFunc(T)
+	{
+		SumType!T payload;
+		ref get() { return payload; }
+		alias get this;
+	}
+
+	static assert(isSumType!(AliasThisVar!int));
+	static assert(isSumType!(AliasThisFunc!int));
 }
 
 /**
