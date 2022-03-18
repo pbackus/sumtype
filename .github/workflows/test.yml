@@ -16,7 +16,9 @@ jobs:
           - macOS-latest
         dc:
           - dmd-latest
+          - dmd-2.098.1
           - ldc-latest
+          - ldc-1.28.1
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
