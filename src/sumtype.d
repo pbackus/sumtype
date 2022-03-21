@@ -378,6 +378,21 @@ public:
 		} else {
 			@disable this(immutable(T) value) immutable;
 		}
+
+		static if (isCopyable!(inout(T))) {
+			static if (IndexOf!(inout(T), Map!(InoutOf, Types)) == tid) {
+				/// ditto
+				this(Value)(Value value) inout
+					if (is(Value == DeducedParameterType!(inout(T))))
+				{
+					__traits(getMember, storage, Storage.memberName!T) = value;
+					tag = tid;
+				}
+			}
+		} else {
+			@disable this(Value)(Value value) inout
+				if (is(Value == DeducedParameterType!(inout(T))));
+		}
 	}
 
 	static if (anySatisfy!(hasElaborateCopyConstructor, Types)) {
@@ -1431,6 +1446,14 @@ version (D_BetterC) {} else
 	SumType!Value s;
 }
 
+// Construction of inout-qualified SumTypes
+@safe unittest {
+	static inout(SumType!(int[])) example(inout(int[]) arr)
+	{
+		return inout(SumType!(int[]))(arr);
+	}
+}
+
 /// True if `T` is an instance of the `SumType` template, otherwise false.
 private enum bool isSumTypeInstance(T) = is(T == SumType!Args, Args...);
 
@@ -2408,5 +2431,51 @@ private void destroyIfOwner(T)(ref T value)
 {
 	static if (hasElaborateDestructor!T) {
 		destroy(value);
+	}
+}
+
+static if (__traits(compiles, { import std.traits: DeducedParameterType; })) {
+	import std.traits: DeducedParameterType;
+} else {
+	/**
+	 * The parameter type deduced by IFTI when an expression of type T is passed as
+	 * an argument to a template function.
+	 *
+	 * For all types other than pointer and slice types, `DeducedParameterType!T`
+	 * is the same as `T`. For pointer and slice types, it is `T` with the
+	 * outer-most layer of qualifiers dropped.
+	 */
+	private template DeducedParameterType(T)
+	{
+		import std.traits: Unqual;
+
+		static if (is(T == U*, U) || is(T == U[], U))
+			alias DeducedParameterType = Unqual!T;
+		else
+			alias DeducedParameterType = T;
+	}
+
+	@safe unittest
+	{
+		static assert(is(DeducedParameterType!(const(int)) == const(int)));
+		static assert(is(DeducedParameterType!(const(int[2])) == const(int[2])));
+
+		static assert(is(DeducedParameterType!(const(int*)) == const(int)*));
+		static assert(is(DeducedParameterType!(const(int[])) == const(int)[]));
+	}
+
+	@safe unittest
+	{
+		static struct NoCopy
+		{
+			@disable this(this);
+		}
+
+		static assert(is(DeducedParameterType!NoCopy == NoCopy));
+	}
+
+	@safe unittest
+	{
+		static assert(is(DeducedParameterType!(inout(int[])) == inout(int)[]));
 	}
 }
