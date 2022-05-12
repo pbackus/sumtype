@@ -256,6 +256,13 @@ private enum hasPostblit(T) = __traits(hasPostblit, T);
 
 private enum isInout(T) = is(T == inout);
 
+// Workaround for dlang issue 19669
+private enum haveDip1000 = __traits(compiles, () @safe {
+	int x;
+	int* p;
+	p = &x;
+});
+
 /**
  * A [tagged union](https://en.wikipedia.org/wiki/Tagged_union) that can hold a
  * single value from any of a specified set of types.
@@ -1734,7 +1741,7 @@ class MatchException : Exception
 template canMatch(alias handler, Ts...)
 	if (Ts.length > 0)
 {
-	enum canMatch = is(typeof((Ts args) => handler(args)));
+	enum canMatch = is(typeof((ref Ts args) => handler(args)));
 }
 
 ///
@@ -2424,6 +2431,28 @@ version (D_Exceptions)
 		{
 			return x.match!((inout(int[]) a) => a);
 		}
+	}));
+}
+
+// return ref
+// issue: https://issues.dlang.org/show_bug.cgi?id=23101
+// Only test on compiler versions >= 2.100, to avoid compiler bugs
+static if (haveDip1000 && __VERSION__ >= 2100)
+@safe unittest {
+	assert(!__traits(compiles, () {
+		SumType!(int, string) st;
+		return st.match!(
+			function int* (string x) => null,
+			function int* (return ref int i) => &i,
+		);
+	}));
+
+	SumType!(int, string) st;
+	assert(__traits(compiles, () {
+		return st.match!(
+			function int* (string x) => null,
+			function int* (return ref int i) => &i,
+		);
 	}));
 }
 
