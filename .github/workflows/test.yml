@@ -16,8 +16,10 @@ jobs:
           - macOS-latest
         dc:
           - dmd-latest
+          - dmd-2.099.1
           - dmd-2.098.1
           - ldc-latest
+          - ldc-1.29.0
           - ldc-1.28.1
     runs-on: ${{ matrix.os }}
     steps:
