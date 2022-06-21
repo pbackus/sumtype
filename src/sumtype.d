@@ -548,9 +548,15 @@ public:
 
 				this.match!destroyIfOwner;
 
-				mixin("Storage newStorage = { ",
-					Storage.memberName!T, ": forward!rhs",
-				" };");
+				static if (isCopyable!T) {
+					mixin("Storage newStorage = { ",
+						Storage.memberName!T, ": __ctfe ? rhs : forward!rhs",
+					" };");
+				} else {
+					mixin("Storage newStorage = { ",
+						Storage.memberName!T, ": forward!rhs",
+					" };");
+				}
 
 				storage = newStorage;
 				tag = tid;
@@ -587,7 +593,14 @@ public:
 		{
 			import core.lifetime: move;
 
-			rhs.match!((ref value) { this = move(value); });
+			rhs.match!((ref value) {
+				static if (isCopyable!(typeof(value))) {
+					// Workaround for dlang issue 21542
+					this = __ctfe ? value : move(value);
+				} else {
+					this = move(value);
+				}
+			});
 			return this;
 		}
 	}
@@ -1459,6 +1472,25 @@ version (D_BetterC) {} else
 	{
 		return inout(SumType!(int[]))(arr);
 	}
+}
+
+// Assignment of struct with overloaded opAssign in CTFE
+@safe unittest {
+	static struct HasOpAssign
+	{
+		void opAssign(HasOpAssign rhs) {}
+	}
+
+	static SumType!HasOpAssign test()
+	{
+		SumType!HasOpAssign s;
+		// Test both overloads
+		s = HasOpAssign();
+		s = SumType!HasOpAssign();
+		return s;
+	}
+
+	enum result = test();
 }
 
 /// True if `T` is an instance of the `SumType` template, otherwise false.
