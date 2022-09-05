@@ -67,6 +67,20 @@ function adrdox_search(searchTerm) {
 		}
 	}
 
+	var dotTerms = searchTerm.replace(/ /g, "").split(".");
+	for(var i = 0; i < dotTerms.length; i++) {
+		var t = dotTerms[i];
+		var dna = declByName[t];
+		if(dna) {
+			dna.forEach(function(dn) {
+				if(hitsObj[dn.getAttribute("id")])
+					hitsObj[dn.getAttribute("id")] += 1;
+				else
+					hitsObj[dn.getAttribute("id")] = 1;
+			});
+		}
+	}
+
 	var hits = [];
 	for(name in hitsObj)
 		hits.push( { decl: name, score: hitsObj[name] } );
@@ -135,11 +149,25 @@ window.onhashchange = function() {
 	adrdox_search(decodeURIComponent(location.hash.substring(2)));
 };
 
+var declByName = {};
+
 window.onload = function() {
 	// index the html first ...
 
-	//foreach(element; index.querySelectorAll("adrdox > listing decl[id]"))
-	//	declById[element.attrs.id] = element;
+	searchDocument.querySelectorAll("adrdox > listing decl[id] > name").forEach(function(element) {
+		if(!declByName[element.textContent])
+			declByName[element.textContent] = [];
+		declByName[element.textContent].push(element.parentNode);
+
+		var p = element.parentNode.parentNode;
+		while(p.tagName == "decl") {
+			var e = p.querySelector("name");
+			if(!declByName[e.textContent])
+				declByName[e.textContent] = [];
+			declByName[e.textContent].push(element.parentNode);
+			p = p.parentNode;
+		}
+	});
 	//foreach(element; index.querySelectorAll("adrdox > index term[value]"))
 	//	termByValue[element.attrs.value] = element;
 
