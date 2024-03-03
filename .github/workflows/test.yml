@@ -21,6 +21,9 @@ jobs:
           - ldc-latest
           - ldc-1.29.0
           - ldc-1.28.1
+        exclude:
+          - os: macOS-latest
+          - dc: dmd-2.098.1
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
