@@ -1781,19 +1781,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 
 		alias stride(size_t i) = .stride!(i, typeCounts);
 		alias TagTuple = .TagTuple!typeCounts;
-
-		/*
-		 * A list of arguments to be passed to a handler needed for the case
-		 * labeled with `caseId`.
-		 */
-		template handlerArgs(size_t caseId)
-		{
-			enum tags = TagTuple.fromCaseId(caseId);
-			enum argsFrom(size_t i: tags.length) = "";
-			enum argsFrom(size_t i) = "args[" ~ toCtString!i ~ "].get!(SumTypes[" ~ toCtString!i ~ "]" ~
-				".Types[" ~ toCtString!(tags[i]) ~ "])(), " ~ argsFrom!(i + 1);
-			enum handlerArgs = argsFrom!0;
-		}
+		alias handlerArgs(size_t caseId) = .handlerArgs!(caseId, typeCounts);
 
 		/* An AliasSeq of the types of the member values in the argument list
 		 * returned by `handlerArgs!caseId`.
@@ -1993,6 +1981,18 @@ private size_t stride(size_t dim, lengths...)()
 
 // Predicate for staticMap
 private enum typeCount(SumType) = SumType.Types.length;
+
+/* A list of arguments to be passed to a handler needed for the case
+ * labeled with `caseId`.
+ */
+template handlerArgs(size_t caseId, typeCounts...)
+{
+	enum tags = TagTuple!typeCounts.fromCaseId(caseId);
+	enum argsFrom(size_t i: tags.length) = "";
+	enum argsFrom(size_t i) = "args[" ~ toCtString!i ~ "].get!(SumTypes[" ~ toCtString!i ~ "]" ~
+		".Types[" ~ toCtString!(tags[i]) ~ "])(), " ~ argsFrom!(i + 1);
+	enum handlerArgs = argsFrom!0;
+}
 
 // Matching
 @safe unittest {
