@@ -1772,32 +1772,6 @@ private template Iota(size_t n)
 	assert(Iota!3 == AliasSeq!(0, 1, 2));
 }
 
-/* The number that the dim-th argument's tag is multiplied by when
- * converting TagTuples to and from case indices ("caseIds").
- *
- * Named by analogy to the stride that the dim-th index into a
- * multidimensional static array is multiplied by to calculate the
- * offset of a specific element.
- */
-private size_t stride(size_t dim, lengths...)()
-{
-	import core.checkedint: mulu;
-
-	size_t result = 1;
-	bool overflow = false;
-
-	static foreach (i; 0 .. dim) {
-		result = mulu(result, lengths[i], overflow);
-	}
-
-	/* The largest number matchImpl uses, numCases, is calculated with
-	 * stride!(SumTypes.length), so as long as this overflow check
-	 * passes, we don't need to check for overflow anywhere else.
-	 */
-	assert(!overflow, "Integer overflow");
-	return result;
-}
-
 private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 {
 	auto ref matchImpl(SumTypes...)(auto ref SumTypes args)
@@ -1921,11 +1895,8 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 	}
 }
 
-// Predicate for staticMap
-private enum typeCount(SumType) = SumType.Types.length;
-
-/* A TagTuple represents a single possible set of tags that `args`
- * could have at runtime.
+/* A TagTuple represents a single possible set of tags that the arguments to
+ * `matchImpl` could have at runtime.
  *
  * Because D does not allow a struct to be the controlling expression
  * of a switch statement, we cannot dispatch on the TagTuple directly.
@@ -1992,6 +1963,35 @@ private struct TagTuple(typeCounts...)
 		return result;
 	}
 }
+
+/* The number that the dim-th argument's tag is multiplied by when
+ * converting TagTuples to and from case indices ("caseIds").
+ *
+ * Named by analogy to the stride that the dim-th index into a
+ * multidimensional static array is multiplied by to calculate the
+ * offset of a specific element.
+ */
+private size_t stride(size_t dim, lengths...)()
+{
+	import core.checkedint: mulu;
+
+	size_t result = 1;
+	bool overflow = false;
+
+	static foreach (i; 0 .. dim) {
+		result = mulu(result, lengths[i], overflow);
+	}
+
+	/* The largest number matchImpl uses, numCases, is calculated with
+	 * stride!(SumTypes.length), so as long as this overflow check
+	 * passes, we don't need to check for overflow anywhere else.
+	 */
+	assert(!overflow, "Integer overflow");
+	return result;
+}
+
+// Predicate for staticMap
+private enum typeCount(SumType) = SumType.Types.length;
 
 // Matching
 @safe unittest {
