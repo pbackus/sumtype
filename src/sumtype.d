@@ -1777,9 +1777,10 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 	auto ref matchImpl(SumTypes...)(auto ref SumTypes args)
 		if (allSatisfy!(isSumType, SumTypes) && args.length > 0)
 	{
-		alias stride(size_t i) = .stride!(i, Map!(typeCount, SumTypes));
+		alias typeCounts = Map!(typeCount, SumTypes);
 
-		alias TagTuple = .TagTuple!(Map!(typeCount, SumTypes));
+		alias stride(size_t i) = .stride!(i, typeCounts);
+		alias TagTuple = .TagTuple!typeCounts;
 
 		/*
 		 * A list of arguments to be passed to a handler needed for the case
