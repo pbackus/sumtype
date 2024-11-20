@@ -1946,7 +1946,7 @@ private enum typeCount(SumType) = SumType.Types.length;
  * When there is only one argument, the caseId is equal to that
  * argument's tag.
  */
-static struct TagTuple(SumTypes...)
+private struct TagTuple(SumTypes...)
 {
 	size_t[SumTypes.length] tags;
 	alias tags this;
