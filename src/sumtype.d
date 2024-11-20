@@ -1805,7 +1805,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 	{
 		alias stride(size_t i) = .stride!(i, Map!(typeCount, SumTypes));
 
-		alias TagTuple = .TagTuple!SumTypes;
+		alias TagTuple = .TagTuple!(Map!(typeCount, SumTypes));
 
 		/*
 		 * A list of arguments to be passed to a handler needed for the case
@@ -1946,20 +1946,21 @@ private enum typeCount(SumType) = SumType.Types.length;
  * When there is only one argument, the caseId is equal to that
  * argument's tag.
  */
-private struct TagTuple(SumTypes...)
+private struct TagTuple(typeCounts...)
 {
-	size_t[SumTypes.length] tags;
+	size_t[typeCounts.length] tags;
 	alias tags this;
 
-	alias stride(size_t i) = .stride!(i, Map!(typeCount, SumTypes));
+	alias stride(size_t i) = .stride!(i, typeCounts);
 
 	invariant {
 		static foreach (i; 0 .. tags.length) {
-			assert(tags[i] < SumTypes[i].Types.length);
+			assert(tags[i] < typeCounts[i]);
 		}
 	}
 
-	this(ref const(SumTypes) args)
+	this(SumTypes...)(ref const SumTypes args)
+		if (allSatisfy!(isSumType, SumTypes) && args.length == typeCounts.length)
 	{
 		static foreach (i; 0 .. tags.length) {
 			tags[i] = args[i].tag;
