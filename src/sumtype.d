@@ -1921,6 +1921,7 @@ private template matchImpl(Flag!"exhaustive" exhaustive, handlers...)
 	}
 }
 
+// Predicate for staticMap
 private enum typeCount(SumType) = SumType.Types.length;
 
 /* A TagTuple represents a single possible set of tags that `args`
