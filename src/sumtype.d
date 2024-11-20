@@ -1988,10 +1988,16 @@ private enum typeCount(SumType) = SumType.Types.length;
 template handlerArgs(size_t caseId, typeCounts...)
 {
 	enum tags = TagTuple!typeCounts.fromCaseId(caseId);
-	enum argsFrom(size_t i: tags.length) = "";
-	enum argsFrom(size_t i) = "args[" ~ toCtString!i ~ "].get!(SumTypes[" ~ toCtString!i ~ "]" ~
-		".Types[" ~ toCtString!(tags[i]) ~ "])(), " ~ argsFrom!(i + 1);
-	enum handlerArgs = argsFrom!0;
+
+	alias handlerArgs = AliasSeq!();
+
+	static foreach (i; 0 .. tags.length) {
+		handlerArgs = AliasSeq!(
+			handlerArgs,
+			"args[" ~ toCtString!i ~ "].get!(SumTypes[" ~ toCtString!i ~ "]" ~
+			".Types[" ~ toCtString!(tags[i]) ~ "])(), "
+		);
+	}
 }
 
 // Matching
