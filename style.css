@@ -1591,3 +1591,83 @@ tt.D.highlighted a {
 .conditional-compilation-attributes {
 	font-size: 90%;
 }
+
+@media (prefers-color-scheme: dark) {
+	body {
+		color: #ddd;
+		background-color: black;
+	}
+
+	a:link, a:visited {
+		color: #00aaff !important;
+	}
+
+	#page-nav {
+		background-color: #333 !important;
+	}
+
+	tt.D,
+	.inline-code {
+		background-color: #444;
+		color: #eee;
+	}
+
+	.block-code:not([data-language=""]):not([data-language="pre"]),
+	pre.d_code {
+		background-color: #444;
+		color: #eee;
+	}
+
+	.tip {
+		background-color: #306630;
+	}
+
+	.pitfall {
+		background-color: #663030;
+	}
+
+	.warning {
+		background-color: #666630;
+	}
+
+	.note {
+		background-color: #3333aa;
+	}
+
+	.sidebar {
+		background-color: #555;
+	}
+
+	.member-list dt .simplified-prototype {
+		color: #aaa;
+		border-color: black;
+	}
+
+	.member-list dt .simplified-prototype:hover {
+		background-color: black;
+		border-color: #555;
+	}
+
+	.highlighted-comment,
+	.com {
+		color: #0ff !important;
+	}
+
+	.kwrd,
+	.highlighted-keyword,
+	.lang-feature,
+	.storage-class {
+		color: #8ff !important;
+	}
+
+	.type-constructor,
+	.builtin-type {
+		color: #00cc00 !important;
+	}
+
+	.type,
+	.highlighted-type {
+		color: lime;
+	}
+}
+
