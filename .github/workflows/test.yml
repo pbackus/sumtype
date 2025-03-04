@@ -22,15 +22,18 @@ jobs:
           - ldc-1.29.0
           - ldc-1.28.1
         exclude:
+          # macOS requires DMD >= 2.107.1
           - os: macOS-latest
-          - dc: dmd-2.098.1
+            dc: dmd-2.099.1
+          - os: macOS-latest
+            dc: dmd-2.098.1
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Install D compiler
-        uses: dlang-community/setup-dlang@v1
+        uses: dlang-community/setup-dlang@v2
         with:
           compiler: ${{ matrix.dc }}
 
