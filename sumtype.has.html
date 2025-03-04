@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>has (sumtype.has)</title>
+	<meta charset="utf-8" />
+	<meta content="width=device-width, initial-scale=1" name="viewport" />
+        <link href="style.css" rel="stylesheet" />
+        <script src="script.js" type="text/javascript"></script>
+
+	
+	<link href="search-results.html" rel="prefetch" />
+</head>
+<body>
+	<div id="page-header">
+		<div id="logotype">
+		<span>Documentation</span>
+		<nav>
+			<a href="http://dlang.org/">Dlang.org</a>
+		</nav>
+		</div>
+
+		<form action="search-docs.html" id="search">
+			<input name="searchTerm" placeholder="Find a symbol name..." type="search" />
+			<input type="submit" value="Go" />
+		</form>
+	</div>
+	<div id="page-body">
+		<div id="page-content">
+		<h1>has</h1><div class="breadcrumbs"><a class="breadcrumb" href="sumtype.html">sumtype</a> </div><div><div class="documentation-comment synopsis"><div><p>Checks whether a <tt class="inline-code">SumType</tt> contains a value of a given type.</p><p>The types must match exactly, without implicit conversions.</p></div></div></div><div class="annotated-prototype"><div class="function-prototype"><div class="parent-prototype"><span class="builtin-type">template</span> <span class="name">has</span><span class="template-params">(T)</span></div><div><div class="attributes"></div><div class="return-type"><span class="builtin-type">bool</span></div><div class="function-name">has</div><div class="template-parameters" data-count="1">(<div class="parameters-list toplevel"><div class="template-parameter-item parameter-item">	<span><span class="name" data-ident="Self">Self</span></span></div></div>)</div><div class="runtime-parameters" data-count="1"><div class="parameters-list toplevel"><span class="paren">(</span><div class="runtime-parameter-item parameter-item"><span class="parameter-type-holder"><span class="parameter-type"><span class="storage-class">auto</span> <span class="storage-class">ref</span> <span class="name" data-ident="Self">Self</span></span></span> <span class="parameter-name name" data-ident="self"><a href="#param-self">self</a></span></div><span class="paren">)</span></div></div><div class="template-constraint"> <a class="lang-feature" href="http://dpldocs.info/template-constraints">if</a> (<div class="template-constraint-expression"><a class="name" data-ident="isSumType" href="sumtype.isSumType.html" title="sumtype.isSumType">isSumType</a>!<span class="name" data-ident="Self">Self</span></div>)</div><div class="function-contracts"></div></div></div></div><h2 id="members"><a class="header-anchor" href="#members">Members</a></h2><h3 class="member-list-header hide-from-toc" id="function"><a class="header-anchor" href="#function">Functions</a></h3><dl class="member-list native"><dt><a href="sumtype.has.has.html">has</a><div class="simplified-prototype" style="max-width: 20ch;"><tt class="highlighted"><span class="type">bool</span></tt> <span class="name">has</span>(Self self)</div></dt><dd><div><p>The actual <tt class="inline-code">has</tt> function.</p></div></dd></dl><div><h2 id="parameters"><a class="header-anchor" href="#parameters">Parameters</a></h2><dl class="parameter-descriptions"><dt id="param-T"><a class="parameter-name" data-ident="T" href="#param-T">T</a></dt><dd><div class="documentation-comment"><div><p>the type to check for.</p></div></div></dd></dl><h2 id="examples"><a class="header-anchor" href="#examples">Examples</a></h2><div class="documentation-comment"><div></div></div><div class="unittest-example-holder"><div class="documentation-comment"><p>Basic usage</p></div><pre class="d_code highlighted"><span class="hid">SumType</span>!(<span class="type">string</span>, <span class="type">double</span>) <span class="hid">example</span> = <span class="str">&quot;hello&quot;</span>;
+
+<span class="kwrd">assert</span>( <span class="hid">example</span>.<span class="hid">has</span>!<span class="type">string</span>);
+<span class="kwrd">assert</span>(!<span class="hid">example</span>.<span class="hid">has</span>!<span class="type">double</span>);
+
+<span class="com">// If T isn't part of the SumType, has!T will always return false</span>
+<span class="kwrd">assert</span>(!<span class="hid">example</span>.<span class="hid">has</span>!<span class="type">int</span>);</pre></div><div class="unittest-example-holder"><div class="documentation-comment"><p>With type qualifiers</p></div><pre class="d_code highlighted"><span class="kwrd">alias</span> <span class="hid">Example</span> = <span class="hid">SumType</span>!(<span class="type">string</span>, <span class="type">double</span>);
+
+<span class="hid">Example</span> <span class="hid">m</span> = <span class="str">&quot;mutable&quot;</span>;
+<span class="kwrd">const</span> <span class="hid">Example</span> <span class="hid">c</span> = <span class="str">&quot;const&quot;</span>;
+<span class="kwrd">immutable</span> <span class="hid">Example</span> <span class="hid">i</span> = <span class="str">&quot;immutable&quot;</span>;
+
+<span class="kwrd">assert</span>( <span class="hid">m</span>.<span class="hid">has</span>!<span class="type">string</span>);
+<span class="kwrd">assert</span>(!<span class="hid">m</span>.<span class="hid">has</span>!(<span class="kwrd">const</span>(<span class="type">string</span>)));
+<span class="kwrd">assert</span>(!<span class="hid">m</span>.<span class="hid">has</span>!(<span class="kwrd">immutable</span>(<span class="type">string</span>)));
+
+<span class="kwrd">assert</span>(!<span class="hid">c</span>.<span class="hid">has</span>!<span class="type">string</span>);
+<span class="kwrd">assert</span>( <span class="hid">c</span>.<span class="hid">has</span>!(<span class="kwrd">const</span>(<span class="type">string</span>)));
+<span class="kwrd">assert</span>(!<span class="hid">c</span>.<span class="hid">has</span>!(<span class="kwrd">immutable</span>(<span class="type">string</span>)));
+
+<span class="kwrd">assert</span>(!<span class="hid">i</span>.<span class="hid">has</span>!<span class="type">string</span>);
+<span class="kwrd">assert</span>(!<span class="hid">i</span>.<span class="hid">has</span>!(<span class="kwrd">const</span>(<span class="type">string</span>)));
+<span class="kwrd">assert</span>( <span class="hid">i</span>.<span class="hid">has</span>!(<span class="kwrd">immutable</span>(<span class="type">string</span>)));</pre></div><h2 id="meta"><a class="header-anchor" href="#meta">Meta</a></h2><div class="documentation-comment source-section other-section"><h3 id="source"><a class="header-anchor" href="#source">Source</a></h3><div><p><a href="source/sumtype.d.html#L2501">See Implementation</a><br /></p></div></div></div></div>
+		<div id="page-nav"><a class="parent" href="sumtype.html">sumtype</a> 
+		<span class="type-separator">classes</span><ul><li><a class="class" href="sumtype.MatchException.html">MatchException</a></li></ul><span class="type-separator">structs</span><ul><li><a class="struct" href="sumtype.SumType.html">SumType</a></li><li><a class="struct" href="sumtype.This.html">This</a></li></ul><span class="type-separator">templates</span><ul><li><a class="template" href="sumtype.canMatch.html">canMatch</a></li><li><a class="template" href="sumtype.get.html">get</a></li><li><a class="template current" href="sumtype.has.html">has</a></li><li><a class="template" href="sumtype.isSumType.html">isSumType</a></li><li><a class="template" href="sumtype.match.html">match</a></li><li><a class="template" href="sumtype.tryGet.html">tryGet</a></li><li><a class="template" href="sumtype.tryMatch.html">tryMatch</a></li></ul></div>
+	</div>
+	<div id="page-footer">Page generated by <a href="https://github.com/adamdruppe/adrdox">adrdox</a></div>
+</body>
+</html>
