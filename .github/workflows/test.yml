@@ -16,13 +16,13 @@ jobs:
           - macOS-latest
         dc:
           - dmd-latest
-          - dmd-2.101.2
+          - dmd-2.103.1
           - ldc-latest
-          - ldc-1.31.0
+          - ldc-1.33.0
         exclude:
           # macOS requires DMD >= 2.107.1
           - os: macOS-latest
-            dc: dmd-2.101.2
+            dc: dmd-2.103.1
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
